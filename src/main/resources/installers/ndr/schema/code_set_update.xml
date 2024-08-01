@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="utf-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.5.xsd">
+
+    <property name="autoIncrement" value="true"/>
+
+    <changeSet id="20230523011" author="amos-data-fi">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="1">
+                SELECT count(*) FROM ndr_code_set
+                WHERE code = '4j'
+            </sqlCheck>
+        </preConditions>
+        <sqlFile dbms="postgresql"
+                 path="sql/update4j.sql"
+                 relativeToChangelogFile="true"
+                 splitStatements="false"
+                 stripComments="true"/>
+    </changeSet>
+
+    <changeSet id="20230524012" author="amos-data-fi">
+        <sql>
+            CREATE TABLE IF NOT EXISTS ndrdata
+            (
+                patient_id    VARCHAR(255) NOT NULL,
+                demorgraphic  JSONB,
+                commencement  JSONB,
+                care_cards    JSONB,
+                labs          JSONB,
+                pharmacies    JSONB,
+                date_modified date,
+                CONSTRAINT pk_ndrdata PRIMARY KEY (patient_id)
+            );
+        </sql>
+    </changeSet>
+
+    <changeSet failOnError="true"  id="20230527013" author="amos-data-fi">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="ndr_message_log" columnName="file_type" />
+            </not>
+        </preConditions>
+        <sql>
+            ALTER TABLE  ndr_message_log
+                ADD file_type VARCHAR(255)
+        </sql>
+    </changeSet>
+    <changeSet failOnError="true"  id="20230609014" author="amos-data-fi">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="ndr_xml_status" columnName="error" />
+            </not>
+        </preConditions>
+        <sql>
+            ALTER TABLE  ndr_xml_status
+                ADD  error JSONB ;
+        </sql>
+    </changeSet>
+
+    <changeSet failOnError="true"  id="202306016015" author="amos-data-fi">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="biometric" columnName="recapture" />
+            </not>
+        </preConditions>
+        <sql>
+            ALTER TABLE  biometric
+                ADD  recapture  INTEGER DEFAULT 0;
+        </sql>
+    </changeSet>
+
+    <changeSet id="20230616016" author="amos-data-fi">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0">
+                select count(*) from hiv_regimen_resolver
+                where regimensys = 'ABC(20mg/ml)+3TC(300mg)+DTG50(50mg)'
+                AND regimen = 'ABC-3TC-DTG50'
+            </sqlCheck>
+        </preConditions>
+        <sql>
+            INSERT INTO hiv_regimen_resolver(regimensys, regimen)
+            VALUES ('ABC(20mg/ml)+3TC(300mg)+DTG50(50mg)', 'ABC-3TC-DTG50');
+        </sql>
+    </changeSet>
+
+    <changeSet id="20230616017" author="amos-data-fi">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0">
+                select count(*) from hiv_regimen_resolver
+                where regimensys = 'ABC(120mg)/3TC(60mg)/DTG(50mg)'
+                  AND regimen = 'ABC-3TC-DTG50'
+            </sqlCheck>
+        </preConditions>
+       <sql>
+           INSERT INTO hiv_regimen_resolver(regimensys, regimen)
+           VALUES ('ABC(120mg)/3TC(60mg)/DTG(50mg)', 'ABC-3TC-DTG50');
+       </sql>
+    </changeSet>
+
+    <changeSet id="20230711018" author="amos-data-fi">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="1">
+                select count(*) from hiv_regimen_resolver
+                where regimensys = 'ABC(20mg/ml)+3TC(300mg)+DTG50(50mg)'
+                  AND regimen = 'ABC-3TC-DTG50'
+            </sqlCheck>
+        </preConditions>
+        <sql>
+            INSERT INTO hiv_regimen_resolver(regimensys, regimen)
+            VALUES ('ABC(20mg/ml)+3TC(300mg)+DTG50(50mg)', 'ABC-3TC-DTG');
+        </sql>
+    </changeSet>
+
+    <changeSet id="20230711019" author="amos-data-fi">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="1">
+                select count(*) from hiv_regimen_resolver
+                where regimensys = 'ABC(120mg)/3TC(60mg)/DTG(50mg)'
+                  AND regimen = 'ABC-3TC-DTG50'
+            </sqlCheck>
+        </preConditions>
+        <sql>
+            INSERT INTO hiv_regimen_resolver(regimensys, regimen)
+            VALUES ('ABC(120mg)/3TC(60mg)/DTG(50mg)', 'ABC-3TC-DTG');
+        </sql>
+    </changeSet>
+
+</databaseChangeLog>

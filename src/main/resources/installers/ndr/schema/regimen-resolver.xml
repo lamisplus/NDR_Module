@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.5.xsd">
+    <property name="autoIncrement" value="true"/>
+
+
+    <changeSet id="2023070601" author="amos-data-fi">
+        <sql>
+            TRUNCATE TABLE ndr_code_set;
+
+             ALTER TABLE ndr_code_set
+                ALTER COLUMN code_set_nm TYPE VARCHAR(250);
+
+            ALTER TABLE ndr_code_set
+                ALTER COLUMN code TYPE VARCHAR(250);
+
+            ALTER TABLE ndr_code_set
+                ALTER COLUMN code_description TYPE VARCHAR(250);
+
+            ALTER TABLE ndr_code_set
+             ALTER COLUMN alt_description TYPE VARCHAR(250);
+
+            ALTER TABLE ndr_code_set
+            ALTER COLUMN sys_description TYPE VARCHAR(250);
+        </sql>
+    </changeSet>
+
+    <changeSet id="2023070602" author="amos-data-fi">
+        <sql>
+            TRUNCATE TABLE hiv_regimen_resolver;
+        </sql>
+    </changeSet>
+
+    <changeSet id="2023070603" author="amos-data-fi">
+        <sqlFile dbms="postgresql"
+                 path="sql/updated-ndr-code-set.sql"
+                 relativeToChangelogFile="true"
+                 splitStatements="false"
+                 stripComments="true"/>
+    </changeSet>
+
+    <changeSet id="2023070604" author="amos-data-fi">
+        <sqlFile dbms="postgresql"
+                 path="sql/updated-regimen-resolver.sql"
+                 relativeToChangelogFile="true"
+                 splitStatements="false"
+                 stripComments="true"/>
+    </changeSet>
+
+</databaseChangeLog>
