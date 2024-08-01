@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!-- PURPOSE: Patient Data Redaction between EMR and NDR -->
+<xs:schema attributeFormDefault="unqualified" elementFormDefault="qualified" xmlns:xs="http://www.w3.org/2001/XMLSchema">
+  <xs:element name="Container">
+   <xs:complexType>
+      <xs:sequence>
+	  <xs:element name="EmrType" minOccurs="1" maxOccurs="1">
+                <xs:annotation>
+                    <xs:documentation xml:lang="en">
+                        EMR TYPE
+                    </xs:documentation>
+                </xs:annotation>
+                <xs:simpleType>
+                    <xs:restriction base="xs:string">
+                        <xs:enumeration value="NMRS" />
+                        <xs:enumeration value="LAMISPlus" />
+						<xs:enumeration value="VIVA" />
+                    </xs:restriction>
+                </xs:simpleType>
+            </xs:element>	
+        <xs:element name="MessageHeader" type="MessageHeaderType" minOccurs="1" maxOccurs="1" />
+		<xs:element name="PatientDemographics" type="PatientDemographicsType" minOccurs="1" maxOccurs="1" />   
+	  </xs:sequence>
+    </xs:complexType>
+   </xs:element>
+	<xs:complexType name="MessageHeaderType">
+		<xs:sequence>
+			<xs:element type="xs:date" name="MessageCreationDateTime"/>
+			<xs:element type="xs:string" name="MessageUniqueID"/>
+			<xs:element name="XmlType" minOccurs="1" maxOccurs="1">
+                <xs:simpleType>
+                    <xs:annotation>
+                        <xs:documentation xml:lang="en">
+                            XML TYPE
+                        </xs:documentation>
+                    </xs:annotation>
+                    <xs:restriction base="xs:string">
+                        <xs:enumeration value="REDACTED" />
+                    </xs:restriction>
+                </xs:simpleType>
+            </xs:element>
+            <xs:element name="MessageVersion" type="xs:float" fixed="1.0" minOccurs="1" maxOccurs="1"/>
+			<xs:element name="MessageSendingOrganisation" type="MessageSendingOrganisationType" minOccurs="1" maxOccurs="1" />
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="MessageSendingOrganisationType">
+		<xs:sequence>
+			<xs:element type="xs:string" name="FacilityName" minOccurs="1" maxOccurs="1"/>
+			 <xs:element type="xs:string" name="FacilityID" minOccurs="1" maxOccurs="1"/> <!--DatimCode -->
+			<xs:element type="xs:string" name="FacilityTypeCode"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="PatientDemographicsType">
+		<xs:sequence>
+			<xs:element name="PatientIdentifier" minOccurs="1" maxOccurs="1">
+				<xs:simpleType>
+					<xs:annotation>
+						<xs:documentation xml:lang="en">
+							The Patient Identifier
+						</xs:documentation>
+					</xs:annotation>
+					<xs:restriction base="xs:string">
+						<xs:minLength value="0" />
+						<xs:maxLength value="2000" />
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>	
+           <xs:element name="RedactedPatient" minOccurs="1" maxOccurs="1">
+                <xs:simpleType>
+                    <xs:annotation>
+                        <xs:documentation xml:lang="en">
+                            Patient Redacted
+                        </xs:documentation>
+                    </xs:annotation>
+                    <xs:restriction base="xs:string">
+                        <xs:enumeration value="YES" />
+                        <xs:enumeration value="NO" />
+                    </xs:restriction>
+                </xs:simpleType>
+            </xs:element>
+            <xs:element name="RedactedPatientReason" type="StringType"
+                        minOccurs="0" maxOccurs="1">
+                <xs:annotation>
+                    <xs:documentation xml:lang="en">
+                       Reason Patient Redacted
+                    </xs:documentation>
+                </xs:annotation>
+            </xs:element>			
+			<xs:element name="RedactedVisit" type="RedactedVisitType" minOccurs="0" maxOccurs="unbounded" />	
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="RedactedVisitType">
+        <xs:sequence>
+            <xs:element name="VisitID" type="StringType" minOccurs="1" maxOccurs="1">
+                <xs:annotation>
+                    <xs:documentation xml:lang="en">
+                        The unique Visit Identifier 
+                    </xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="RedactedVisitReason" type="StringType" minOccurs="0" maxOccurs="1">
+                <xs:annotation>
+                    <xs:documentation xml:lang="en">
+                       Reason Patient Visit Redacted
+                    </xs:documentation>
+                </xs:annotation>
+            </xs:element>           
+        </xs:sequence>
+    </xs:complexType>
+	    
+	<xs:simpleType name="StringType">
+        <xs:restriction base="xs:string">
+            <xs:minLength value="0" />
+            <xs:maxLength value="255" />
+        </xs:restriction>
+    </xs:simpleType>
+	</xs:schema>

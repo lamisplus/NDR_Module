@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.5.xsd">
+
+    <property name="autoIncrement" value="true"/>
+
+    <changeSet failOnError="true"  id="20230829-001" author="Kennedy">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="ndr_pusher_config" columnName="base_url" />
+            </not>
+        </preConditions>
+        <sql>
+            alter table ndr_pusher_config add base_url varchar(500);
+        </sql>
+    </changeSet>
+
+    <changeSet failOnError="true"  id="20230829-002" author="Kennedy">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="ndr_messages" columnName="batch_number" />
+            </not>
+        </preConditions>
+        <sql>
+            alter table ndr_messages add batch_number varchar(200);
+        </sql>
+    </changeSet>
+
+</databaseChangeLog>

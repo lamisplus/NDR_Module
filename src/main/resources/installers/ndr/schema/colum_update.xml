@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.5.xsd">
+
+    <property name="autoIncrement" value="true"/>
+
+    <changeSet failOnError="true"  id="20230724-001-AM" author="Amos data-fi">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="ndr_xml_status" columnName="type" />
+            </not>
+        </preConditions>
+        <sql>
+            ALTER TABLE ndr_xml_status
+                ADD COLUMN type varchar(100) DEFAULT 'treatment';
+        </sql>
+    </changeSet>
+    <changeSet failOnError="true"  id="20230807-002-PM" author="Amos data-fi">
+        <sql>
+            update base_application_codeset
+            set display = 'No signs or symptoms of TB'
+            where id = 67
+        </sql>
+    </changeSet>
+</databaseChangeLog>

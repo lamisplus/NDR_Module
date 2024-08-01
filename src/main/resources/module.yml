@@ -1,0 +1,17 @@
+basePackage: org.lamisplus.modules.ndr
+name: NDRModule
+dependencies: {PatientModule: 2.0.2, TriageModule: 2.0.1, LaboratoryModule: 2.0.3, HivModule: 2.1.1 }
+store: true
+menus:
+  - icon:
+    disabled: false
+    name: NDR
+    state: ndr
+    url: /across/resources/static/ndr/index.html
+umdLocation: /across/resources/static/ndr/index.html
+gitHubLink: https://api.github.com/repos/lamisplus/NDR-Module/releases/latest
+webModules:
+  - breadcrumb: NDR
+    name: NDRModule
+    path: NDR
+    position: 99

@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.5.xsd">
+
+    <property name="autoIncrement" value="true"/>
+
+    <changeSet id="insert_lab_results" author="Amos-ecews">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <sqlCheck expectedResult="0">
+                    SELECT COUNT(*) FROM ndr_code_set
+                    WHERE code_set_nm = 'LAB_RESULTED_TEST' AND code IN ('83', '84', '85', '86', '87')
+                </sqlCheck>
+            </not>
+        </preConditions>
+
+        <insert tableName="ndr_code_set">
+            <column name="code_set_nm" value="LAB_RESULTED_TEST"/>
+            <column name="code" value="83"/>
+            <column name="code_description" value="CD4 LFA RESULT"/>
+        </insert>
+
+        <insert tableName="ndr_code_set">
+            <column name="code_set_nm" value="LAB_RESULTED_TEST"/>
+            <column name="code" value="84"/>
+            <column name="code_description" value="Serology for CrAg Result"/>
+        </insert>
+
+        <insert tableName="ndr_code_set">
+            <column name="code_set_nm" value="LAB_RESULTED_TEST"/>
+            <column name="code" value="85"/>
+            <column name="code_description" value="Other Test (TB-LAM, LF-LAM,etc)"/>
+        </insert>
+
+        <insert tableName="ndr_code_set">
+            <column name="code_set_nm" value="LAB_RESULTED_TEST"/>
+            <column name="code" value="86"/>
+            <column name="code_description" value="CSF for CrAg"/>
+        </insert>
+
+        <insert tableName="ndr_code_set">
+            <column name="code_set_nm" value="LAB_RESULTED_TEST"/>
+            <column name="code" value="87"/>
+            <column name="code_description" value="CSF for MCS Result"/>
+        </insert>
+    </changeSet>
+</databaseChangeLog>

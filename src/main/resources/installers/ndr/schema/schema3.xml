@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.5.xsd">
+
+    <property name="autoIncrement" value="true"/>
+
+    <changeSet failOnError="true"  id="20230225-004-DR" author="Dr Karim">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="ndr_xml_status" columnName="push_identifier" />
+            </not>
+        </preConditions>
+        <sql>
+            ALTER TABLE ndr_xml_status
+                ADD push_identifier character varying(255) COLLATE pg_catalog."default" DEFAULT 'Not Linked'::character varying;
+        </sql>
+    </changeSet>
+    <changeSet failOnError="true"  id="20230225-005-DR" author="Dr Karim">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="ndr_xml_status" columnName="completely_pushed" />
+            </not>
+        </preConditions>
+        <sql>
+            ALTER TABLE ndr_xml_status  ADD completely_pushed boolean DEFAULT true
+        </sql>
+    </changeSet>
+    <changeSet failOnError="true"  id="20230225-006-DR" author="Dr Karim">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="ndr_xml_status" columnName="percentage_pushed" />
+            </not>
+        </preConditions>
+        <sql>
+            ALTER TABLE ndr_xml_status ADD percentage_pushed bigint DEFAULT 100;
+        </sql>
+    </changeSet>
+    <changeSet failOnError="true"  id="20230225-006-DR" author="Dr Karim">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="ndr_xml_status" columnName="percentage_pushed" />
+            </not>
+        </preConditions>
+        <sql>
+            ALTER TABLE ndr_xml_status ADD percentage_pushed bigint DEFAULT 100;
+        </sql>
+    </changeSet>
+
+</databaseChangeLog>
