@@ -157,7 +157,8 @@ public class HtsTypeMapper {
                     testResult.setScreeningTestResult("R");
                 }
             } else {
-                throw new IllegalArgumentException("ScreeningTestResult can not be null kindly correct");
+                log.error("ScreeningTestResult can not be null kindly correct");
+                //throw new IllegalArgumentException("ScreeningTestResult can not be null kindly correct");
             }
             validateAndSetTestResultDate(h.getScreeningTestResultDate(), testResult);
             if (h.getConfirmatoryTestResult().equalsIgnoreCase("negative")) {
@@ -177,7 +178,8 @@ public class HtsTypeMapper {
                 log.error("Recency number is null for client {}", h.getClientCode());
                 throw new IllegalArgumentException("Recency Number can not be null kindly correct");
             }else {
-                if (testResult.getFinalTestResult().equals("Pos") && !StringUtils.isBlank(h.getRecencyNumber())) {
+//                if (testResult.getFinalTestResult().equals("Pos") && !StringUtils.isBlank(h.getRecencyNumber())) {
+                if (!StringUtils.isBlank(h.getRecencyNumber())) {
                     processAndSetRecencyResult(hivTestResultType, objectFactory, h);
                 }
             }
@@ -228,7 +230,8 @@ public class HtsTypeMapper {
                 throw new RuntimeException(e);
             }
         } else {
-            throw new IllegalArgumentException("DateSampleSent can not be null kindly correct this");
+            log.info("DateSampleSent can not be null kindly correct this");
+            //throw new IllegalArgumentException("DateSampleSent can not be null kindly correct this");
         }
 
         if (h.getDateSampleCollected() != null) {
@@ -238,7 +241,8 @@ public class HtsTypeMapper {
                 throw new RuntimeException(e);
             }
         } else {
-            throw new IllegalArgumentException("DateSampleCollected can not be null kindly correct this");
+            log.info("DateSampleCollected can not be null kindly correct this");
+            //throw new IllegalArgumentException("DateSampleCollected can not be null kindly correct this");
         }
 
         if (h.getViralLoadConfirmationTestDate() != null) {

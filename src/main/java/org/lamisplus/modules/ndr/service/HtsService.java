@@ -57,6 +57,53 @@ public class HtsService {
 	private final NdrOptimizationService ndrOptimizationService;
 
 
+
+    public void generateOnePatientHtsNDRXml(long facilityId, boolean initial, String clientCode) {
+        ObjectFactory objectFactory = new ObjectFactory();
+        final String pathname = BASE_DIR + "temp/" + facilityId + "/";
+        log.info("folder -> "+ pathname);
+        ndrService.cleanupFacility(facilityId, pathname);
+        AtomicInteger generatedCount = new AtomicInteger();
+        AtomicInteger errorCount = new AtomicInteger();
+        LocalDateTime start = LocalDateTime.of(1984, 1, 1, 0, 0);
+        List<String> patientIds = new ArrayList<>();
+        List<NDRErrorDTO> ndrErrors = new ArrayList<NDRErrorDTO>();
+        PatientDemographicDTO[] patientDemographicDTO = new PatientDemographicDTO[1];
+
+        if (initial) {
+            patientIds = data.getHtsClientCode(facilityId, start);
+            log.info("generating initial ....");
+        }
+
+        log.info("HTS patient single -> "+ patientIds.size());
+
+        if (getPatientHtsNDRXml(clientCode, facilityId, initial,objectFactory, ndrErrors)) {
+            generatedCount.getAndIncrement();
+            patientDemographicDTO[0] = data.getHtsPatientDemographics(facilityId, clientCode, start).get();
+        } else {
+            errorCount.getAndIncrement();
+        }
+
+        log.info("generated  {}/{}", generatedCount.get(), patientIds.size());
+        log.info("files not generated  {}/{}", errorCount.get(), patientIds.size());
+        File folder = new File(BASE_DIR + "temp/" + facilityId + "/");
+        log.info("fileSize {} bytes ", ZipUtility.getFolderSize(folder));
+        if (ZipUtility.getFolderSize(folder) >= 15_000_000) {
+            log.info(BASE_DIR + "temp/" + facilityId + "/" + " will be split into two");
+        }
+        if (generatedCount.get() > 0) {
+            ndrOptimizationService.zipAndSaveTheFilesforDownload(
+                    facilityId,
+                    pathname,
+                    generatedCount,
+                    patientDemographicDTO[0],
+                    ndrErrors,
+                    "hts", patientDemographicDTO[0].getPatientIdentifier()
+            );
+        }
+        log.error("error list size {}", ndrErrors.size());
+    }
+
 	private boolean getPatientHtsNDRXml(String clientCode, long facilityId, boolean initial, ObjectFactory obj, List<NDRErrorDTO> ndrErrors) {
 		log.info("starting process patient xml file information");
 		log.info("facilityId {}, patientId {}", facilityId, clientCode);
@@ -168,9 +215,6 @@ public class HtsService {
 		}
 		log.error("error list size {}", ndrErrors.size());
 	}
-
-
-
 
 	private String generatePatientHtsNDRXml(
 			long facilityId,ObjectFactory objectFactory, PatientDemographicDTO patientDemographic,

@@ -106,7 +106,14 @@ public class NDRController {
         log.info("Total time taken to generate the NDR files: {}", stopwatch.elapsed().toMinutes());
         return ResponseEntity.ok().build();
     }
-    
+
+    //testing single HTS file
+    @GetMapping("/generate_one_hts")
+    public void generateOneHTSPatientXml(@RequestParam("clientCode") String clientCode, @RequestParam("facility") Long facility) {
+        Stopwatch stopwatch = Stopwatch.createStarted();
+        htsService.generateOnePatientHtsNDRXml(facility, true, clientCode);
+        log.info("Total time taken to generate a file: {}", stopwatch.elapsed().toMillis());
+    }
     
 
     @GetMapping("/download/{file}")
