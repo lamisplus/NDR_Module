@@ -158,7 +158,7 @@ public class HtsTypeMapper {
                 }
             } else {
                 log.error("ScreeningTestResult can not be null kindly correct");
-                //throw new IllegalArgumentException("ScreeningTestResult can not be null kindly correct");
+                throw new IllegalArgumentException("ScreeningTestResult can not be null kindly correct");
             }
             validateAndSetTestResultDate(h.getScreeningTestResultDate(), testResult);
             if (h.getConfirmatoryTestResult().equalsIgnoreCase("negative")) {
