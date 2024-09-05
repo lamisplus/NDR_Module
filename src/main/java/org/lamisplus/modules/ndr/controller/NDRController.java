@@ -71,11 +71,9 @@ public class NDRController {
             @RequestParam boolean initial,
             @RequestParam List<String> patientIds){
         messagingTemplate.convertAndSend("/topic/ndr-status", "start");
-        Stopwatch stopwatch = Stopwatch.createStarted();
         System.out.println("calling patients api with initial value  = " + initial);
         facilityIds.forEach (facilityId -> ndrOptmizationService.generateNDRXMLByFacilityAndListOfPatient(facilityId,initial,patientIds));
         messagingTemplate.convertAndSend("/topic/ndr-status", "end");
-        log.info("Total time taken to generate a file: {}", stopwatch.elapsed().toMillis());
     }
     
     @GetMapping("/patients")
@@ -85,17 +83,17 @@ public class NDRController {
     
     @GetMapping("/optimization/date-range")
     public ResponseEntity<Void> generateWithDateRange(@RequestParam List<Long> facilityIds, @RequestParam LocalDateTime startDate, @RequestParam LocalDateTime endDate) {
-        Stopwatch stopwatch = Stopwatch.createStarted();
+        messagingTemplate.convertAndSend("/topic/ndr-status", "start");
         facilityIds.forEach(facilityId -> ndrOptmizationService.generatePatientsNDRXml(facilityId, startDate, endDate));
-        log.info("Total time taken to generate the NDR files: {}", stopwatch.elapsed().toMinutes());
+        messagingTemplate.convertAndSend("/topic/ndr-status", "end");
         return ResponseEntity.ok().build();
     }
 
     @GetMapping("/optimization")
     public ResponseEntity<Void> generateWithOptimization(@RequestParam List<Long> facilityIds, @RequestParam boolean isInitial) {
-        Stopwatch stopwatch = Stopwatch.createStarted();
+        messagingTemplate.convertAndSend("/topic/ndr-status", "start");
         facilityIds.forEach(facilityId -> ndrOptmizationService.generatePatientsNDRXml(facilityId, isInitial));
-        log.info("Total time taken to generate the NDR files: {}", stopwatch.elapsed().toMinutes());
+        messagingTemplate.convertAndSend("/topic/ndr-status", "end");
         return ResponseEntity.ok().build();
     }
 

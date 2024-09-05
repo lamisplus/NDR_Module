@@ -75,46 +75,93 @@ public interface NdrMessageLogRepository extends JpaRepository<NdrMessageLog, In
             nativeQuery = true)
     Optional<PatientDemographicDTO> getPatientDemographics(String identifier, Long facilityId);
     
-    @Query(value = "SELECT hac.person_uuid as patientUuid, cast( json_agg(distinct  jsonb_build_object('visitID', hac.uuid,\n" +
-            "\t\t\t\t\t\t\t\t\t  'visitDate', CAST(hac.visit_date AS DATE),\n" +
-            "\t\t\t\t\t\t\t\t\t  'weight',  CASE WHEN tvs.body_weight IS NULL THEN 0 ELSE tvs.body_weight END,\n" +
-            "\t\t\t\t\t\t\t\t\t  'childHeight', CASE WHEN tvs.height IS NULL THEN 0 ELSE tvs.height END,\n" +
-            "\t\t\t\t\t\t\t\t\t   'tbStatus', ncs.code,\n" +
-            "\t\t\t\t\t\t\t\t\t\t'bloodPressure', \n" +
-            "\t\t\t\t\t\t\t\t\t\t(CASE WHEN tvs.systolic IS NOT NULL AND tvs.diastolic IS NOT NULL \n" +
-            "\t\t\t\t\t\t\t\t\t\tTHEN CONCAT(CAST(tvs.systolic AS INTEGER), '/', CAST(tvs.diastolic AS INTEGER))\n" +
-            "\t\t\t\t\t\t\t\t\t\tELSE '' END),\n" +
-            "\t\t\t\t\t\t\t\t\t  'nextAppointmentDate', hac.next_appointment)) as varchar) AS encounters\n" +
-            "\tFROM hiv_art_clinical hac \n" +
-            "\tLEFT JOIN triage_vital_sign tvs ON hac.vital_sign_uuid=tvs.uuid AND hac.archived=0\n" +
-            "\tLEFT JOIN base_application_codeset bac_tb ON bac_tb.id=CAST(hac.tb_status AS BIGINT) AND bac_tb.archived=0\n" +
-            "\tLEFT JOIN ndr_code_set ncs ON ncs.code_description=bac_tb.display\n" +
-            "\tWHERE hac.archived = 0\n" +
-            "\t  And hac.person_uuid = ?1\n" +
+    @Query(value = "SELECT \n" +
+            "    hac.person_uuid AS patientUuid, \n" +
+            "    CAST(\n" +
+            "        json_agg(\n" +
+            "            DISTINCT jsonb_build_object(\n" +
+            "                'visitID', hac.uuid,\n" +
+            "                'visitDate', CAST(hac.visit_date AS DATE),\n" +
+            "                'weight', CASE WHEN tvs.body_weight IS NULL THEN 0 ELSE tvs.body_weight END,\n" +
+            "                'childHeight', CASE WHEN tvs.height IS NULL THEN 0 ELSE tvs.height END,\n" +
+            "                'tbStatus', ncs.code,\n" +
+            "                'bloodPressure', \n" +
+            "                CASE \n" +
+            "                    WHEN tvs.systolic IS NOT NULL AND tvs.diastolic IS NOT NULL \n" +
+            "                    THEN CONCAT(CAST(tvs.systolic AS DOUBLE PRECISION), '/', CAST(tvs.diastolic AS DOUBLE PRECISION)) -- this should be a double precession cast\n" +
+            "                    ELSE '' \n" +
+            "                END,\n" +
+            "                'nextAppointmentDate', hac.next_appointment\n" +
+            "            )\n" +
+            "        ) AS VARCHAR\n" +
+            "    ) AS encounters\n" +
+            "FROM \n" +
+            "    hiv_art_clinical hac \n" +
+            "LEFT JOIN \n" +
+            "    triage_vital_sign tvs ON hac.vital_sign_uuid = tvs.uuid AND hac.archived = 0\n" +
+            "LEFT JOIN \n" +
+            "    base_application_codeset bac_tb ON bac_tb.id = CAST(NULLIF(hac.tb_status, '') AS BIGINT) AND bac_tb.archived = 0 --now check for  value on tb column\n" +
+            "LEFT JOIN \n" +
+            "    ndr_code_set ncs ON ncs.code_description = bac_tb.display\n" +
+            "WHERE \n" +
+            "    hac.archived = 0\n" +
+            "      AND hac.person_uuid = ?1\n" +
             "      AND hac.facility_id = ?2\n" +
-            "      AND hac.visit_date >= ?3\n" +
-            "      AND hac.visit_date <= ?4\n" +
-            "\tGROUP BY hac.person_uuid", nativeQuery = true)
+            "\t AND hac.visit_date >= ?3\n" +
+            "     AND hac.visit_date <= ?4\n" +
+            "GROUP BY \n" +
+            "    hac.person_uuid", nativeQuery = true)
     Optional<PatientEncounterDTO> getPatientEncounter(String identifier, Long facilityId, LocalDate start, LocalDate end);
 
-    @Query(value = "SELECT hac.person_uuid as patientUuid, cast( json_agg(distinct  jsonb_build_object('visitID', hac.uuid,\n" +
-            "\t\t\t\t\t\t\t\t\t  'visitDate', CAST(hac.visit_date AS DATE),\n" +
-            "\t\t\t\t\t\t\t\t\t  'weight',  CASE WHEN tvs.body_weight IS NULL THEN 0 ELSE tvs.body_weight END,\n" +
-            "\t\t\t\t\t\t\t\t\t  'childHeight', CASE WHEN tvs.height IS NULL THEN 0 ELSE tvs.height END,\n" +
-            "\t\t\t\t\t\t\t\t\t   'tbStatus', ncs.code,\n" +
-            "\t\t\t\t\t\t\t\t\t\t'bloodPressure', \n" +
-            "\t\t\t\t\t\t\t\t\t\t(CASE WHEN tvs.systolic IS NOT NULL AND tvs.diastolic IS NOT NULL \n" +
-            "\t\t\t\t\t\t\t\t\t\tTHEN CONCAT(CAST(tvs.systolic AS INTEGER), '/', CAST(tvs.diastolic AS INTEGER))\n" +
-            "\t\t\t\t\t\t\t\t\t\tELSE '' END),\n" +
-            "\t\t\t\t\t\t\t\t\t  'nextAppointmentDate', hac.next_appointment)) as varchar) AS encounters\n" +
-            "\tFROM hiv_art_clinical hac \n" +
-            "\tLEFT JOIN triage_vital_sign tvs ON hac.vital_sign_uuid=tvs.uuid AND hac.archived=0\n" +
-            "\tLEFT JOIN base_application_codeset bac_tb ON bac_tb.id=CAST(hac.tb_status AS BIGINT) AND bac_tb.archived=0\n" +
-            "\tLEFT JOIN ndr_code_set ncs ON ncs.code_description=bac_tb.display\n" +
-            "\tWHERE hac.archived = 0\n" +
-            "\t  And hac.person_uuid = ?1\n" +
-            "      AND hac.facility_id = ?2\n" +
-            "\tGROUP BY hac.person_uuid, hac.visit_date order by hac.visit_date desc limit 1", nativeQuery = true)
+    @Query(value ="SELECT \n" +
+            "    hac.person_uuid AS patientUuid,\n" +
+            "    CAST(\n" +
+            "        json_agg(\n" +
+            "            DISTINCT jsonb_build_object(\n" +
+            "                'visitID', hac.uuid,\n" +
+            "                'visitDate', CAST(hac.visit_date AS DATE),\n" +
+            "                'weight', CASE \n" +
+            "                    WHEN tvs.body_weight IS NULL THEN 0 \n" +
+            "                    ELSE tvs.body_weight \n" +
+            "                END,\n" +
+            "                'childHeight', CASE \n" +
+            "                    WHEN tvs.height IS NULL THEN 0 \n" +
+            "                    ELSE tvs.height \n" +
+            "                END,\n" +
+            "                'tbStatus', ncs.code,\n" +
+            "                'bloodPressure', CASE \n" +
+            "                    WHEN tvs.systolic IS NOT NULL AND tvs.diastolic IS NOT NULL \n" +
+            "                    THEN CONCAT(\n" +
+            "                        CAST(tvs.systolic AS DOUBLE PRECISION), '/', \n" +
+            "                        CAST(tvs.diastolic AS DOUBLE PRECISION)\n" +
+            "                    )\n" +
+            "                    ELSE '' \n" +
+            "                END,\n" +
+            "                'nextAppointmentDate', hac.next_appointment\n" +
+            "            )\n" +
+            "        ) AS VARCHAR\n" +
+            "    ) AS encounters\n" +
+            "FROM \n" +
+            "    hiv_art_clinical hac\n" +
+            "LEFT JOIN \n" +
+            "    triage_vital_sign tvs \n" +
+            "    ON hac.vital_sign_uuid = tvs.uuid \n" +
+            "    AND hac.archived = 0\n" +
+            "LEFT JOIN \n" +
+            "     base_application_codeset bac_tb ON bac_tb.id = CAST(NULLIF(hac.tb_status, '') AS BIGINT) AND bac_tb.archived = 0 --now check for  value on tb column\n" +
+            "LEFT JOIN \n" +
+            "    ndr_code_set ncs \n" +
+            "    ON ncs.code_description = bac_tb.display\n" +
+            "WHERE \n" +
+            "    hac.archived = 0\n" +
+            "    AND hac.person_uuid = ?1\n" +
+            "    AND hac.facility_id = ?2\n" +
+            "GROUP BY \n" +
+            "    hac.person_uuid, \n" +
+            "    hac.visit_date \n" +
+            "ORDER BY \n" +
+            "    hac.visit_date DESC \n" +
+            "LIMIT 1", nativeQuery = true)
     Optional<PatientEncounterDTO> getPatientLastEncounter(String identifier, Long facilityId);
 
     @Query(value = "SELECT \n" +
@@ -335,7 +382,7 @@ public interface NdrMessageLogRepository extends JpaRepository<NdrMessageLog, In
            "           OR (lr.date_modified  between ?1 and ?2)\n" +
            "           OR (hst.last_modified_date  between ?1 and ?2) \n" +
            "           AND ph.facility_id = ?3", nativeQuery = true)
-   List<String>  getPatientIdsEligibleForNDR(LocalDateTime start, LocalDateTime endDate,  long facilityId);
+   List<String> getPatientIdsEligibleForNDR(LocalDateTime start, LocalDateTime endDate,  long facilityId);
    
   @Query(value = "SELECT\n" +
           "    lo.patient_uuid,\n" +
