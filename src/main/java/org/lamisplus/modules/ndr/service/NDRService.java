@@ -74,7 +74,6 @@ public class NDRService {
     private final MessageHeaderTypeMapper messageHeaderTypeMapper;
 
     private final PatientDemographicsMapper patientDemographicsMapper;
-    
 
     private final ConditionTypeMapper conditionTypeMapper;
 
@@ -734,7 +733,8 @@ public class NDRService {
         stateNdr.ifPresent(codedSimpleType -> state.append(codedSimpleType.getCode()));
         return state.toString ();
     }
-    
+
+
     public List<NDREligibleClient> getNDRClientList(Long facilityId, String search) {
         if (search != null) {
             return artClinicalRepository.findAll()
@@ -744,20 +744,18 @@ public class NDRService {
                     .map(ARTClinical::getPerson)
                     .map(clientMap)
                     .filter(ndrClient -> ndrClient.getHospitalNumber().contains(search)
-                                    || ndrClient.getName().contains(search))
+                            || ndrClient.getName().contains(search))
                     .collect(Collectors.toList());
         } else {
-            return artClinicalRepository.findAll()
+            return artClinicalRepository.findAllByFacilityId(facilityId)
                     .stream()
-                    .filter(artClinical -> artClinical.getFacilityId().equals(facilityId))
                     .filter(ARTClinical::getIsCommencement)
+                    .limit(10)
                     .map(ARTClinical::getPerson)
                     .map(clientMap)
-                    .limit(10)
                     .collect(Collectors.toList());
         }
     }
-
 
 //  Here my coding begins Dr Karim
 private String ConvertContainerToString(Container container) throws JsonProcessingException {

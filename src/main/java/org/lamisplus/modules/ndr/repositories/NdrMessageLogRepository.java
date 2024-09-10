@@ -714,6 +714,7 @@ public interface NdrMessageLogRepository extends JpaRepository<NdrMessageLog, In
           ") cc\n" +
           "GROUP BY person_uuid", nativeQuery = true)
   ClientVerificationDTO getClientVerification(String identifier, Long facilityId, LocalDate start, LocalDate end);
+
   @Query(value = "SELECT client_code from hts_client where facility_id=?1 AND date_modified > ?2 AND archived = 0 ", nativeQuery = true)
   List<String>getHtsClientCode(Long facilityId, LocalDateTime lastModified);
 

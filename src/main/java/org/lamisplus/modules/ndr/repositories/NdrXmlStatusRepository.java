@@ -1,10 +1,13 @@
 package org.lamisplus.modules.ndr.repositories;
+import org.lamisplus.modules.hiv.domain.entity.ARTClinical;
 import org.lamisplus.modules.ndr.domain.dto.PatientDemographics;
 import org.lamisplus.modules.ndr.domain.dto.ARTClinicalInfo;
 import org.lamisplus.modules.ndr.domain.dto.LabDTO;
 import org.lamisplus.modules.ndr.domain.entities.NdrXmlStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+import org.springframework.stereotype.Repository;
 
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
@@ -12,6 +15,10 @@ import java.util.List;
 import java.util.Optional;
 
 public interface NdrXmlStatusRepository extends JpaRepository<NdrXmlStatus, Integer> {
+
+
+
+
 	
 	@Query(value = "SELECT p.id,p.uuid as personUuid, p.facility_id as facilityId, p.archived \\:\\:BOOLEAN as archived, p.uuid,p.hospital_number as hospitalNumber, \n" +
 			"\t\t\t\t  p.surname, p.first_name as firstName,\n" +

@@ -1,0 +1,231 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.8.xsd">
+
+    <!-- Conditional Index Creation Using Raw SQL -->
+
+    <!-- hiv_art_pharmacy Table -->
+    <changeSet id="20240909-01" author="amos-ecews">
+        <sql>
+            -- hiv_art_pharmacy Table
+            CREATE INDEX IF NOT EXISTS idx_hiv_art_pharmacy_person_uuid_archived_last_modified_date
+                ON hiv_art_pharmacy(person_uuid, archived, last_modified_date);
+        </sql>
+    </changeSet>
+
+    <changeSet id="20240909-02" author="amos-ecews">
+        <sql>
+            -- patient_person Table
+            CREATE INDEX IF NOT EXISTS idx_patient_person_uuid_archived
+                ON patient_person(uuid, archived);
+        </sql>
+    </changeSet>
+
+    <changeSet id="20240909-03" author="amos-ecews">
+        <sql>
+            -- laboratory_result Table
+            CREATE INDEX IF NOT EXISTS idx_laboratory_result_patient_uuid_date_result_reported_date_modified
+                ON laboratory_result(patient_uuid, date_result_reported, date_modified);
+        </sql>
+    </changeSet>
+
+    <changeSet id="20240909-04" author="amos-ecews">
+        <sql>
+            -- hiv_status_tracker Table
+            CREATE INDEX IF NOT EXISTS idx_hiv_status_tracker_person_id_archived_last_modified_date
+                ON hiv_status_tracker(person_id, archived, last_modified_date);
+        </sql>
+    </changeSet>
+
+    <changeSet id="20240909-05" author="amos-ecews">
+        <sql>
+            -- hiv_art_clinical Table
+            CREATE INDEX IF NOT EXISTS idx_hiv_art_clinical_person_facility_archived_visit_date_vital_sign
+                ON hiv_art_clinical(person_uuid, facility_id, archived, visit_date, vital_sign_uuid);
+        </sql>
+    </changeSet>
+
+    <changeSet id="20240909-06" author="amos-ecews">
+        <sql>
+            CREATE INDEX IF NOT EXISTS idx_hiv_art_clinical_person_facility_archived_visit_date
+                ON hiv_art_clinical(person_uuid, facility_id, archived, visit_date);
+        </sql>
+    </changeSet>
+
+    <changeSet id="20240909-07" author="amos-ecews">
+        <sql>
+            -- triage_vital_sign Table
+            CREATE INDEX IF NOT EXISTS idx_triage_vital_sign_uuid_archived
+                ON triage_vital_sign(uuid, archived);
+        </sql>
+    </changeSet>
+
+    <changeSet id="20240909-08" author="amos-ecews">
+        <sql>
+            CREATE INDEX IF NOT EXISTS idx_triage_vital_sign_uuid
+                ON triage_vital_sign(uuid);
+        </sql>
+    </changeSet>
+
+
+    <changeSet id="20240909-09" author="amos-ecews">
+        <sql>
+            -- base_application_codeset Table
+            CREATE INDEX IF NOT EXISTS idx_base_application_codeset_id_archived
+                ON base_application_codeset(id, archived);
+        </sql>
+    </changeSet>
+
+    <changeSet id="20240909-10" author="amos-ecews">
+        <sql>
+            -- ndr_code_set Table
+            CREATE INDEX IF NOT EXISTS idx_ndr_code_set_code_description
+                ON ndr_code_set(code_description);
+        </sql>
+    </changeSet>
+
+
+    <changeSet id="20240909-11" author="amos-ecews">
+        <sql>
+            CREATE INDEX IF NOT EXISTS idx_ndr_code_set_alt_description
+                ON ndr_code_set(alt_description);
+        </sql>
+    </changeSet>
+
+    <changeSet id="20240909-12" author="amos-ecews">
+        <sql>
+            -- hiv_art_pharmacy Table
+            CREATE INDEX IF NOT EXISTS idx_hiv_art_pharmacy_person_facility_archived_visit_date
+                ON hiv_art_pharmacy(person_uuid, facility_id, archived, visit_date);
+        </sql>
+    </changeSet>
+
+
+    <changeSet id="20240909-13" author="amos-ecews">
+        <sql>
+            CREATE INDEX IF NOT EXISTS idx_hiv_art_pharmacy_filters
+                ON hiv_art_pharmacy(person_uuid, facility_id, archived, visit_date);
+        </sql>
+    </changeSet>
+
+
+    <changeSet id="20240909-14" author="amos-ecews">
+        <sql>
+            -- hiv_regimen Table
+            CREATE INDEX IF NOT EXISTS idx_hiv_regimen_description
+                ON hiv_regimen(description);
+        </sql>
+    </changeSet>
+
+    <changeSet id="20240909-15" author="amos-ecews">
+        <sql>
+            -- dsd_devolvement Table
+            CREATE INDEX IF NOT EXISTS idx_dsd_devolvement_person_uuid
+                ON dsd_devolvement(person_uuid);
+        </sql>
+    </changeSet>
+
+
+    <changeSet id="20240909-16" author="amos-ecews">
+        <sql>
+            -- hiv_regimen_resolver Table
+            CREATE INDEX IF NOT EXISTS idx_hiv_regimen_resolver_regimensys
+                ON hiv_regimen_resolver(regimensys);
+        </sql>
+    </changeSet>
+
+
+    <changeSet id="20240909-17" author="amos-ecews">
+        <sql>
+            -- laboratory_order Table
+            CREATE INDEX IF NOT EXISTS idx_laboratory_order_order_date_facility_uuid
+                ON laboratory_order(order_date, facility_id, patient_uuid);
+        </sql>
+    </changeSet>
+
+
+    <changeSet id="20240909-18" author="amos-ecews">
+        <sql>
+            -- laboratory_test Table
+            CREATE INDEX IF NOT EXISTS idx_laboratory_test_lab_order_id_facility_uuid
+                ON laboratory_test(lab_order_id, facility_id, patient_uuid);
+        </sql>
+    </changeSet>
+
+
+    <changeSet id="20240909-19" author="amos-ecews">
+        <sql>
+            -- laboratory_sample Table
+            CREATE INDEX IF NOT EXISTS idx_laboratory_sample_test_id_facility_uuid
+                ON laboratory_sample(test_id, facility_id, patient_uuid);
+        </sql>
+    </changeSet>
+
+
+    <changeSet id="20240909-20" author="amos-ecews">
+        <sql>
+            -- laboratory_result Table
+            CREATE INDEX IF NOT EXISTS idx_laboratory_result_test_id_facility_uuid
+                ON laboratory_result(test_id, facility_id, patient_uuid);
+        </sql>
+    </changeSet>
+
+
+    <changeSet id="20240909-21" author="amos-ecews">
+        <sql>
+            -- laboratory_labtest Table
+            CREATE INDEX IF NOT EXISTS idx_laboratory_labtest_lab_test_name
+                ON laboratory_labtest(lab_test_name);
+        </sql>
+    </changeSet>
+
+    <changeSet id="20240909-22" author="amos-ecews">
+        <sql>
+            -- patient_person Table (mortality)
+            CREATE INDEX IF NOT EXISTS idx_patient_person_facility_uuid
+                ON patient_person(facility_id, uuid);
+        </sql>
+    </changeSet>
+
+
+    <changeSet id="20240909-23" author="amos-ecews">
+        <sql>
+            -- hiv_enrollment Table
+            CREATE INDEX IF NOT EXISTS idx_hiv_enrollment_person_uuid
+                ON hiv_enrollment(person_uuid);
+        </sql>
+    </changeSet>
+
+
+    <changeSet id="20240909-24" author="amos-ecews">
+        <sql>
+            -- hiv_patient_tracker Table
+            CREATE INDEX IF NOT EXISTS idx_hiv_patient_tracker_person_uuid
+                ON hiv_patient_tracker(person_uuid);
+        </sql>
+    </changeSet>
+
+
+    <changeSet id="20240909-25" author="amos-ecews">
+        <sql>
+            -- hiv_status_tracker Table
+            CREATE INDEX IF NOT EXISTS idx_hiv_status_tracker_person_id_status_date_archived
+                ON hiv_status_tracker(person_id, status_date DESC, archived)
+                WHERE archived = 0;
+        </sql>
+    </changeSet>
+
+    <!-- hiv_observation Table -->
+    <changeSet id="20240909-26" author="amos-ecews">
+        <sql>
+            -- hiv_observation Table
+            CREATE INDEX IF NOT EXISTS idx_hiv_observation_person_uuid_type_archived
+                ON hiv_observation(person_uuid, type, archived)
+                WHERE archived = 0;
+        </sql>
+    </changeSet>
+
+</databaseChangeLog>

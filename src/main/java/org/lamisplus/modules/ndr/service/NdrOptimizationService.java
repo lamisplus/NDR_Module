@@ -9,6 +9,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.RegExUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.jetbrains.annotations.NotNull;
 import org.lamisplus.modules.ndr.domain.dto.*;
 import org.lamisplus.modules.ndr.domain.entities.NdrMessageLog;
 import org.lamisplus.modules.ndr.domain.entities.NdrXmlStatus;
@@ -161,7 +162,7 @@ public class NdrOptimizationService {
         log.info("patient size -> " + patientIds.size());
         String pushIdentifier = UUID.randomUUID().toString();
         NDRProcessingDataCommand command =
-                getNdrProcessingDataCommand(facilityId, patientIds, startDate, endDate, ndrErrors, pushIdentifier, generatedCount, errorCount);
+                getNdrProcessingDataCommand(facilityId, patientIds, false, startDate, endDate, ndrErrors, pushIdentifier, generatedCount, false, errorCount);
         submitTask(command);
         log.info("generated  {}/{}", generatedCount.get(), patientIds.size());
         log.info("files not generated  {}/{}", errorCount.get(), patientIds.size());
@@ -186,22 +187,25 @@ public class NdrOptimizationService {
 
     private static NDRProcessingDataCommand getNdrProcessingDataCommand(
             long facilityId, List<String> patientIds,
+            boolean isInitial,
             LocalDateTime startDate,
             LocalDateTime endDate,
             List<NDRErrorDTO> ndrErrors,
             String pushIdentifier,
             AtomicInteger generatedCount,
+            boolean isLastRecord,
             AtomicInteger errorCount) {
         return NDRProcessingDataCommand.builder()
                 .facilityId(facilityId)
                 .patientIds(patientIds)
-                .initial(false)
+                .initial(isInitial)
                 .ndrErrors(ndrErrors)
                 .pushIdentifier(pushIdentifier)
                 .generatedCount(generatedCount)
                 .errorCount(errorCount)
                 .startDate(startDate)
                 .endDate(endDate)
+                .isLastRecord(isLastRecord)
                 .build();
     }
 
@@ -211,7 +215,7 @@ public class NdrOptimizationService {
         AtomicInteger generatedCount = new AtomicInteger();
         generatedCount.set((int) unModfiedCounts);
         AtomicInteger errorCount = new AtomicInteger();
-        List<NDRErrorDTO> ndrErrors = new ArrayList<NDRErrorDTO>();
+        List<NDRErrorDTO> ndrErrors = new ArrayList<>();
         String pushIdentifier = UUID.randomUUID().toString();
         // Create a list of CompletableFutures to handle parallel processing
 
@@ -221,7 +225,7 @@ public class NdrOptimizationService {
             log.error("Patient Demographic not found for patientId: {}", patientIds.get(0));
         }
         NDRProcessingDataCommand command =
-                getNdrProcessingDataCommand(facilityId, patientIds, null, null, ndrErrors, pushIdentifier, generatedCount, errorCount);
+                getNdrProcessingDataCommand(facilityId, patientIds, initial, null, null, ndrErrors, pushIdentifier, generatedCount, false, errorCount);
         submitTask(command);
         log.info("generated  {}/{}", generatedCount.get(), patientIds.size());
         log.info("files not generated  {}/{}", errorCount.get(), patientIds.size());
@@ -267,10 +271,13 @@ public class NdrOptimizationService {
                             }
                             if (isGenerated.get()) {
                                 command.getGeneratedCount().getAndIncrement();
+                                log.info("Generated amos patient with id: {}", id);
                             } else {
+                                log.error("Error generating  amos patient with id: {}", id);
                                 command.getErrorCount().getAndIncrement();
                             }
-                            messagingTemplate.convertAndSend("/topic/ndr-status", "Done generating " + command.getGeneratedCount().get() + "/" + command.getPatientIds().size());
+                            Map<String, Object> message = getMessage(command);
+                            messagingTemplate.convertAndSend("/topic/ndr-status", message);
                         } catch (Exception e) {
                             log.error("Error generating patient with id: {} - {}", id, e.getMessage());
                             command.getNdrErrors().add(new NDRErrorDTO(id, "", e.getMessage()));
@@ -281,6 +288,26 @@ public class NdrOptimizationService {
         } finally {
             executor.shutdown();
         }
+
+        Map<String, Object> message = new HashMap<>();
+        message.put("progress", 100);
+        message.put("generated", command.getGeneratedCount().get());
+        message.put("total", command.getPatientIds().size());
+        messagingTemplate.convertAndSend("/topic/ndr-status", message);
+    }
+
+    private static @NotNull Map<String, Object> getMessage(NDRProcessingDataCommand command) {
+        // Calculate the progress
+        int total = command.getPatientIds().size();
+        int generatedCount = command.getGeneratedCount().get();
+        double progressPercentage = ((double) generatedCount / total) * 100;
+
+        // Send the progress as a JSON message
+        Map<String, Object> message = new HashMap<>();
+        message.put("progress", progressPercentage); // Send the progress percentage
+        message.put("generated", generatedCount);
+        message.put("total", total);
+        return message;
     }
 
 
@@ -299,7 +326,7 @@ public class NdrOptimizationService {
 
         String pushIdentifier = UUID.randomUUID().toString();
         NDRProcessingDataCommand command =
-                getNdrProcessingDataCommand(facilityId, patientIds, null, null, ndrErrors, pushIdentifier, generatedCount, errorCount);
+                getNdrProcessingDataCommand(facilityId, patientIds, initial, null, null, ndrErrors, pushIdentifier, generatedCount, false, errorCount);
         submitTask(command);
         log.info("generated  {}/{}", generatedCount.get(), patientIds.size());
         log.info("files not generated  {}/{}", errorCount.get(), patientIds.size());
@@ -331,7 +358,7 @@ public class NdrOptimizationService {
         log.info("patient size -> " + patientIds.size());
         String pushIdentifier = UUID.randomUUID().toString();
         NDRProcessingDataCommand command =
-                getNdrProcessingDataCommand(facilityId, patientIds, null, null, ndrErrors, pushIdentifier, generatedCount, errorCount);
+                getNdrProcessingDataCommand(facilityId, patientIds, initial, null, null, ndrErrors, pushIdentifier, generatedCount, true, errorCount);
         submitTask(command);
     }
 
@@ -354,7 +381,7 @@ public class NdrOptimizationService {
         String pushIdentifier = UUID.randomUUID().toString();
 
         NDRProcessingDataCommand command =
-                getNdrProcessingDataCommand(facilityId, patientUuidList, null, null, ndrErrors, pushIdentifier, generatedCount, errorCount);
+                getNdrProcessingDataCommand(facilityId, patientUuidList, initial, null, null, ndrErrors, pushIdentifier, generatedCount, false, errorCount);
         submitTask(command);
 
         log.info("generated  {}/{}", generatedCount.get(), patientUuidList.size());
@@ -400,6 +427,7 @@ public class NdrOptimizationService {
                 data.findFirstByIdentifierAndFileType(patientDemographic.getPatientIdentifier(), "treatment");
 
         //check if xml is eligible for update generation
+         //initial true
         if (!initial && messageLog.isPresent()) {
             log.info("updated part 2");
             start = messageLog.get().getLastUpdated().toLocalDate();
@@ -445,7 +473,7 @@ public class NdrOptimizationService {
 
         } else {
 
-            log.info("updated part 4");
+            log.info("initial part 1");
             // those that don't have
             List<EncounterDTO> patientEncounters =
                     getPatientEncounters(patientId, facilityId, objectMapper, start, end, ndrErrors);
@@ -457,6 +485,7 @@ public class NdrOptimizationService {
                     getPatientLabEncounter(patientId, facilityId, objectMapper, start, end, ndrErrors);
 
             MortalityType mortality = mortalityTypeMapper.getMortalityType(patientId, facilityId, start, end, ndrErrors);
+
             String fileName = generatePatientNDRXml(
                     facilityId, patientDemographic,
                     patientEncounters,
@@ -467,6 +496,7 @@ public class NdrOptimizationService {
                     ndrErrors, pushIdentifier);
 
             if (fileName != null) {
+
                 saveTheXmlFile(patientDemographic.getPatientIdentifier(), fileName, "treatment");
                 return true;
             }
@@ -845,12 +875,17 @@ public class NdrOptimizationService {
     }
 
     public void saveTheXmlFile(String identifier, String fileName, String fileTye) {
+        try{
         NdrMessageLog ndrMessageLog = new NdrMessageLog();
         ndrMessageLog.setIdentifier(identifier);
         ndrMessageLog.setFile(fileName);
         ndrMessageLog.setLastUpdated(LocalDateTime.now());
         ndrMessageLog.setFileType(fileTye);
         data.save(ndrMessageLog);
+        }catch (Exception e){
+            log.error("An error occurred while saving the xml file error {}", e.getMessage());
+            throw new RuntimeException("An error occurred while saving the xml file error {}", e);
+        }
     }
 
     public void zipAndSaveTheFilesforDownload(

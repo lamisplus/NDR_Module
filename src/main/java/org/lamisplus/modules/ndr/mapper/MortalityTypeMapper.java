@@ -22,6 +22,7 @@ public class MortalityTypeMapper {
 
     private final NdrMessageLogRepository ndrMessageLogRepository;
     private final ClientVerificationTypeMapper clientVerificationTypeMapper;
+
     public MortalityType getMortalityType(String patientId, long facilityId, LocalDate start, LocalDate end, List<NDRErrorDTO> ndrErrors) {
         MortalityType mortalityType = new MortalityType();
         try {
@@ -29,7 +30,7 @@ public class MortalityTypeMapper {
             List<MortalityDTO> mortalityVariables = ndrMessageLogRepository.getPatientMortalities(patientId, facilityId, start, end);
 
             if (mortalityVariables != null && !mortalityVariables.isEmpty()) {
-//            log.info("mortality init");
+//
                 mortalityVariables.forEach(mortality -> {
 
                     if (clientVerification != null) {
@@ -53,19 +54,19 @@ public class MortalityTypeMapper {
                     }else {
                         throw new RuntimeException("Mortality visit date  cannot be null");
                     }
-                    if(mortality.getReasonForTracking() != null) {
+                    if(mortality.getReasonForTracking() != null && !mortality.getReasonForTracking().isEmpty()) {
                         reasonForTracking(mortality.getReasonForTracking(), mortalityType);
                     }
-                    if(mortality.getOtherTrackingReason() != null) {
+                    if(mortality.getOtherTrackingReason() != null && !mortality.getOtherTrackingReason().isEmpty()) {
                         mortalityType.setOtherTrackingReason(mortality.getOtherTrackingReason());
                     }
-                    if(mortality.getPartnerFullName() != null && mortality.getPartnerFullName().isEmpty()) {
+                    if(mortality.getPartnerFullName() != null && !mortality.getPartnerFullName().isEmpty()) {
                         mortalityType.setPartnerFullName(mortality.getPartnerFullName());
                     }
-                    if(mortality.getAddressofTreatmentSupporter() != null) {
+                    if(mortality.getAddressofTreatmentSupporter() != null && !mortality.getAddressofTreatmentSupporter().isEmpty()) {
                         mortalityType.setAddressofTreatmentSupporter(mortality.getAddressofTreatmentSupporter());
                     }
-                    if(mortality.getContactPhoneNumber() != null) {
+                    if(mortality.getContactPhoneNumber() != null && !mortality.getContactPhoneNumber().isEmpty()) {
                         mortalityType.setContactPhoneNumber(mortality.getContactPhoneNumber());
                     }
                     if(mortality.getDateofLastActualContact() != null) {
@@ -95,26 +96,26 @@ public class MortalityTypeMapper {
                         }
 
                     }
-                    if(mortality.getNameofPersonWhoAttemptedContact() != null) {
+                    if(mortality.getNameofPersonWhoAttemptedContact() != null && !mortality.getNameofPersonWhoAttemptedContact().isEmpty()) {
                         mortalityType.setNameofPersonWhoAttemptedContact(mortality.getNameofPersonWhoAttemptedContact());
                     }
-                    if(mortality.getModeofCommunication() != null) {
+                    if(mortality.getModeofCommunication() != null && !mortality.getModeofCommunication().isEmpty()) {
                         modeofCommunication(mortality.getModeofCommunication(), mortalityType);
                     }
-                    if(mortality.getPersonContacted() != null) {
+                    if(mortality.getPersonContacted() != null && !mortality.getPersonContacted().isEmpty()) {
                         personContacted(mortality.getPersonContacted(), mortalityType);
                     }
-                    if(mortality.getReasonforDefaulting() != null) {
+                    if(mortality.getReasonforDefaulting() != null && !mortality.getReasonforDefaulting().isEmpty()) {
                         reasonforDefaulting(mortality.getReasonforDefaulting(), mortalityType);
                     }
-                    if(mortality.getOtherReasonforDefaulting() != null) {
+                    if(mortality.getOtherReasonforDefaulting() != null && !mortality.getOtherReasonforDefaulting().isEmpty()) {
                         mortalityType.setOtherReasonforDefaulting(mortality.getOtherReasonforDefaulting());
                     }
 //                if(mortality.getLosttoFollowup() != null) {
 //                    log.info("110 {}", mortality.getLosttoFollowup());
 //                    mortalityType.setLosttoFollowup(true);
 //                }
-                    if(mortality.getReasonforLosttoFollowup() != null) {
+                    if(mortality.getReasonforLosttoFollowup() != null && !mortality.getReasonforLosttoFollowup().isEmpty()) {
                         reasonforLosttoFollowup(mortality.getReasonforLosttoFollowup(), mortalityType);
                     }
 //                if(mortality.getDateLosttoFollowup() != null) {
@@ -127,13 +128,13 @@ public class MortalityTypeMapper {
 //                    }
 //
 //                };
-                    if(mortality.getPreviousARVExposure() != null) {
+                    if(mortality.getPreviousARVExposure() != null && !mortality.getPreviousARVExposure().isEmpty()) {
 
                         if(mortality.getPreviousARVExposure().contains("previousARVExposure")) {
                             mortalityType.setPreviousARVExposure("Yes");
                         }
                     }
-                    if(mortality.getDateofTermination() != null) {
+                    if(mortality.getDateofTermination() != null ) {
                         Date terminationDate = java.sql.Date.valueOf(mortality.getDateofTermination());
                         try {
                             mortalityType.setDateofTermination(DateUtil.getXmlDate(terminationDate));
@@ -142,30 +143,30 @@ public class MortalityTypeMapper {
                         }
 
                     }
-                    if(mortality.getReasonforTermination() != null) {
+                    if(mortality.getReasonforTermination() != null && !mortality.getReasonforTermination().isEmpty()) {
                         reasonforTermination(mortality.getReasonforTermination(), mortalityType);
                     }
 
-                    if(mortality.getTransferredOutTo() != null) {
+                    if(mortality.getTransferredOutTo() != null && !mortality.getTransferredOutTo().isEmpty()) {
                         mortalityType.setTransferredOutTo(mortality.getTransferredOutTo());
                     }
-                    if(mortality.getDeath() != null) {
+                    if(mortality.getDeath() != null && !mortality.getDeath().isEmpty()) {
                         death(mortality.getDeath(), mortalityType);
                     }
-                    if(mortality.getVaCauseofDeath() != null) {
+                    if(mortality.getVaCauseofDeath() != null && !mortality.getVaCauseofDeath().isEmpty()) {
                         vaCauseOfDeath(mortality.getVaCauseofDeath(), mortalityType);
                     }
-                    if(mortality.getOtherCauseofDeath() != null) {
+                    if(mortality.getOtherCauseofDeath() != null && !mortality.getOtherCauseofDeath().isEmpty()) {
                         mortalityType.setOtherCauseofDeath(mortality.getOtherCauseofDeath());
                     }
-                    if(mortality.getCauseOfDeath() != null) {
+                    if(mortality.getCauseOfDeath() != null && !mortality.getCauseOfDeath().isEmpty()) {
                         causeOfDeath(mortality.getCauseOfDeath(), mortalityType);
                     }
-                    if(mortality.getDiscontinuedCare() != null) {
+                    if(mortality.getDiscontinuedCare() != null && !mortality.getDiscontinuedCare().isEmpty()) {
                         discontinuedCare(mortality.getDiscontinuedCare(), mortalityType);
                     }
 
-                    if(mortality.getDiscontinueCareOtherSpecify() != null) {
+                    if(mortality.getDiscontinueCareOtherSpecify() != null && !mortality.getDiscontinueCareOtherSpecify().isEmpty()) {
                         mortalityType.setDiscontinueCareOtherSpecify(mortality.getDiscontinueCareOtherSpecify());
                     }
                     if(mortality.getDateReturnedtoCare() != null) {
@@ -177,25 +178,16 @@ public class MortalityTypeMapper {
                         }
 
                     }
-                    if(mortality.getReffferedFor() != null) {
+                    if(mortality.getReffferedFor() != null && !mortality.getReffferedFor().isEmpty()) {
                         reffferedFor(mortality.getReffferedFor(), mortalityType);
                     }
-                    if(mortality.getReffferedForOther() != null) {
+                    if(mortality.getReffferedForOther() != null && !mortality.getReffferedForOther().isEmpty()) {
                         mortalityType.setReffferedForOther(mortality.getReffferedForOther());
                     }
-                    if(mortality.getNameofContactTracer() != null) {
+                    if(mortality.getNameofContactTracer() != null && !mortality.getNameofContactTracer().isEmpty()) {
                         log.info("124 {}", mortality.getNameofContactTracer());
                         mortalityType.setNameofContactTracer(mortality.getNameofContactTracer());
                     }
-//                if(mortality.getContactTrackerSignatureDate() != null) {
-//                    Date trackDate = java.sql.Date.valueOf(mortality.getContactTrackerSignatureDate());
-//                    try {
-//                        mortalityType.setContactTrackerSignatureDate(DateUtil.getXmlDate(trackDate));
-//                    } catch (DatatypeConfigurationException e) {
-//                        throw new RuntimeException(e);
-//                    }
-//
-//                };
                 });
                 return  mortalityType;
             }
