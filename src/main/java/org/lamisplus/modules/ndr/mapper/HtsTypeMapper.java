@@ -67,20 +67,6 @@ public class HtsTypeMapper {
                     indexNotificationServicesType.getPartner().addAll(partnerNotifications);
                     hivTestingReportType.setIndexNotificationServices(indexNotificationServicesType);
 
-
-
-                    //IndexNotificationServicesType indexNotificationServicesType = objectFactory.createIndexNotificationServicesType();
-                    //List<PartnerNotificationType> partnerNotifications = getPartnerNotification(Hts);
-                    //define a method pass partnernotificationtype and HTSdto return a list partnerNotifications
-                    // should loop and set partner notifications variables
-                    //IndexNotificationServicesType indexNotificationServicesType =  new IndexNotificationServicesType();
-                    //indexNotificationServicesType.getPartner().addAll(getAllPartnerNotification);
-                    //hivTestingReportType.setIndexNotificationServices(indexNotificationServicesType);
-                    //PartnerNotificationType partnerNotificationType = setPartnerNotification(objectFactory, h);
-                    //hivTestingReportType.setIndexNotificationServices(partnerNotificationType);
-
-
-
                     hivTestingReportType.setPostTestCounselling(postTestCounsellingType);
                     HIVTestResultType hivTestResultType = setResult(objectFactory, h);
                     hivTestingReportType.setHIVTestResult(hivTestResultType);
@@ -107,7 +93,6 @@ public class HtsTypeMapper {
         }
         return new ArrayList<>();
     }
-
 
     private List<PartnerNotificationType> getAllPartnerNotification (HtsReportDto h, List<NDRErrorDTO> ndrErrors ) {
         List<PartnerNotificationType> partnerNotifications = new ArrayList<>();
@@ -147,8 +132,9 @@ public class HtsTypeMapper {
     }
 
     private HIVTestResultType setResult(ObjectFactory objectFactory, HtsReportDto h) {
+        HIVTestResultType hivTestResultType = objectFactory.createHIVTestResultType();
         try {
-            HIVTestResultType hivTestResultType = objectFactory.createHIVTestResultType();
+
             TestResultType testResult = objectFactory.createTestResultType();
             if (h.getScreeningTestResult() != null) {
                 if (h.getScreeningTestResult().equalsIgnoreCase("negative")) {
@@ -427,60 +413,6 @@ public class HtsTypeMapper {
 
     }
 
-
-//    private static List<PartnerNotificationType> getPartnerNotification(ObjectFactory objectFactory, HtsReportDto h) {
-//        List<PartnerNotificationType> partnerNotifications = new ArrayList<>();
-//
-//        PartnerNotificationType partner = objectFactory.createPartnerNotificationType();
-//
-//        partner.setPartnername(h.getPartnername());
-//        partner.setDescriptiveAddress(h.getDescriptiveAddress());
-//        partner.setPhoneNumber(h.getPhoneNumber());
-//
-//        String gender = h.getPartnerGender();
-//        if (gender != null) {
-//            if (gender.contains("Male")) {
-//                gender = "M";
-//            } else {
-//                gender = "F";
-//            }
-//            partner.setPartnerGender(gender);
-//        }
-//
-//        String indexRelation = h.getIndexRelation();
-//        if (indexRelation != null) {
-//            if (indexRelation.contains("Biological")) {
-//                indexRelation = "1";
-//            } else if (indexRelation.contains("Sexual")) {
-//                indexRelation = "2";
-//            } else if (indexRelation.contains("Social")) {
-//                indexRelation = "3";
-//            }
-//            partner.setIndexRelation(indexRelation);
-//        }
-//        partnerNotifications.add(partner);
-//
-//        return partnerNotifications;
-//    }
-//                gender = "F";
-//            }
-//            partner.setPartnerGender(h.getPartnerGender());
-//        }
-//        partner.setDescriptiveAddress(h.getDescriptiveAddress());
-//        if (indexRelation != null){
-//            if (indexRelation.contains("Biological")){
-//                indexRelation = "1";
-//            } else if (indexRelation.contains("Sexual")) {
-//               indexRelation = "2";
-//            } else if (indexRelation.contains("Social")) {
-//                indexRelation = "3";
-//            }
-//            partner.setIndexRelation(h.getIndexRelation());
-//        }
-//        partner.setPhoneNumber(h.getPhoneNumber());
-//        return partner;
-//    }
-
     private static PostTestCounsellingType setPostTest(ObjectFactory objectFactory, HtsReportDto h) {
         PostTestCounsellingType postTest = objectFactory.createPostTestCounsellingType();
         String testedForHIVBeforeWithinThisYear = h.getTestedForHIVBeforeWithinThisYear();
@@ -659,7 +591,7 @@ public class HtsTypeMapper {
         }
     }
 
-public static void validateAndSetIsIndex (String isIndex, HIVTestingReportType hivTestingReportType) {
+    public static void validateAndSetIsIndex (String isIndex, HIVTestingReportType hivTestingReportType) {
         if(isIndex != null) {
             if(isIndex.equalsIgnoreCase("true")){
                 isIndex = "Y";
@@ -671,7 +603,7 @@ public static void validateAndSetIsIndex (String isIndex, HIVTestingReportType h
 }
 
 
-public static void validateAndSetMaritalStatus (String maritalStatus, HIVTestingReportType hivTestingReportType) {
+    public static void validateAndSetMaritalStatus (String maritalStatus, HIVTestingReportType hivTestingReportType) {
         if (maritalStatus != null){
             if (maritalStatus.contains("Married")) {
                 maritalStatus = "M";
@@ -712,11 +644,11 @@ public static void validateAndSetMaritalStatus (String maritalStatus, HIVTesting
         }
     }
 
-public static void validateAndSetIsIndexClientId (String indexClientId, HIVTestingReportType hivTestingReportType){
+    public static void validateAndSetIsIndexClientId (String indexClientId, HIVTestingReportType hivTestingReportType){
         if(indexClientId != null && !indexClientId.isEmpty()) {
             hivTestingReportType.setIsIndexClient(indexClientId);
         }
-}
+    }
 
     public static boolean isNotNull(Object obj) {
         return obj != null;
