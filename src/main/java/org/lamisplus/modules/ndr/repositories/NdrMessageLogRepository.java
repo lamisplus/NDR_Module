@@ -716,7 +716,7 @@ public interface NdrMessageLogRepository extends JpaRepository<NdrMessageLog, In
           "             LEFT JOIN patient_person pp ON pp.uuid=hc.person_uuid \n" +
           "             LEFT JOIN ndr_code_set sex ON TRIM(sex.code_description)=TRIM(pp.sex)\n" +
           "             LEFT JOIN ndr_code_set sexMigrated ON TRIM(sexMigrated.code_description)=TRIM(INITCAP(hc.extra->>'gender'))  \n" +
-          "             LEFT JOIN ndr_code_set edu ON TRIM(edu.code_description) = TRIM(CAST(pp.education->>'display' AS VARCHAR))\n" +
+          "             LEFT JOIN ndr_code_set edu ON TRIM(edu.code_description) = TRIM(CAST(pp.education->>'display' AS VARCHAR)) AND edu.code_set_nm = 'EDUCATIONAL_LEVEL' \n" +
           "             LEFT JOIN ndr_code_set marital ON TRIM(marital.code_description) = TRIM(CAST(pp.marital_status->>'display' AS VARCHAR)) \n" +
           "             LEFT JOIN ndr_code_set maritalMigrated ON TRIM(maritalMigrated.code_description) = TRIM(CAST(hc.extra->>'marital_status' AS VARCHAR))\n" +
           "             LEFT JOIN ndr_code_set occupation ON TRIM(occupation.code_description) = TRIM(CAST(pp.employment_status->>'display' AS VARCHAR))\n" +
