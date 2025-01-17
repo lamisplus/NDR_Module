@@ -143,10 +143,7 @@ public class EncountersTypeMapper {
 			}catch (Exception e) {
 			 log.error("An exception occurred while processing  the patient encounters error {}", e.getMessage());
 			}
-			if (hivEncounters.isEmpty()){
-				//return null;
-			}
-			
+
 		return encountersType;
 	}
 	
@@ -224,7 +221,7 @@ public class EncountersTypeMapper {
 		Optional<String> tbStatusOptional =
 				ndrXmlStatusRepository.getTbStatusByPersonUuid(personUuid);
 		tbStatusOptional.ifPresent(tbStatus -> {
-			log.debug("tbStatus: {} " + tbStatus);
+			log.debug("tbStatus:" + tbStatus);
 			Optional<String> ndrTBStatus = ndrCodeSetResolverService.getNDRCodeSetCode("TB_STATUS", tbStatus);
 			ndrTBStatus.ifPresent(hivEncounterType::setTBStatus);
 		});

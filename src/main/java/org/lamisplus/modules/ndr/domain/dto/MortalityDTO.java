@@ -1,7 +1,6 @@
 package org.lamisplus.modules.ndr.domain.dto;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 
 public interface MortalityDTO {
 
@@ -35,11 +34,7 @@ public interface MortalityDTO {
 
     String getOtherReasonforDefaulting();
 
-    Boolean getLosttoFollowup();
-
     String getReasonforLosttoFollowup();
-
-    LocalDate getDateLosttoFollowup();
 
     String getPreviousARVExposure();
 
@@ -67,6 +62,4 @@ public interface MortalityDTO {
     String getReffferedForOther();
 
     String getNameofContactTracer();
-
-    LocalDate getContactTrackerSignatureDate();
 }

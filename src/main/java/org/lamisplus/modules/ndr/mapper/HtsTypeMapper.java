@@ -11,7 +11,6 @@ import org.lamisplus.modules.ndr.domain.dto.PartnerNotificationDTO;
 import org.lamisplus.modules.ndr.schema.*;
 import org.lamisplus.modules.ndr.utility.DateUtil;
 import org.springframework.stereotype.Component;
-import org.thymeleaf.spring5.processor.SpringErrorClassTagProcessor;
 
 import javax.xml.datatype.DatatypeConfigurationException;
 import java.sql.Date;

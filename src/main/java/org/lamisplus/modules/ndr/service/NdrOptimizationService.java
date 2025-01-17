@@ -60,8 +60,6 @@ public class NdrOptimizationService {
 
 	public static final String BASE_DIR = "runtime/ndr/transfer/";
 
-	public static final String USER_DIR = "user.dir";
-
 	public static final String JAXB_ENCODING = "UTF-8";
 	public static final String XML_WAS_GENERATED_FROM_LAMISPLUS_APPLICATION = "\n<!-- This XML was generated from LAMISPlus application -->";
 	public static final String HEADER_BIND_COMMENT = "com.sun.xml.bind.xmlHeaders";
@@ -75,7 +73,7 @@ public class NdrOptimizationService {
 		ndrService.cleanupFacility(facilityId, pathname);
 		AtomicInteger generatedCount = new AtomicInteger();
 
-		List<NDRErrorDTO> ndrErrors = new ArrayList<NDRErrorDTO>();
+		List<NDRErrorDTO> ndrErrors = new ArrayList<>();
 
 		PatientDemographicDTO[] patientDemographicDTO = new PatientDemographicDTO[1];
 
@@ -106,7 +104,7 @@ public class NdrOptimizationService {
 
 	public void generatePatientsNDRXml(long facilityId, boolean initial){
 
-		List<String> patientIds = new ArrayList<String>();
+		List<String> patientIds;
 		LocalDateTime start = LocalDateTime.of(1984, 1, 1, 0, 0);
 		if (initial) {
 			patientIds = data.getPatientIdsEligibleForNDR(start, LocalDateTime.now(), facilityId);
@@ -149,7 +147,7 @@ public class NdrOptimizationService {
 		ndrService.cleanupFacility(facilityId, pathname);
 		AtomicInteger generatedCount = new AtomicInteger();
 		AtomicInteger errorCount = new AtomicInteger();
-		List<NDRErrorDTO> ndrErrors = new ArrayList<NDRErrorDTO>();
+		List<NDRErrorDTO> ndrErrors = new ArrayList<>();
 
 		PatientDemographicDTO[] patientDemographicDTO = new PatientDemographicDTO[1];
 
@@ -193,7 +191,7 @@ public class NdrOptimizationService {
 		AtomicInteger generatedCount = new AtomicInteger();
 		generatedCount.set((int) unModfiedCounts);
 		AtomicInteger errorCount = new AtomicInteger();
-		List<NDRErrorDTO> ndrErrors = new ArrayList<NDRErrorDTO>();
+		List<NDRErrorDTO> ndrErrors = new ArrayList<>();
 
 		PatientDemographicDTO[] patientDemographicDTO = new PatientDemographicDTO[1];
 
@@ -235,7 +233,7 @@ public class NdrOptimizationService {
 		ndrService.cleanupFacility(facilityId, pathname);
 		AtomicInteger generatedCount = new AtomicInteger();
 		AtomicInteger errorCount = new AtomicInteger();
-		List<NDRErrorDTO> ndrErrors = new ArrayList<NDRErrorDTO>();
+		List<NDRErrorDTO> ndrErrors = new ArrayList<>();
 
 		PatientDemographicDTO[] patientDemographicDTO = new PatientDemographicDTO[1];
 
@@ -259,7 +257,7 @@ public class NdrOptimizationService {
 		ndrService.cleanupFacility(facilityId, pathname);
 		AtomicInteger generatedCount = new AtomicInteger();
 		AtomicInteger errorCount = new AtomicInteger();
-		List<NDRErrorDTO> ndrErrors = new ArrayList<NDRErrorDTO>();
+		List<NDRErrorDTO> ndrErrors = new ArrayList<>();
 		PatientDemographicDTO[] patientDemographicDTO = new PatientDemographicDTO[1];
 
 		String pushIdentifier = UUID.randomUUID().toString();
@@ -570,7 +568,7 @@ public class NdrOptimizationService {
 				SchemaFactory sf = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI);
 				Schema schema = sf.newSchema(getClass().getClassLoader().getResource("NDR1_6_6_1.xsd"));
 				jaxbMarshaller.setSchema(schema);
-				String identifier = patientDemographics.getPatientIdentifier();
+
 
 				log.info("converting treatment details to xml... ");
 				String fileName = ndrService.processAndGenerateNDRFile(facilityId, jaxbMarshaller, container, patientDemographic, id, ndrErrors);
@@ -584,7 +582,7 @@ public class NdrOptimizationService {
 				return fileName;
 			}
 		} catch (Exception e) {
-			log.error("error: " + e.toString());
+			log.error("error: " + e);
 			e.printStackTrace();
 			ndrErrors.add(new NDRErrorDTO(patientDemographic.getPersonUuid(),
 					patientDemographic.getHospitalNumber(), e.toString()));
@@ -882,8 +880,6 @@ public class NdrOptimizationService {
 					}
 				}
 			}
-		} catch (FileNotFoundException e) {
-			throw new RuntimeException(e);
 		} catch (IOException e) {
 			throw new RuntimeException(e);
 		}

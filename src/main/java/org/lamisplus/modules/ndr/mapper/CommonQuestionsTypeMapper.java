@@ -11,8 +11,6 @@ import org.lamisplus.modules.ndr.utility.DateUtil;
 import org.springframework.stereotype.Service;
 
 import java.sql.Date;
-import java.time.LocalDate;
-import java.time.Period;
 import java.util.Map;
 
 
@@ -103,35 +101,5 @@ public class CommonQuestionsTypeMapper {
 		}
 		return null;
 	}
-
-	public CommonQuestionsType getPatientCommonQuestion(PatientDemographicDTO demographics, boolean isHts) {
-		log.info(LogMessages.GENERATING_COMMON_QUESTIONS, demographics.getPersonUuid());
-		try {
-			CommonQuestionsType common = new CommonQuestionsType();
-			FacilityType treatmentFacility = messageHeaderTypeMapper.getTreatmentFacility(demographics);
-			common.setDiagnosisFacility(treatmentFacility);
-			common.setHospitalNumber(demographics.getHospitalNumber());
-			common.setPatientAge(demographics.getAge());
-			if (demographics.getPatientSexCode() != null) {
-				if (demographics.getPatientSexCode().contains("F")) {
-					Map<String, Object> pStatus =
-							pregnancyStatus.getPregnancyStatus(demographics.getPersonUuid());
-					common.setPatientPregnancyStatusCode((String) pStatus.get("status"));
-				}
-			}
-			if (demographics.getDiagnosisDate() != null) {
-				common.setDiagnosisDate(DateUtil.getXmlDate(Date.valueOf(demographics.getDiagnosisDate())));
-			} else {
-				throw new IllegalArgumentException("Diagnosis date cannot be null");
-			}
-			return common;
-		} catch (Exception e) {
-			log.error(LogErrorMessages.GENERATING_ERROR_MSG,
-					demographics.getPersonUuid());
-			log.error("Error Message: {}", e.getMessage());
-		}
-		return null;
-	}
-
 }
 

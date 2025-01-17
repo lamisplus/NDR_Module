@@ -100,7 +100,7 @@ public class RegimenTypeMapper {
 								regimenType.setVisitDate(DateUtil.getXmlDate(Date.valueOf(local)));
 								regimenType.setPrescribedRegimenDispensedDate(DateUtil.getXmlDate(Date.valueOf(local)));
 							} catch (Exception e) {
-								log.info("An error occurred parsing the regimen date: error{}" + e.getMessage());
+								log.info("An error occurred parsing the regimen date: error" + e.getMessage());
 							}
 						} else {
 							throw new IllegalArgumentException("Regimen visit date cannot be null");
@@ -141,7 +141,7 @@ public class RegimenTypeMapper {
 								regimenType.setVisitDate(DateUtil.getXmlDate(Date.valueOf(local)));
 								regimenType.setDateRegimenStarted(DateUtil.getXmlDate(Date.valueOf(local)));
 							} catch (Exception e) {
-								log.info("An error occurred parsing the Date Regimen Started date: error {}" + e.getMessage());
+								log.info("An error occurred parsing the Date Regimen Started date: error" + e.getMessage());
 							}
 						}
 						if (StringUtils.isNotBlank(regimen.getDifferentiatedServiceDelivery())) {

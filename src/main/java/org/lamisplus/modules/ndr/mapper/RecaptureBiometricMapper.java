@@ -25,8 +25,6 @@ import java.util.stream.Collectors;
 public class RecaptureBiometricMapper {
 	private final NdrMessageLogRepository ndrMessageLogRepository;
 	
-	private final ModuleService moduleService;
-	
 	private final NDRCodeSetRepository ndrCodeSetRepository;
 
 	public Container getRecaptureBiometricMapper(PatientDemographics demographics) {
@@ -89,7 +87,7 @@ public class RecaptureBiometricMapper {
 		String patientIdentifier = patientDemographicsType.getPatientIdentifier();
 		Optional<NdrMessageLog> messageLog =
 				ndrMessageLogRepository.findFirstByIdentifierAndFileType(patientIdentifier, "recaptured-biometric");
-		List<RecaptureBiometricDTO> biometricDTOList = new ArrayList<>();
+		List<RecaptureBiometricDTO> biometricDTOList;
 		if(messageLog.isPresent()) {
 
 			LocalDate lastUpdated =

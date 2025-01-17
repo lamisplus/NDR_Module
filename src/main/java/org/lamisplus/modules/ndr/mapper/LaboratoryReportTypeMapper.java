@@ -16,10 +16,7 @@ import org.lamisplus.modules.ndr.utility.DateUtil;
 import org.lamisplus.modules.ndr.utility.NumericUtils;
 import org.springframework.stereotype.Component;
 
-import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlSchemaType;
 import javax.xml.datatype.DatatypeConfigurationException;
-import javax.xml.datatype.XMLGregorianCalendar;
 import java.sql.Date;
 import java.time.LocalDate;
 import java.time.LocalDateTime;

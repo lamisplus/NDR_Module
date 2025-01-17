@@ -11,7 +11,6 @@ import java.util.List;
 import java.util.Optional;
 
 public interface NdrMessageLogRepository extends JpaRepository<NdrMessageLog, Integer> {
-    List<NdrMessageLog> getNdrMessageLogByIdentifier(String identifier);
     
     Optional<NdrMessageLog> findFirstByIdentifier(String identifier);
     

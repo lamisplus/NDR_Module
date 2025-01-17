@@ -36,7 +36,6 @@ import java.util.*;
 public class NDRJSONService {
     //TODO: Save the hard-coded values in database
     String pingUrl = "https://emr-ndrpushsandbox.phis3project.org.ng/api/Cronbox";
-    private final int BATCHMAX = 10;
     String authEndPoint = "/auth";
     String pushEndPoint = "/beep";
     String logsEndPoint = "/errorLogs";
@@ -279,12 +278,13 @@ public class NDRJSONService {
                 while (iterator.hasNext()) {
                     NDRMessages msg = (NDRMessages) iterator.next();
                     batches++; counter++;
-                    if(batches%BATCHMAX != 0){
+                    int BATCHMAX = 10;
+                    if(batches% BATCHMAX != 0){
                         data.add(msg.getDeMessage().replace("null,", ""));
                         messages.add(msg);
                         continue;
                     }
-                    else if ( (batches%BATCHMAX == 0) || (counter == size)) {
+                    else if ( (batches% BATCHMAX == 0) || (counter == size)) {
                         if (batches == BATCHMAX) {
                             data.add(msg.getDeMessage());
                             messages.add(msg);

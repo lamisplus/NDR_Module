@@ -1,6 +1,5 @@
 package org.lamisplus.modules.ndr.service;
 
-import com.esotericsoftware.minlog.Log;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
@@ -15,13 +14,9 @@ import org.apache.commons.lang3.RegExUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.lamisplus.modules.base.controller.apierror.EntityNotFoundException;
 import org.lamisplus.modules.base.domain.entities.OrganisationUnit;
-import org.lamisplus.modules.base.domain.entities.User;
-import org.lamisplus.modules.base.domain.repositories.OrganisationUnitRepository;
 import org.lamisplus.modules.base.service.OrganisationUnitService;
-import org.lamisplus.modules.base.service.UserService;
 import org.lamisplus.modules.hiv.domain.entity.ARTClinical;
 import org.lamisplus.modules.hiv.repositories.ARTClinicalRepository;
-import org.lamisplus.modules.hiv.repositories.ArtPharmacyRepository;
 import org.lamisplus.modules.ndr.domain.dto.*;
 import org.lamisplus.modules.ndr.domain.entities.NDRMessages;
 import org.lamisplus.modules.ndr.domain.entities.NdrMessageLog;
@@ -36,7 +31,6 @@ import org.lamisplus.modules.ndr.repositories.NdrMessageLogRepository;
 import org.lamisplus.modules.ndr.repositories.NdrXmlStatusRepository;
 import org.lamisplus.modules.ndr.schema.*;
 import org.lamisplus.modules.ndr.utility.ZipUtility;
-import org.lamisplus.modules.patient.repository.PersonRepository;
 import org.springframework.stereotype.Service;
 
 
@@ -67,9 +61,6 @@ import java.util.stream.Stream;
 @Slf4j
 public class NDRService {
     private final NDRCodeSetRepository nDRCodeSetRepository;
-    
-    private int MAX = 2;
-    private final OrganisationUnitRepository organisationUnitRepository;
 
     private final MessageHeaderTypeMapper messageHeaderTypeMapper;
 
@@ -89,22 +80,12 @@ public class NDRService {
 
     private final NdrXmlStatusRepository ndrXmlStatusRepository;
     
-    private final ArtPharmacyRepository pharmacyRepository;
-    
     private final NDREligibleClientMapper clientMap;
 
-    private final PersonRepository personRepository;
-
     private final NDRMessagesRepository ndrMessagesRepository;
-    
-    private final BootData bootData;
-
-    private final UserService userService;
 
     public static final String BASE_DIR = "runtime/ndr/transfer/";
     public static final String BASE_REDACTED_DIR = "runtime/ndr_redact/transfer/";
-
-    public static final String   USER_DIR = "user.dir";
 
     public static final String JAXB_ENCODING = "UTF-8";
     public static final String XML_WAS_GENERATED_FROM_LAMISPLUS_APPLICATION = "\n<!-- This XML was generated from LAMISPlus application -->";
@@ -120,7 +101,7 @@ public class NDRService {
     public NDRStatus shouldPrintPatientContainerXml(String personUuid , Long facilityId, boolean isInitial, String pushIdentifier) {
         log.info("generating ndr xml of patient with uuid {}" , personUuid);
         try {
-           
+
             log.info("fetching patient demographics");
             Optional<PatientDemographics> demographicsOptional =
                     ndrXmlStatusRepository.getPatientDemographicsByUUID(personUuid);
@@ -135,7 +116,6 @@ public class NDRService {
                 //save this somewhere...
                 PatientDemographicsType patientDemographics =
                         patientDemographicsMapper.getPatientDemographics(demographics);
-                //
                 if (patientDemographics != null) {
                     IndividualReportType individualReportType = new IndividualReportType();
                     log.info("fetching treatment details ");
@@ -309,7 +289,7 @@ public class NDRService {
                 ndrXmlStatus.setLastModified (LocalDateTime.now ());
                 ndrXmlStatus.setPushIdentifier(pushIdentifier);
                 ndrXmlStatus.setCompletelyPushed(Boolean.FALSE);
-                ndrXmlStatus.setPercentagePushed(0l);
+                ndrXmlStatus.setPercentagePushed(0L);
                 ndrXmlStatusRepository.save (ndrXmlStatus);
             }
         }
@@ -606,7 +586,7 @@ public class NDRService {
             ndrMessages.setFacilityId(facilityId);
             ndrMessages.setIdentifier(identifier);
             ndrMessagesRepository.save(ndrMessages);
-        }catch (Exception e){}
+        }catch (Exception ignored){}
 
     }
 
@@ -615,7 +595,7 @@ public class NDRService {
     public List<NdrXmlStatusDto> getNdrStatus() {
         List<NdrXmlStatus> ndrXmlStatusList= ndrXmlStatusRepository.getAllFiles ();
         List<NdrXmlStatusDto> ndrXmlStatusDtos = new ArrayList<>();
-        Iterator iterator = ndrXmlStatusList.iterator();
+        Iterator<NdrXmlStatus> iterator = ndrXmlStatusList.iterator();
         log.info("SIZE = "+ndrXmlStatusList.size());
         while (iterator.hasNext()){
             NdrXmlStatus ndrXmlStatus = (NdrXmlStatus) iterator.next();
@@ -626,13 +606,9 @@ public class NDRService {
             ndrXmlStatusDto.setLastModified(ndrXmlStatus.getLastModified());
             ndrXmlStatusDto.setId(ndrXmlStatus.getId());
             try {
-                if(ndrXmlStatus.getError() != null){
-                    ndrXmlStatusDto.setError(true);
-                }else {
-                    ndrXmlStatusDto.setError(false );
-                }
+                ndrXmlStatusDto.setError(ndrXmlStatus.getError() != null);
                 if (null == ndrXmlStatus.getPercentagePushed()) {
-                    ndrXmlStatusDto.setPercentagePushed(100l);
+                    ndrXmlStatusDto.setPercentagePushed(100L);
                     ndrXmlStatusDto.setCompletelyPushed(Boolean.TRUE);
                     ndrXmlStatusDto.setPushIdentifier("Not Linked");
                 } else {
@@ -641,7 +617,7 @@ public class NDRService {
                     ndrXmlStatusDto.setPushIdentifier(ndrXmlStatus.getPushIdentifier());
 
                 }
-            }catch (Exception e){
+            }catch (Exception ignored){
             }
             ndrXmlStatusDtos.add(ndrXmlStatusDto);
 

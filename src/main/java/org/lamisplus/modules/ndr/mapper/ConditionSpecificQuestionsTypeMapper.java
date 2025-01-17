@@ -33,9 +33,6 @@ public class ConditionSpecificQuestionsTypeMapper {
     
     private final NDRCodeSetRepository ndrCodeSetRepository;
 
-    private final ApplicationCodesetService applicationCodesetService;
-    
-    private final RegimenRepository regimenRepository;
     private final StatusManagementService statusManagementService;
 
     public static class LogMessages {
@@ -79,7 +76,7 @@ public class ConditionSpecificQuestionsTypeMapper {
         } catch (Exception e) {
             log.error(LogErrorMessages.GENERATING_ERROR_MSG,
                     demographics.getPersonUuid());
-           log.error("Error Message: {} " + e.getMessage());
+           log.error("Error Message:" + e.getMessage());
         }
         return null;
 
@@ -115,7 +112,7 @@ public class ConditionSpecificQuestionsTypeMapper {
         } catch (Exception e) {
             log.error(LogErrorMessages.GENERATING_ERROR_MSG,
                     demographics.getPersonUuid());
-            log.error("Error Message: {} " + e.getMessage());
+            log.error("Error Message:" + e.getMessage());
         }
         return null;
         
@@ -185,7 +182,7 @@ public class ConditionSpecificQuestionsTypeMapper {
         } catch (Exception e) {
             log.error(LogErrorMessages.GENERATING_ERROR_MSG,
                     demographics.getPersonUuid());
-            log.error("Error Message: {} " + e.getMessage());
+            log.error("Error Message:" + e.getMessage());
         }
         return null;
         
@@ -262,7 +259,7 @@ public class ConditionSpecificQuestionsTypeMapper {
 
     private void processAndHandleARTStatus(HIVQuestionsType hiv, Long personId, String enrollmentStatus) {
         try {
-            String ndrARTStatus = enrollmentStatus == null ? "Pre-ART" : "ART";
+            
             String status = statusManagementService.getCurrentStatus (personId);
             handlePatientTransferOut (hiv, personId, status);
             handlePatientDeathStatus (hiv, personId, status);
@@ -306,10 +303,7 @@ public class ConditionSpecificQuestionsTypeMapper {
         String clinicalStage = null;
         String eligible = null;
         if (cd4 == null) {
-            cd4 = 0l;
-        }
-        if (cd4 == null) {
-            cd4p = 0l;
+            cd4 = 0L;
         }
         String whyEligible = "WHY_ELIGIBLE";
         if (age >= 15) {

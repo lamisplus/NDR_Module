@@ -48,7 +48,6 @@ import java.util.zip.ZipOutputStream;
 public class RedactService {
     private static final String BASE_DIR = "runtime/ndr_redact/transfer/";
     @Autowired
-    private NdrMessageLogRepository ndrMessageLogRepository;
     private final NdrRedactService ndrService;
     private final NdrMessageLogRepository data;
     private final NdrXmlStatusRepository ndrXmlStatusRepository;
@@ -65,7 +64,6 @@ public class RedactService {
     /**
      * NDR REDACTED XML FOR PATIENT IN LAMISPLUS
      * IMPLEMENTED BY VICTOR AJOR
-     *
      * **/
     public void generatePatientsRedactedXml(long facilityId, boolean initial) {
         final String pathname = BASE_DIR + TEMP + facilityId + "/";
@@ -74,8 +72,8 @@ public class RedactService {
         AtomicInteger generatedCount = new AtomicInteger();
         AtomicInteger errorCount = new AtomicInteger();
         LocalDateTime start = LocalDateTime.of(1984, 1, 1, 0, 0);
-        List<String> patientIds = new ArrayList<String>();
-        List<NDRErrorDTO> ndrErrors = new ArrayList<NDRErrorDTO>();
+        List<String> patientIds = new ArrayList<>();
+        List<NDRErrorDTO> ndrErrors = new ArrayList<>();
         if (initial) {
             patientIds = data.getPatientIdsEligibleForRedaction(start, facilityId);
             log.info("starting initial redaction....");
@@ -126,7 +124,7 @@ public class RedactService {
     }
 
     private boolean getPatientRedactedXml(String patientId, long facilityId, boolean initial, List<NDRErrorDTO> ndrErrors, String pushIdentifier) {
-        ObjectMapper objectMapper = new ObjectMapper();
+
         log.info("starting process patient xml file information");
         log.info("facilityId {}, patientId {}", facilityId, patientId);
         LocalDate start = LocalDate.of(1985, Month.JANUARY, 1);
@@ -163,13 +161,9 @@ public class RedactService {
 
             if (patientRedactedDemographic != null) {
                MessageHeaderType messageHeader = messageHeaderTypeMapper.getMessageHeader(patientDemographic);
-                String messageStatusCode = "INITIAL";
                 if (!initial) {
                     Optional<NdrMessageLog> firstByIdentifier =
                             data.findFirstByIdentifier(patientDemographic.getPatientIdentifier());
-                    if (firstByIdentifier.isPresent()) {
-                        messageStatusCode = "UPDATED";
-                    }
                 }
 
                 messageHeader.setMessageUniqueID(Long.toString(id));
@@ -203,7 +197,7 @@ public class RedactService {
         } catch (Exception e) {
             log.error("An error occur when generating person with hospital number {}",
                     patientDemographic.getHospitalNumber());
-            log.error("error: " + e.toString());
+            log.error("error: " + e);
             e.printStackTrace();
             ndrErrors.add(new NDRErrorDTO(patientDemographic.getPersonUuid(),
                     patientDemographic.getHospitalNumber(), e.toString()));
@@ -314,8 +308,6 @@ public class RedactService {
                     }
                 }
             }
-        } catch (FileNotFoundException e) {
-            throw new RuntimeException(e);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

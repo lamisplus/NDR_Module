@@ -1,9 +1,7 @@
 package org.lamisplus.modules.ndr.service;
 
-import kotlin.jvm.Throws;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import net.bytebuddy.implementation.bytecode.Throw;
 import org.lamisplus.modules.ndr.domain.dto.*;
 import org.lamisplus.modules.ndr.domain.entities.NdrMessageLog;
 import org.lamisplus.modules.ndr.mapper.ConditionTypeMapper;
@@ -46,7 +44,6 @@ public class HtsService {
 	private final ConditionTypeMapper conditionTypeMapper;
 	private final NdrXmlStatusRepository ndrXmlStatusRepository;
 	public static final String BASE_DIR = "runtime/ndr/transfer/";
-	public static final String USER_DIR = "user.dir";
 	public static final String JAXB_ENCODING = "UTF-8";
 	public static final String XML_WAS_GENERATED_FROM_LAMISPLUS_APPLICATION = "\n<!-- This XML was generated from LAMISPlus application -->";
 	public static final String HEADER_BIND_COMMENT = "com.sun.xml.bind.xmlHeaders";
@@ -66,7 +63,7 @@ public class HtsService {
         AtomicInteger errorCount = new AtomicInteger();
         LocalDateTime start = LocalDateTime.of(1984, 1, 1, 0, 0);
         List<String> patientIds = new ArrayList<>();
-        List<NDRErrorDTO> ndrErrors = new ArrayList<NDRErrorDTO>();
+        List<NDRErrorDTO> ndrErrors = new ArrayList<>();
         PatientDemographicDTO[] patientDemographicDTO = new PatientDemographicDTO[1];
 
         if (initial) {
@@ -163,31 +160,16 @@ public class HtsService {
 		AtomicInteger errorCount = new AtomicInteger();
 		LocalDateTime start = LocalDateTime.of(1984, 1, 1, 0, 0);
 
-		List<NDRErrorDTO> ndrErrors = new ArrayList<NDRErrorDTO>();
+		List<NDRErrorDTO> ndrErrors = new ArrayList<>();
 		PatientDemographicDTO[] patientDemographicDTO = new PatientDemographicDTO[1];
-//		if (initial) {
-//			patientIds = data.getHtsClientCode(facilityId, start);
-//			log.info("generating initial ....");
-//		}else {
-//			log.info("generating updated....");
-//			Optional<Timestamp> lastGenerateDateTimeByFacilityId =
-//					ndrXmlStatusRepository.getLastGenerateDateTimeByFacilityId(facilityId,"hts");
-//			if (lastGenerateDateTimeByFacilityId.isPresent()) {
-//				start = lastGenerateDateTimeByFacilityId.get().toLocalDateTime();
-//				log.info("Last Generated Date: " + start);
-//				patientIds = data.getHtsClientCode(facilityId,start);
-//			}
-//		}
-
 
 		log.info("patient size -> "+ patientIds.size());
 		log.info("patient ids -> "+ patientIds);
-		LocalDateTime finalStart = start;
 		patientIds.parallelStream()
 				.forEach(id -> {
 					if (getPatientHtsNDRXml(id, facilityId, initial,objectFactory, ndrErrors)) {
 						generatedCount.getAndIncrement();
-						patientDemographicDTO[0] = data.getHtsPatientDemographics(facilityId, id , finalStart).get();
+						patientDemographicDTO[0] = data.getHtsPatientDemographics(facilityId, id , start).get();
 					} else {
 						errorCount.getAndIncrement();
 					}
