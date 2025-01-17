@@ -87,16 +87,6 @@ public class RegimenTypeMapper {
 	}
 	public ConditionType regimenType(PatientDemographicDTO demographics, ConditionType condition, List<RegimenDTO> regimens) {
 		List<RegimenType> regimenTypeList = condition.getRegimen();
-//		@XmlElement(name = "VisitID", required = true) ---- >  done checked
-//		protected String visitID;
-//		@XmlElement(name = "VisitDate", required = true)  ---- >  done checked
-//		@XmlSchemaType(name = "date")
-//		protected XMLGregorianCalendar visitDate;
-//		@XmlElement(name = "PrescribedRegimen", required = true) ---- >  done checked
-//		protected CodedSimpleType prescribedRegimen;
-//		@XmlElement(name = "PrescribedRegimenTypeCode", required = true) ---- >  done checked
-//		@XmlElement(name = "PrescribedRegimenDuration", required = true)  ---- >  done checked
-//		@XmlElement(name = "PrescribedRegimenDispensedDate", required = true)   ---- >  done checked
 		if(regimens != null ) {
 			regimens.parallelStream()
 					.forEach(regimen -> {
@@ -125,16 +115,14 @@ public class RegimenTypeMapper {
 						if (StringUtils.isNotBlank(regimen.getPrescribedRegimenDuration())) {
 							regimenType.setPrescribedRegimenDuration(regimen.getPrescribedRegimenDuration());
 						} else {
-							//log.error("Regimen duration cannot be null");
-							//regimenType.setPrescribedRegimenDuration("60");
+
 							throw new IllegalArgumentException("Regimen duration cannot be null");
 						}
 						
 						if (StringUtils.isNotBlank(regimen.getPrescribedRegimenTypeCode())) {
 							regimenType.setPrescribedRegimenTypeCode(regimen.getPrescribedRegimenTypeCode());
 						} else {
-							//log.error("Regimen type code cannot be null");
-							//regimenType.setPrescribedRegimenTypeCode("1b");
+
 							throw new IllegalArgumentException("Regimen type code cannot be null");
 						}
 						if (StringUtils.isNotBlank(regimen.getPrescribedRegimenCode())
@@ -144,7 +132,7 @@ public class RegimenTypeMapper {
 							simpleTypeCode.setCodeDescTxt(regimen.getPrescribedRegimenCodeDescTxt());
 							regimenType.setPrescribedRegimen(simpleTypeCode);
 						} else {
-							//log.error("Prescribed Regimen code cannot be null");
+
 							throw new IllegalArgumentException("Prescribed regimen code cannot be null");
 						}
 						if (StringUtils.isNotBlank(regimen.getDateRegimenStarted())) {
@@ -153,7 +141,7 @@ public class RegimenTypeMapper {
 								regimenType.setVisitDate(DateUtil.getXmlDate(Date.valueOf(local)));
 								regimenType.setDateRegimenStarted(DateUtil.getXmlDate(Date.valueOf(local)));
 							} catch (Exception e) {
-								log.info("An error occurred parsing the Date Regimen Started date: error{}" + e.getMessage());
+								log.info("An error occurred parsing the Date Regimen Started date: error {}" + e.getMessage());
 							}
 						}
 						if (StringUtils.isNotBlank(regimen.getDifferentiatedServiceDelivery())) {
@@ -317,7 +305,7 @@ public class RegimenTypeMapper {
 	
 	private void sortConditionRegimenType(ConditionType condition) {
 		List<RegimenType> regimenTypeSet = new ArrayList<>(condition.getRegimen());
-		//log.info("regimen  type {}", regimenTypeSet);
+
 		List<RegimenType> regimenTypes = regimenTypeSet.stream()
 				.filter(Objects::nonNull)
 				.sorted(Comparator.comparing(RegimenType::getPrescribedRegimenDuration))
@@ -398,15 +386,13 @@ public class RegimenTypeMapper {
 	
 	public String getRegimeLineCode(Regimen regimen, Long previousRegimenId) {
 		if (regimen != null && regimen.getRegimenType() != null) {
-			//Long regimenId = regimen.getId();
+
 			if (regimen.getRegimenType().getId() == 1 || regimen.getRegimenType().getId() == 3) {
-				//if (previousRegimenId != 0 && !(previousRegimenId .equals ( regimenId))) {
-				// }
+
 				return "First Line";
 			}
 			if (regimen.getRegimenType().getId() == 2 || regimen.getRegimenType().getId() == 4) {
-				//if (previousRegimenId != 0 && previousRegimenId != regimenId) {
-				// }
+
 				return "Second Line";
 			}
 			if (regimen.getRegimenType().getId() == 14) {

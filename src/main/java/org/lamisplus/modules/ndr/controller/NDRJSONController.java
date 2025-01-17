@@ -38,43 +38,10 @@ public class NDRJSONController {
         return NDRJSONService.AuthenticateUser(email, password);
     }
 
-//    @PostMapping("/ndr-data")
-//    public NDRDataResponseDTO pushData(@RequestParam("personUuid") String personUuid) throws Exception {
-//        List<String> data = new ArrayList<>();
-//
-//        //TODO: Process patient records in batches
-//        //pull the patients from database and process them in batches
-//        Container2 container = ndrService.PatientRecordJson(personUuid);
-//        String patientData = ConvertContainerToString(container);
-//        data.add(patientData);
-//        //
-//
-//        Log.info(data);
-//        return NDRJSONService.PushPatientData(data);
-//    }
-
     @GetMapping("/error-logs")
     public NDRLogsResponseDTO getErrorLogs(@RequestParam("batchId") String batchId){
         return NDRJSONService.GetErrorLogs(batchId);
     }
-
-//    @GetMapping("/ndr-json")
-//    public List<String> GetNDRDataJson(@RequestParam("personUuid") String personUuid) throws JsonProcessingException {
-//        Container container = ndrService.PatientRecordJson(personUuid);
-//        return Collections.singletonList(ConvertContainerToString(container));
-//    }
-
-
-
-//    @PostMapping("/ndr-auto-pusher")
-//    public void pushData(
-//    @RequestParam Long facilityIds,
-//    @RequestParam boolean isInitial) throws Exception {
-//                //pull the patients from database and process them in batches
-//        List<Container2> container = ndrService.generateNDRReportAndPushByFacility(facilityIds, isInitial);
-//
-//        NDRJSONService.PushPatientData(container);
-//    }
 
     @PostMapping("/auto-push-configuration")
     public NDRPusherConfig autoPushConfig(@RequestBody NDRAuthRequestDTO ndrAuthRequestDTO) throws Exception {
@@ -94,7 +61,6 @@ public class NDRJSONController {
     @DeleteMapping("/auto-push-configuration-deleter")
     public String deleteAutoPushConfig() {
         return this.NDRJSONService.deleteAutoPushConfig();
-       // return ResponseEntity.accepted ().build ();
     }
 
     @GetMapping(value = "auto-push-configuration-viewer")
@@ -104,11 +70,7 @@ public class NDRJSONController {
 
     @GetMapping("/ndr-auto-pusher")
     public void pushData(@RequestParam("id") Integer id) throws Exception {
-        NDRJSONService.batchPushToNDR(id);//.PushPatientData(container);
+        NDRJSONService.batchPushToNDR(id);
     }
-//    @GetMapping("/percentage-pushed")
-//    public int getPercentagePushed(@RequestParam("id") Integer id) throws Exception {
-//        return NDRJSONService.getPacentagePushed(id);//.PushPatientData(container);
-//    }
 
 }

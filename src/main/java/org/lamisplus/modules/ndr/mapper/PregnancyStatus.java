@@ -13,7 +13,7 @@ import java.util.Optional;
 public class PregnancyStatus {
 	
 	private final NdrXmlStatusRepository ndrXmlStatusRepository;
-	
+	private static final String STATUS = "status";
 	public Map<String, Object> getPregnancyStatus(String personUuid) {
 		Optional<String> pregnancyStatusOptional =
 				ndrXmlStatusRepository.getPregnancyStatusByPersonUuid(personUuid);
@@ -21,21 +21,21 @@ public class PregnancyStatus {
 		if (pregnancyStatusOptional.isPresent()) {
 			String pregnancyStatus = pregnancyStatusOptional.get();
 			if(pregnancyStatus.contains("Not")){
-				map.put("status", "NP");  //If clinic record is found but no record with pregnancy status checked
+				map.put(STATUS, "NP");  //If clinic record is found but no record with pregnancy status checked
 				map.put("lmp", null);
 				map.put("edd", null);
 			}else if(pregnancyStatus.equals("Pregnant")){
-				map.put("status", "P");
+				map.put(STATUS, "P");
 				map.put("lmp", null);
 				map.put("edd", null);
 			}else {
-				map.put("status", "NK");   //If no clinic record is found the pregnancy status is Unknown
+				map.put(STATUS, "NK");   //If no clinic record is found the pregnancy status is Unknown
 				map.put("lmp", null);
 				map.put("edd", null);
 			}
 			
 		} else {
-			map.put("status", "NK");   //If no clinic record is found the pregnancy status is Unknown
+			map.put(STATUS, "NK");   //If no clinic record is found the pregnancy status is Unknown
 			map.put("lmp", null);
 			map.put("edd", null);
 		}

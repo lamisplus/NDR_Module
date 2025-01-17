@@ -38,9 +38,17 @@ public class ConditionSpecificQuestionsTypeMapper {
     private final RegimenRepository regimenRepository;
     private final StatusManagementService statusManagementService;
 
+    public static class LogMessages {
+        public static final String GENERATING_COMMON_QUESTIONS = "Generating condition specific questions for patient with uuid {}";
+    }
+
+    public static class LogErrorMessages {
+        public static final String GENERATING_ERROR_MSG = "An error Generating condition specific questions for patient with uuid {}";
+    }
+
 
     public ConditionSpecificQuestionsType getConditionSpecificQuestionsType(PatientDemographics demographics) {
-        log.info("Generating condition specific questions for patient with uuid {}", demographics.getPersonUuid());
+        log.info(LogMessages.GENERATING_COMMON_QUESTIONS, demographics.getPersonUuid());
         try {
             ConditionSpecificQuestionsType hivQuestions = new ConditionSpecificQuestionsType ();
             HIVQuestionsType hiv = new HIVQuestionsType ();
@@ -69,7 +77,7 @@ public class ConditionSpecificQuestionsTypeMapper {
                 hivQuestions.setHIVQuestions (hiv);
             return hivQuestions;
         } catch (Exception e) {
-            log.error("An error Generating condition specific questions for patient with uuid {}",
+            log.error(LogErrorMessages.GENERATING_ERROR_MSG,
                     demographics.getPersonUuid());
            log.error("Error Message: {} " + e.getMessage());
         }
@@ -81,7 +89,7 @@ public class ConditionSpecificQuestionsTypeMapper {
     public ConditionSpecificQuestionsType getConditionSpecificQuestionsType(
             PatientDemographics demographics,
             ArtCommencementDTO artCommencement) {
-        log.info("Generating condition specific questions for patient with uuid {}", demographics.getPersonUuid());
+        log.info(LogMessages.GENERATING_COMMON_QUESTIONS, demographics.getPersonUuid());
         try {
             ConditionSpecificQuestionsType hivQuestions = new ConditionSpecificQuestionsType ();
             HIVQuestionsType hiv = new HIVQuestionsType ();
@@ -105,7 +113,7 @@ public class ConditionSpecificQuestionsTypeMapper {
             hivQuestions.setHIVQuestions (hiv);
             return hivQuestions;
         } catch (Exception e) {
-            log.error("An error Generating condition specific questions for patient with uuid {}",
+            log.error(LogErrorMessages.GENERATING_ERROR_MSG,
                     demographics.getPersonUuid());
             log.error("Error Message: {} " + e.getMessage());
         }
@@ -115,11 +123,11 @@ public class ConditionSpecificQuestionsTypeMapper {
     
     public ConditionSpecificQuestionsType getConditionSpecificQuestionsType(PatientDemographicDTO demographics) {
         //@XmlElement(name = "EnrolledInHIVCareDate", required = true)
-        log.info("Generating condition specific questions for patient with uuid {}", demographics.getPersonUuid());
+        log.info(LogMessages.GENERATING_COMMON_QUESTIONS, demographics.getPersonUuid());
         try {
             ConditionSpecificQuestionsType hivQuestions = new ConditionSpecificQuestionsType ();
             HIVQuestionsType hiv = new HIVQuestionsType ();
-            //LocalDate inHIVCareDate = demographics.getEnrolledInHIVCareDate();
+
             LocalDate inHIVCareDate = (demographics.getEnrolledInHIVCareDate() != null ? demographics.getEnrolledInHIVCareDate() : demographics.getArtStartDate());
             if(inHIVCareDate != null){
                 hiv.setEnrolledInHIVCareDate(getXmlDate (Date.valueOf (inHIVCareDate)));
@@ -175,7 +183,7 @@ public class ConditionSpecificQuestionsTypeMapper {
             hivQuestions.setHIVQuestions (hiv);
             return hivQuestions;
         } catch (Exception e) {
-            log.error("An error Generating condition specific questions for patient with uuid {}",
+            log.error(LogErrorMessages.GENERATING_ERROR_MSG,
                     demographics.getPersonUuid());
             log.error("Error Message: {} " + e.getMessage());
         }
@@ -251,69 +259,6 @@ public class ConditionSpecificQuestionsTypeMapper {
             e.printStackTrace ();
         }
     }
-
-//    private void processAndHandleARTStatus(HIVQuestionsType hiv, Long personId, String enrollmentStatus) {
-//        try {
-//            String ndrARTStatus = enrollmentStatus == null ? "Pre-ART" : "ART";
-//            String status = statusManagementService.getCurrentStatus (personId);
-//            handlePatientTransferOut (hiv, personId, ndrARTStatus, status);
-//            handlePatientDeathStatus (hiv, personId, ndrARTStatus, status);
-//        } catch (Exception e) {
-//           log.error ("An error occurred while processing client status message {}", e.getMessage());
-//        }
-//
-//    }
-//
-//    private void handlePatientDeathStatus(HIVQuestionsType hiv, Long personId, String ndrARTStatus, String status) {
-//        try {
-//            log.info("status of the current patient {}", status);
-//        if (status.contains("Died") || status.contains("DEATH") || status.contains("DIED")) {
-//            //Optional<HIVStatusTrackerDto> patientStatus = getPatientStatus (personId, status);
-//            HIVStatusDisplay clientReportingStatus = statusManagementService.getClientReportingStatus(personId);
-//            log.info("current status handling death {} ", clientReportingStatus.getDescription());
-//            Optional<String> artStatus = ndrCodeSetResolverService.getNDRCodeSetCode("ART_STATUS", ndrARTStatus);
-//            artStatus.ifPresent(hiv::setStatusAtDeath);
-//            log.info("art status at the death of the patient {}", artStatus);
-//            log.info("ndr art status at the death of the patient {}", ndrARTStatus);
-//
-//            if (!artStatus.isPresent()) {
-//                Optional<String> ndrART = Optional.of(ndrARTStatus);
-//                String artStatusInitial = ndrART.map(statusInitial -> statusInitial.equalsIgnoreCase("ART") ? "A" : "P").orElse("P");
-//                hiv.setStatusAtDeath(artStatusInitial);
-//            }
-//            hiv.setDeathDate(getXmlDate(Date.valueOf(clientReportingStatus.getDate())));
-//            hiv.setPatientHasDied(true);
-//        }
-//    }catch (DatatypeConfigurationException e) {
-//            log.error("An error occurred while handling Death status msg {}", e.getMessage());
-//        }
-//    }
-//
-//    private void handlePatientTransferOut(HIVQuestionsType hiv, Long personId, String ndrARTStatus, String status) {
-//        try {
-//            if (status.contains("Out")) {
-//                //  Optional<HIVStatusTrackerDto> patientStatus = getPatientStatus (personId, status);
-//                HIVStatusDisplay clientReportingStatus = statusManagementService.getClientReportingStatus(personId);
-//                Optional<String> artStatus = ndrCodeSetResolverService.getNDRCodeSetCode("ART_STATUS", ndrARTStatus);
-//                artStatus.ifPresent(hiv::setTransferredOutStatus);
-//                hiv.setTransferredOutDate(getXmlDate(Date.valueOf(clientReportingStatus.getDate())));
-//                hiv.setPatientTransferredOut(true);
-//
-//            } else {
-//                hiv.setPatientTransferredOut(false);
-//            }
-//        } catch (Exception e) {
-//            log.error("An error occurred while processing transfer-out client status msg {}", e.getMessage());
-//        }
-//    }
-
-//    @NotNull
-//    private Optional<HIVStatusTrackerDto> getPatientStatus(Long personId, String status) {
-//        return hivStatusTrackerService.getPersonHIVStatusByPersonId (personId)
-//                .stream ()
-//                .filter (s -> s.getHivStatus ().equals (status))
-//                .findFirst ();
-//    }
 
     private void processAndHandleARTStatus(HIVQuestionsType hiv, Long personId, String enrollmentStatus) {
         try {

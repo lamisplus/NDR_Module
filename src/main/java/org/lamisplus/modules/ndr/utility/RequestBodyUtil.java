@@ -42,27 +42,3 @@ public class RequestBodyUtil {
         };
     }
 }
-
-
-/*
-
-    OkHttpClient client = new OkHttpClient();
-
-    MediaType MEDIA_TYPE_MARKDOWN
-            = MediaType.parse("text/x-markdown; charset=utf-8");
-
-    InputStream inputStream = getAssets().open("README.md");
-
-    RequestBody requestBody = RequestBodyUtil.create(MEDIA_TYPE_MARKDOWN, inputStream);
-    Request request = new Request.Builder()
-            .url("https://api.github.com/markdown/raw")
-            .post(requestBody)
-            .build();
-
-    Response response = client.newCall(request).execute();
-if (!response.isSuccessful())
-        throw new IOException("Unexpected code " + response);
-
-        Log.d("POST", response.body().string());
-
- */

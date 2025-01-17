@@ -60,7 +60,6 @@ public class HtsTypeMapper {
 
 
                     IndexNotificationServicesType indexNotificationServicesType = new IndexNotificationServicesType();
-                    //List<PartnerNotificationType> partnerNotifications = getAllPartnerNotification(query);
 
                     List<PartnerNotificationType> partnerNotifications = getAllPartnerNotification(h, errors);
                     log.info("List of partner notification size {} ", partnerNotifications.size());
@@ -164,7 +163,6 @@ public class HtsTypeMapper {
                 log.error("Recency number is null for client {}", h.getClientCode());
                 throw new IllegalArgumentException("Recency Number can not be null kindly correct");
             }else {
-//                if (testResult.getFinalTestResult().equals("Pos") && !StringUtils.isBlank(h.getRecencyNumber())) {
                 if (!StringUtils.isBlank(h.getRecencyNumber())) {
                     processAndSetRecencyResult(hivTestResultType, objectFactory, h);
                 }
@@ -217,7 +215,6 @@ public class HtsTypeMapper {
             }
         } else {
             log.info("DateSampleSent can not be null kindly correct this");
-            //throw new IllegalArgumentException("DateSampleSent can not be null kindly correct this");
         }
 
         if (h.getDateSampleCollected() != null) {
@@ -228,7 +225,6 @@ public class HtsTypeMapper {
             }
         } else {
             log.info("DateSampleCollected can not be null kindly correct this");
-            //throw new IllegalArgumentException("DateSampleCollected can not be null kindly correct this");
         }
 
         if (h.getViralLoadConfirmationTestDate() != null) {
@@ -238,9 +234,6 @@ public class HtsTypeMapper {
                 throw new RuntimeException(e);
             }
         }
-//		else {
-//			throw new IllegalArgumentException("ViralLoadConfirmationTestDate can not be null kindly correct this");
-//		}
 
 
     }
@@ -600,7 +593,7 @@ public class HtsTypeMapper {
             }
             hivTestingReportType.setIsIndexClient(isIndex);
         }
-}
+    }
 
 
     public static void validateAndSetMaritalStatus (String maritalStatus, HIVTestingReportType hivTestingReportType) {
@@ -620,7 +613,7 @@ public class HtsTypeMapper {
             }
             hivTestingReportType.setMaritalStatus(maritalStatus);
         }
-}
+    }
 
     public static void validateAndSetReferedFrom (String referredFrom, HIVTestingReportType hivTestingReportType) {
         if (referredFrom != null){
@@ -641,6 +634,7 @@ public class HtsTypeMapper {
             } else if (referredFrom.contains("Others")) {
                 referredFrom = "8";
             }
+            hivTestingReportType.setReferredFrom(referredFrom);
         }
     }
 

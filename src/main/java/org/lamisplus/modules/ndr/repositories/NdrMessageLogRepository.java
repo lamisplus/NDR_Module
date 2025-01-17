@@ -17,61 +17,61 @@ public interface NdrMessageLogRepository extends JpaRepository<NdrMessageLog, In
     
     Optional<NdrMessageLog> findFirstByIdentifierAndFileType(String identifier, String fileType);
     @Query(value="SELECT\n" +
-            "                    DISTINCT (p.uuid) AS personUuid, p.date_of_registration AS diagnosisDate,\n" +
-            "                             p.date_of_birth AS dateOfBirth,\n" +
-            "                             p.id AS personId,\n" +
-            "                             p.hospital_number AS hospitalNumber,\n" +
-            "             concat( boui.code,'_', p.uuid) as patientIdentifier,\n" +
-            "                            EXTRACT(YEAR FROM AGE(NOW(), date_of_birth)) AS age,\n" +
-            "                             (CASE WHEN INITCAP(p.sex)='Female' THEN 'F' ELSE 'M' END) AS patientSexCode,\n" +
-            "                             p.date_of_birth AS patientDateOfBirth, 'FAC' AS facilityTypeCode,\n" +
-            "                             facility.name AS facilityName,\n" +
-            "                            facility_lga.name AS lga,\n" +
-            "                             facility_state.name AS state,\n" +
-            "                             boui.code AS facilityId,\n" +
-            "                             hac.visit_date AS artStartDate,\n" +
-            "                            hrr.regimen AS firstARTRegimenCodeDescTxt,\n" +
+            "                   DISTINCT (p.uuid) AS personUuid, p.date_of_registration AS diagnosisDate,\n" +
+            "                            p.date_of_birth AS dateOfBirth,\n" +
+            "                            p.id AS personId,\n" +
+            "                            p.hospital_number AS hospitalNumber,\n" +
+            "            concat( boui.code,'_', p.uuid) as patientIdentifier,\n" +
+            "                           EXTRACT(YEAR FROM AGE(NOW(), date_of_birth)) AS age,\n" +
+            "                            (CASE WHEN INITCAP(p.sex)='Female' THEN 'F' ELSE 'M' END) AS patientSexCode,\n" +
+            "                            p.date_of_birth AS patientDateOfBirth, 'FAC' AS facilityTypeCode,\n" +
+            "                            facility.name AS facilityName,\n" +
+            "                           facility_lga.name AS lga,\n" +
+            "                            facility_state.name AS state,\n" +
+            "                            boui.code AS facilityId,\n" +
+            "                            hac.visit_date AS artStartDate,\n" +
+            "                           hrr.regimen AS firstARTRegimenCodeDescTxt,\n" +
             "            ncs.code AS firstARTRegimenCode,\n" +
-            "            lgaCode.code AS lgaCode,\n" +
+            "            (CASE WHEN (lgaCode.code = '521' AND stateCode.code = '20') THEN '520' ELSE lgaCode.code END) AS lgaCode,\n" +
             "            enrollStatus.display AS statusAtRegistration,\n" +
             "            stateCode.code AS stateCode,\n" +
             "            'NGA' AS countryCode,\n" +
-            "             emplCode.code AS patientOccupationCode,\n" +
-            "             mariCode.code AS PatientMaritalStatusCode,\n" +
-            "             stateCode.code AS stateOfNigeriaOriginCode,\n" +
+            "            emplCode.code AS patientOccupationCode,\n" +
+            "            mariCode.code AS PatientMaritalStatusCode,\n" +
+            "            stateCode.code AS stateOfNigeriaOriginCode,\n" +
             "            eduCode.code AS patientEducationLevelCode,\n" +
             "            ndrTbstatus.code AS tbStatus,\n" +
             "            COALESCE(ndrFuncStatCodestatus.code, ndrClinicStage.code) AS functionalStatusStartART,\n" +
             "            CASE WHEN hpt.reason_for_discountinuation = 'Death' THEN hpt.cause_of_death ELSE NULL END AS causeOfDeath\n" +
-            "               FROM\n" +
-            "                    patient_person p\n" +
-            "                       INNER JOIN base_organisation_unit facility ON facility.id = facility_id\n" +
-            "                        INNER JOIN base_organisation_unit facility_lga ON facility_lga.id = facility.parent_organisation_unit_id\n" +
-            "                       INNER JOIN base_organisation_unit facility_state ON facility_state.id = facility_lga.parent_organisation_unit_id\n" +
-            "                       INNER JOIN base_organisation_unit_identifier boui ON boui.organisation_unit_id = facility_id AND boui.name ='DATIM_ID'\n" +
-            "                        INNER JOIN hiv_enrollment h ON h.person_uuid = p.uuid\n" +
-            "                        INNER JOIN hiv_art_clinical hac ON hac.hiv_enrollment_uuid = h.uuid AND hac.archived = 0\n" +
-            "                      INNER JOIN hiv_regimen hr ON hr.id = hac.regimen_id\n" +
-            "                        INNER JOIN hiv_regimen_type hrt ON hrt.id = hac.regimen_type_id\n" +
+            "              FROM\n" +
+            "                   patient_person p\n" +
+            "                      INNER JOIN base_organisation_unit facility ON facility.id = facility_id\n" +
+            "                       INNER JOIN base_organisation_unit facility_lga ON facility_lga.id = facility.parent_organisation_unit_id\n" +
+            "                      INNER JOIN base_organisation_unit facility_state ON facility_state.id = facility_lga.parent_organisation_unit_id\n" +
+            "                      INNER JOIN base_organisation_unit_identifier boui ON boui.organisation_unit_id = facility_id AND boui.name ='DATIM_ID'\n" +
+            "                       INNER JOIN hiv_enrollment h ON h.person_uuid = p.uuid\n" +
+            "                       INNER JOIN hiv_art_clinical hac ON hac.hiv_enrollment_uuid = h.uuid AND hac.archived = 0\n" +
+            "                     INNER JOIN hiv_regimen hr ON hr.id = hac.regimen_id\n" +
+            "                       INNER JOIN hiv_regimen_type hrt ON hrt.id = hac.regimen_type_id\n" +
             "            INNER JOIN hiv_regimen_resolver hrr ON hrr.regimensys=hr.description\n" +
             "            INNER JOIN ndr_code_set ncs ON ncs.code_description=hrr.regimen\n" +
-            "           LEFT JOIN ndr_code_set lgaCode ON trim(lgaCode.code_description)=trim(facility_lga.name) and lgaCode.code_set_nm = 'LGA'\n" +
+            "                      LEFT JOIN ndr_code_set lgaCode ON trim(lgaCode.code_description)=trim(facility_lga.name) and lgaCode.code_set_nm = 'LGA'\n" +
             "            LEFT JOIN base_application_codeset enrollStatus ON enrollStatus.id= h.status_at_registration_id\n" +
             "            LEFT JOIN ndr_code_set stateCode ON trim(stateCode.code_description)=trim(facility_state.name) and  stateCode.code_set_nm = 'STATES'\n" +
             "            LEFT JOIN ndr_code_set emplCode ON emplCode.code_description=p.employment_status->>'display' and emplCode.code_set_nm = 'OCCUPATION_STATUS'\n" +
             "            LEFT JOIN ndr_code_set mariCode ON mariCode.code_description=p.marital_status->>'display' and mariCode.code_set_nm = 'MARITAL_STATUS'\n" +
             "            LEFT JOIN ndr_code_set eduCode ON  eduCode.code_description=p.education->>'display' and eduCode.code_set_nm = 'EDUCATIONAL_LEVEL'\n" +
-            "           LEFT JOIN base_application_codeset fsCodeset ON fsCodeset.id=hac.functional_status_id\n" +
-            "           LEFT JOIN base_application_codeset tbCodeset ON tbCodeset.id=h.tb_status_id\n" +
+            "                      LEFT JOIN base_application_codeset fsCodeset ON fsCodeset.id=hac.functional_status_id\n" +
+            "                      LEFT JOIN base_application_codeset tbCodeset ON tbCodeset.id=h.tb_status_id\n" +
             "            LEFT JOIN base_application_codeset csCodeset ON csCodeset.id=hac.clinical_stage_id\n" +
             "            LEFT JOIN ndr_code_set ndrFuncStatCodestatus ON ndrFuncStatCodestatus.code_description=fsCodeset.display\n" +
             "            LEFT JOIN ndr_code_set ndrTbstatus ON trim(ndrTbstatus.code_description)=trim(tbCodeset.display)\n" +
             "            LEFT JOIN ndr_code_set ndrClinicStage ON ndrClinicStage.code_description=csCodeset.display\n" +
-            "           LEFT JOIN hiv_patient_tracker hpt ON hpt.person_uuid = p.uuid\n" +
-            "               WHERE h.archived = 0\n" +
+            "                      LEFT JOIN hiv_patient_tracker hpt ON hpt.person_uuid = p.uuid\n" +
+            "              WHERE h.archived = 0\n" +
             "             AND p.uuid = ?1\n" +
-            "               AND h.facility_id = ?2\n" +
-            "               AND hac.is_commencement = TRUE LIMIT 1\n" ,
+            "              AND h.facility_id = ?2\n" +
+            "              AND hac.is_commencement = TRUE LIMIT 1" ,
             nativeQuery = true)
     Optional<PatientDemographicDTO> getPatientDemographics(String identifier, Long facilityId);
     
@@ -198,47 +198,6 @@ public interface NdrMessageLogRepository extends JpaRepository<NdrMessageLog, In
             "  person_uuid\n", nativeQuery = true)
     Optional<PatientPharmacyEncounterDTO> getPatientPharmacyEncounter(String identifier, Long facilityId, LocalDate start, LocalDate end);
 
-//   @Query(value = "SELECT person_uuid, cast(json_agg(DISTINCT  jsonb_build_object('visitID', phar.uuid,\n" +
-//           "'visitDate', phar.visitDate,\n" +
-//           "'prescribedRegimenCode',  phar.prescribedRegimenCode,\n" +
-//           "'prescribedRegimenCodeDescTxt', phar.prescribedRegimenCodeDescTxt,\n" +
-//           "'prescribedRegimenTypeCode', (CASE WHEN regimen_type_id=8 THEN 'OI' WHEN regimen_type_id=15 THEN 'TB' ELSE 'ART' END),\n" +
-//           "'prescribedRegimenDuration', phar.duration,\n" +
-//           "'dateRegimenStarted', phar.visitDate,\n" +
-//           "'differentiatedServiceDelivery', phar.dsd_model,\n" +
-//           "'dispensing', phar.dsd_type,\n" +
-//           "'multiMonthDispensing', phar.mmd_type))as varchar) AS regimens\n" +
-//           "FROM (\n" +
-//           "select * from (\n" +
-//           "SELECT DISTINCT pharmacy.person_uuid, pharmacy.uuid, pharmacy.visit_date AS visitDate,\n" +
-//           "pharmacy_object ->> 'name' as name, cast(pharmacy_object ->> 'duration' as VARCHAR) as duration, hr.regimen_type_id,\n" +
-//           "(CASE WHEN hrr.regimen IS NULL THEN hr.description ELSE hrr.regimen END) AS prescribedRegimenCodeDescTxt,\n" +
-//           "(\n" +
-//           "CASE WHEN ncs_reg.code IS NOT NULL THEN ncs_reg.code\n" +
-//           "WHEN ncs_others.code IS NOT NULL THEN ncs_others.code\n" +
-//           "WHEN ncs_tpt.code IS NOT NULL THEN ncs_tpt.code\n" +
-//           "END\n" +
-//           ")AS prescribedRegimenCode,\n" +
-//           "dd.dsd_model, \n" +
-//           "\tdd.dsd_type, \n" +
-//           "mmd_type \n" +
-//           "FROM hiv_art_pharmacy pharmacy\n" +
-//           "CROSS JOIN LATERAL jsonb_array_elements(extra->'regimens') with ordinality p(pharmacy_object)\n" +
-//           "INNER JOIN hiv_regimen hr ON hr.description=CAST(pharmacy_object ->> 'name' AS VARCHAR)\n" +
-//           "LEFT JOIN hiv_regimen_resolver hrr ON hrr.regimensys=hr.description\n" +
-//           "LEFT JOIN ndr_code_set ncs_reg ON ncs_reg.code_description=hrr.regimen\n" +
-//           "LEFT JOIN ndr_code_set ncs_others ON ncs_others.code_description=hr.description \n" +
-//           "LEFT JOIN dsd_devolvement dd ON dd.person_uuid = pharmacy.person_uuid\n" +
-//           "LEFT JOIN ndr_code_set ncs_tpt ON hr.description = any(string_to_array(ncs_tpt.alt_description, ','))\n" +
-//           "WHERE pharmacy.archived = 0\n" +
-//           "AND pharmacy.person_uuid = ?1    \n" +
-//           "\tAND pharmacy.facility_id = ?2    \n" +
-//           "\tAND pharmacy.visit_date >= ?3   \n" +
-//           "\tAND pharmacy.visit_date <= ?4\n" +
-//           ") as dt where prescribedRegimenCode is not null\n" +
-//           ") phar GROUP BY person_uuid", nativeQuery = true)
-//   Optional<PatientPharmacyEncounterDTO> getPatientPharmacyEncounter(String identifier, Long facilityId, LocalDate start, LocalDate end);
-
     @Query(value = "SELECT person_uuid, phar.visitDate, cast(json_agg(DISTINCT  jsonb_build_object('visitID', phar.uuid,\n" +
             "'visitDate', phar.visitDate,\n" +
             "'prescribedRegimenCode',  phar.prescribedRegimenCode,\n" +
@@ -282,48 +241,6 @@ public interface NdrMessageLogRepository extends JpaRepository<NdrMessageLog, In
             ") phar GROUP BY person_uuid, visitdate, phar.dsd_model, phar.dsd_type,phar.mmd_type\n" +
             "order by phar.visitDate desc limit 1", nativeQuery = true)
     Optional<PatientPharmacyEncounterDTO> getPatientLastPharmacyEncounter(String identifier, Long facilityId);
-
-//    @Query(value = "SELECT person_uuid, phar.visitDate, cast(json_agg(DISTINCT  jsonb_build_object('visitID', phar.uuid,\n" +
-//            "'visitDate', phar.visitDate,\n" +
-//            "'prescribedRegimenCode',  phar.prescribedRegimenCode,\n" +
-//            "'prescribedRegimenCodeDescTxt', phar.prescribedRegimenCodeDescTxt,\n" +
-//            "'prescribedRegimenTypeCode', (CASE WHEN regimen_type_id=8 THEN 'OI' WHEN regimen_type_id=15 THEN 'TB' ELSE 'ART' END),\n" +
-//            "'prescribedRegimenDuration', phar.duration,\n" +
-//            "'dateRegimenStarted', phar.visitDate,\n" +
-//            "'differentiatedServiceDelivery', phar.dsd_model,\n" +
-//            "'dispensing', phar.dsd_type,\n" +
-//            "'multiMonthDispensing', phar.mmd_type  \n" +
-//            "))as varchar) AS regimens\n" +
-//            " \n" +
-//            "FROM (\n" +
-//            "select * from (\n" +
-//            "SELECT DISTINCT pharmacy.person_uuid, pharmacy.uuid, pharmacy.visit_date AS visitDate,\n" +
-//            "pharmacy_object ->> 'name' as name, cast(pharmacy_object ->> 'duration' as VARCHAR) as duration, hr.regimen_type_id,\n" +
-//            "(CASE WHEN hrr.regimen IS NULL THEN hr.description ELSE hrr.regimen END) AS prescribedRegimenCodeDescTxt,\n" +
-//            "(\n" +
-//            "CASE WHEN ncs_reg.code IS NOT NULL THEN ncs_reg.code\n" +
-//            "WHEN ncs_others.code IS NOT NULL THEN ncs_others.code\n" +
-//            "WHEN ncs_tpt.code IS NOT NULL THEN ncs_tpt.code\n" +
-//            "END\n" +
-//            ")AS prescribedRegimenCode,\n" +
-//            "dd.dsd_model, \n" +
-//            "dd.dsd_type, \n" +
-//            "mmd_type \n" +
-//            "FROM hiv_art_pharmacy pharmacy\n" +
-//            "CROSS JOIN LATERAL jsonb_array_elements(extra->'regimens') with ordinality p(pharmacy_object)\n" +
-//            "INNER JOIN hiv_regimen hr ON hr.description=CAST(pharmacy_object ->> 'name' AS VARCHAR)\n" +
-//            "LEFT JOIN hiv_regimen_resolver hrr ON hrr.regimensys=hr.description\n" +
-//            "LEFT JOIN ndr_code_set ncs_reg ON ncs_reg.code_description=hrr.regimen\n" +
-//            "LEFT JOIN ndr_code_set ncs_others ON ncs_others.code_description=hr.description\n" +
-//            "LEFT JOIN dsd_devolvement dd ON dd.person_uuid = pharmacy.person_uuid\n" +
-//            "LEFT JOIN ndr_code_set ncs_tpt ON hr.description = any(string_to_array(ncs_tpt.alt_description, ','))\n" +
-//            "WHERE pharmacy.archived = 0\n" +
-//            " AND  pharmacy.person_uuid = ?1\n" +
-//            "      AND pharmacy.facility_id = ?2\n" +
-//            ") as dt where prescribedRegimenCode is not null\n" +
-//            ") phar GROUP BY person_uuid, visitdate, phar.dsd_model, phar.dsd_type,phar.mmd_type\n" +
-//            "order by phar.visitDate desc limit 1", nativeQuery = true)
-//    Optional<PatientPharmacyEncounterDTO> getPatientLastPharmacyEncounter(String identifier, Long facilityId);
 
    @Query(value = "SELECT DISTINCT person_uuid FROM hiv_art_pharmacy ph\n" +
            "           INNER JOIN patient_person p ON p.uuid = ph.person_uuid\n" +
@@ -730,78 +647,6 @@ public interface NdrMessageLogRepository extends JpaRepository<NdrMessageLog, In
           "             WHERE hc.archived=0 AND hc.facility_id =?1 and hc.client_code =?2\n" +
           "\t\t\t AND hc.date_modified > ?3", nativeQuery = true)
   Optional<PatientDemographicDTO> getHtsPatientDemographics(long facilityId,  String clientCode, LocalDateTime lastModified);
-//
-//  @Query(value = "SELECT hc.person_uuid AS personUuid, hc.uuid as visitId, hc.testing_setting as setting, 'YES' as firstTimeVisit, hc.client_code AS clientCode, hc.date_visit  as visitDate, \n" +
-//          "tr.screeningTestResult,\n" +
-//          "tr.screeningTestResultDate, tr.confirmatoryTestResult, \n" +
-//          "tr.confirmatoryTestResultDate, \n" +
-//          "(CASE WHEN tr.tieBreakerTestResult IS NULL OR tr.tieBreakerTestResult='' THEN tr.confirmatoryTestResult\n" +
-//          "ELSE tr.tieBreakerTestResult END) AS tieBreakerTestResult,\n" +
-//          "(CASE WHEN tr.tieBreakerTestResult IS NULL OR tr.tieBreakerTestResult='' THEN tr.confirmatoryTestResultDate\n" +
-//          "ELSE tr.tieBreakerTestResultDate END) AS tieBreakerTestResultDate,\n" +
-//          "CAST(risk_assessment ->> 'everHadSexualIntercourse' AS BOOLEAN) AS \teverHadSexualIntercourse,\n" +
-//          "CAST(risk_assessment ->> 'bloodTransfusionInLast3Months' AS BOOLEAN) AS bloodTransfussionInLast3Months,\n" +
-//          "CAST(risk_assessment ->> 'unprotectedSexWithCasualPartnerInLast3Months' AS BOOLEAN) AS unprotectedSexWithCasualPartnerinLast3Months,\n" +
-//          "CAST(risk_assessment ->> 'moreThan1SexPartnerDuringLast3Months' AS BOOLEAN) AS moreThan1SexPartnerDuringLast3Months,\n" +
-//          "CAST(risk_assessment ->> 'stiInLast3Months' AS BOOLEAN) AS stiInLast3Months,\n" +
-//          "\n" +
-//          "--ClinicalTBScreeningType\n" +
-//          "CAST(tb_screening ->> 'currentlyCough' AS BOOLEAN) AS currentlyCough,\n" +
-//          "CAST(tb_screening ->> 'weightLoss' AS BOOLEAN) AS weightLoss,\n" +
-//          "CAST(tb_screening ->> 'fever' AS BOOLEAN) AS fever,\n" +
-//          "CAST(tb_screening ->> 'nightSweats' AS BOOLEAN) AS nightSweats,\n" +
-//          "--SyndromicSTIScreeningType\n" +
-////          "CAST(tb_screening ->> 'currentlyCough' AS BOOLEAN) AS currentlyCough,\n" +
-////          "CAST(tb_screening ->> 'weightLoss' AS BOOLEAN) AS weightLoss,\n" +
-////          "CAST(tb_screening ->> 'fever' AS BOOLEAN) AS fever,\n" +
-////          "CAST(tb_screening ->> 'nightSweats' AS BOOLEAN) AS nightSweats, \n" +
-//          "--PostTesting\n" +
-//          "CASE WHEN CAST(post_test_counseling ->> 'hivTestBefore' AS VARCHAR) ILIKE '%Not%' THEN false\n" +
-//          "\t ELSE true END AS testedForHIVBeforeWithinThisYear,\n" +
-//          "CASE WHEN post_test_counseling ->> 'hivRequestResult'='' \n" +
-//          "\t  OR post_test_counseling ->> 'hivRequestResult' ILIKE 'false' THEN FALSE ELSE true END AS hivRequestAndResultFormSignedByTester,\n" +
-//          "CASE WHEN post_test_counseling ->> 'hivRequestResultCt'='' \n" +
-//          "\t\tOR post_test_counseling ->> 'hivRequestResultCt' ILIKE 'false' THEN FALSE ELSE TRUE END AS hivRequestAndResultFormFilledWithCTIForm,\n" +
-//          "CASE WHEN post_test_counseling ->> 'clientReceivedHivTestResult'=''\n" +
-//          "\tOR post_test_counseling ->> 'clientReceivedHivTestResult' ILIKE 'false' THEN FALSE ELSE TRUE END AS clientRecievedHIVTestResult,\n" +
-//          "CASE WHEN post_test_counseling ->> 'postTestCounseling' = ''\n" +
-//          "OR post_test_counseling ->> 'postTestCounseling' ILIKE 'false' THEN FALSE ELSE TRUE END  AS postTestCounsellingDone,\n" +
-//          "CASE WHEN post_test_counseling ->> 'riskReduction'=''\n" +
-//          "OR post_test_counseling ->> 'riskReduction' ILIKE 'false' THEN  FALSE ELSE TRUE  END AS riskReductionPlanDeveloped,\n" +
-//          "CASE WHEN post_test_counseling ->> 'postTestDisclosure' = ''\n" +
-//          "OR post_test_counseling ->> 'postTestDisclosure' ='false' THEN FALSE ELSE TRUE  END AS postTestDisclosurePlanDeveloped,\n" +
-//          "CASE WHEN post_test_counseling ->> 'bringPartnerHivtesting' =''\n" +
-//          "OR post_test_counseling ->> 'bringPartnerHivtesting' ILIKE 'false'THEN FALSE ELSE TRUE  END AS willBringPartnerForHIVTesting,\n" +
-//          "CASE WHEN post_test_counseling ->> 'childrenHivtesting' =''\n" +
-//          "OR post_test_counseling ->> 'childrenHivtesting' ILIKE 'false' THEN FALSE ELSE TRUE  END AS willBringOwnChildrenForHIVTesting,\n" +
-//          "CASE WHEN post_test_counseling ->> 'informationFp' = ''\n" +
-//          "OR post_test_counseling ->> 'informationFp' ILIKE 'false' THEN FALSE ELSE TRUE  END AS providedWithInformationOnFPandDualContraception,\n" +
-//          "CASE WHEN post_test_counseling ->> 'partnerFpThanCondom' =''\n" +
-//          "OR post_test_counseling ->> 'partnerFpThanCondom' ILIKE 'false' THEN FALSE ELSE TRUE END AS clientOrPartnerUseFPMethodsOtherThanCondoms,\n" +
-//          "CASE WHEN post_test_counseling ->> 'partnerFpUseCondom' =''\n" +
-//          "OR post_test_counseling ->> 'partnerFpUseCondom'ILIKE 'false' THEN FALSE ELSE TRUE END  AS clientOrPartnerUseCondomsAsOneFPMethods,\n" +
-//          "CASE WHEN post_test_counseling ->> 'correctCondomUse' =''\n" +
-//          "OR post_test_counseling ->> 'correctCondomUse' ILIKE 'false' THEN FALSE ELSE TRUE END AS correctCondomUseDemonstrated,\n" +
-//          "CASE WHEN post_test_counseling ->> 'condomProvidedToClient' =''\n" +
-//          "OR  post_test_counseling ->> 'condomProvidedToClient' ILIKE 'false' THEN FALSE ELSE TRUE END  AS condomsProvidedToClient,\n" +
-//          "CASE WHEN post_test_counseling ->> 'referredToServices'=''\n" +
-//          "OR post_test_counseling ->> 'referredToServices' ILIKE 'false' THEN FALSE ELSE TRUE END AS clientReferredToOtherServices\n" +
-//          "from hts_client hc\n" +
-//          "INNER JOIN \n" +
-//          "(SELECT person_uuid AS personUuid, uuid, client_code AS clientCode, \n" +
-//          "CASE WHEN test1 ->> 'result' ILIKE 'Yes' THEN 'Positive' ELSE 'Negative' END AS screeningTestResult,\n" +
-//          "(CASE WHEN (test1 ->> 'date' ~* '[0-9]') is false THEN NULL\n" +
-//          "\tELSE CAST(test1 ->> 'date' AS DATE) END) AS screeningTestResultDate,\n" +
-//          "CASE WHEN confirmatory_test ->> 'result' ILIKE 'Yes' THEN 'Positive' ELSE 'Negative' END AS confirmatoryTestResult,\n" +
-//          "(CASE WHEN (confirmatory_test ->> 'date' ~* '[0-9]') is false THEN NULL\n" +
-//          "\tELSE CAST(confirmatory_test ->> 'date' AS DATE) END) AS confirmatoryTestResultDate,\n" +
-//          "CASE WHEN tie_breaker_test ->> 'result' ILIKE 'Yes' THEN 'Positive' ELSE 'Negative' END AS tieBreakerTestResult,\n" +
-//          "(CASE WHEN (tie_breaker_test ->> 'date' ~* '[0-9]') is false THEN NULL\n" +
-//          "\tELSE CAST(tie_breaker_test ->> 'date' AS DATE) END)AS tieBreakerTestResultDate\n" +
-//          "from hts_client) tr ON tr.clientcode=hc.client_code \n" +
-//          "WHERE hc.facility_id= ?1 AND hc.client_code = ?2\n" +
-//          "AND hc.date_modified > ?3 AND hc.archived = 0",nativeQuery = true)
-
 
   @Query(value = "SELECT DISTINCT ON (hc.person_uuid) hc.person_uuid AS personUuid,\n" +
           "          partner.partnerNotifications AS partnerNotification,\n" +
@@ -1009,21 +854,6 @@ public interface NdrMessageLogRepository extends JpaRepository<NdrMessageLog, In
           "          AND hc.date_modified > ?3 \n" +
           "          AND hc.archived = 0 ", nativeQuery = true) List<HtsReportDto> getHstReportByClientCodeAndLastModified(Long facilityId, String clientCode, LocalDateTime lastModified);
 
-//  @Query(value = "SELECT hc.person_uuid, hie.facility_id, hc.client_code,\n" +
-//          "CONCAT(hie.last_name, ' ', hie.first_name,' ', hie.middle_name)\n" +
-//          "AS partnername,\n" +
-//          "bac.display AS partnerGender, \n" +
-//          "hie.relationship_with_index_client AS indexRelation, \n" +
-//          "hie.address AS descriptiveAddress, \n" +
-//          "hie.phone_number AS phoneNumber\n" +
-//          "from hts_index_elicitation hie\n" +
-//          "INNER JOIN hts_client hc ON hie.hts_client_uuid = hc.uuid\n" +
-//          "LEFT JOIN base_application_codeset bac ON hie.sex = bac.id\n" +
-//          "WHERE hie.facility_id = ?1 AND hc.client_code = ?2", nativeQuery = true)
-//  List<PartnerNotificationTypeDto> getPartnerNotifications (Long facilityId, String personUuid);
-
-
-  // client verification query
    @Query(value = "SELECT DISTINCT p.uuid FROM patient_person AS p\n" +
             "\tJOIN hiv_enrollment AS e on e.person_uuid = p.uuid\n" +
             "\tINNER JOIN hiv_art_clinical hac ON hac.hiv_enrollment_uuid = e.uuid\n" +

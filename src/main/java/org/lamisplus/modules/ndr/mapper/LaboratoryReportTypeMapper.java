@@ -37,6 +37,12 @@ public class LaboratoryReportTypeMapper {
 
     private final NDRCodeSetResolverService ndrCodeSetResolverService;
 
+    private static final String VIRALLOAD = "Viral Load";
+    private static final String VISITMESSAGE = "visitId cannot be null";
+    private static final String LESSTE200 = "LessTE200";
+    private static final String POSITIVE = "Positive";
+    private static final String NEGATIVE = "Negative";
+
     public ConditionType laboratoryReportType(String patientUuid, LocalDateTime lastGenerateTime, ConditionType condition) {
 
         List<LabDTO> labDTOS = ndrXmlStatusRepository.getLabInfoByPersonUuid(patientUuid, lastGenerateTime);
@@ -89,7 +95,7 @@ public class LaboratoryReportTypeMapper {
                             numeric.setValue1((int) d);
                             answer.setAnswerNumeric(numeric);
                         } else {
-                            if (labDTO.getLabTestName().equals("Viral Load")) {
+                            if (labDTO.getLabTestName().equals(VIRALLOAD)) {
                                 numeric.setValue1(0);   //if lab test is a viralLoad set the value to 0
                                 answer.setAnswerNumeric(numeric);
                             } else {
@@ -167,7 +173,7 @@ public class LaboratoryReportTypeMapper {
                             numeric.setValue1((int) d);
                             answer.setAnswerNumeric(numeric);
                         } else {
-                            if (labDTO.getLabTestName().equals("Viral Load")) {
+                            if (labDTO.getLabTestName().equals(VIRALLOAD)) {
                                 numeric.setValue1(0);  //if lab test is a viralLoad set the value to 0
                                 answer.setAnswerNumeric(numeric);
                             } else {
@@ -205,7 +211,7 @@ public class LaboratoryReportTypeMapper {
                     if (labDTO.getVisitId() != null) {
                         laboratory.setVisitID(labDTO.getVisitId());
                     } else {
-                        throw new IllegalArgumentException("visitId cannot be null");
+                        throw new IllegalArgumentException(VISITMESSAGE);
                     }
 
                     String visitDate = labDTO.getVisitDate();
@@ -217,7 +223,7 @@ public class LaboratoryReportTypeMapper {
                             throw new IllegalArgumentException(e);
                         }
                     } else {
-                        throw new IllegalArgumentException("visitId cannot be null");
+                        throw new IllegalArgumentException(VISITMESSAGE);
                     }
 
                     String collectionDate = labDTO.getCollectionDate();
@@ -229,7 +235,7 @@ public class LaboratoryReportTypeMapper {
                             throw new IllegalArgumentException(e);
                         }
                     } else {
-                        throw new IllegalArgumentException("visitId cannot be null");
+                        throw new IllegalArgumentException(VISITMESSAGE);
                     }
                     laboratory.setLaboratoryTestIdentifier(labDTO.getLaboratoryTestIdentifier());
 
@@ -274,7 +280,7 @@ public class LaboratoryReportTypeMapper {
                             numeric.setValue1((int) d);
                             answer.setAnswerNumeric(numeric);
                         } else {
-                            if (labDTO.getLaboratoryResultedTestCodeDescTxt().equalsIgnoreCase("Viral Load")) {
+                            if (labDTO.getLaboratoryResultedTestCodeDescTxt().equalsIgnoreCase(VIRALLOAD)) {
                                 numeric.setValue1(0);  //if lab test is a viralLoad set the value to 0
                                 answer.setAnswerNumeric(numeric);
                             } else {
@@ -285,9 +291,9 @@ public class LaboratoryReportTypeMapper {
                                     labResult.setLaboratoryResultedTest(codedSimpleType);
                                     labResult.setLaboratoryTestTypeCode("83");
                                     if (result.equalsIgnoreCase("<200")) {
-                                        answerCode.setCode("LessTE200");
-                                        answerCode.setCodeSystemCode("LessTE200");
-                                        answerCode.setCodeDescTxt("LessTE200");
+                                        answerCode.setCode(LESSTE200);
+                                        answerCode.setCodeSystemCode(LESSTE200);
+                                        answerCode.setCodeDescTxt(LESSTE200);
                                     } else {
                                         answerCode.setCode("GreaterTE200");
                                         answerCode.setCodeSystemCode("GreaterTE200");
@@ -297,14 +303,14 @@ public class LaboratoryReportTypeMapper {
                                 } else {
                                     if (result.contains("+")
                                             || result.contains("Pos")
-                                            || result.contains("pos") || result.equalsIgnoreCase("positive")) {
-                                        answerCode.setCode("Positive");
-                                        answerCode.setCodeSystemCode("Positive");
-                                        answerCode.setCodeDescTxt("Positive");
+                                            || result.contains("pos") || result.equalsIgnoreCase(POSITIVE)) {
+                                        answerCode.setCode(POSITIVE);
+                                        answerCode.setCodeSystemCode(POSITIVE);
+                                        answerCode.setCodeDescTxt(POSITIVE);
                                     } else {
-                                        answerCode.setCode("Negative");
-                                        answerCode.setCodeSystemCode("Negative");
-                                        answerCode.setCodeDescTxt("Negative");
+                                        answerCode.setCode(NEGATIVE);
+                                        answerCode.setCodeSystemCode(NEGATIVE);
+                                        answerCode.setCodeDescTxt(NEGATIVE);
                                     }
                                     answer.setAnswerCode(answerCode);
                                 }

@@ -20,6 +20,15 @@ import java.util.List;
 @Slf4j
 public class ClientVerificationTypeMapper {
 
+    private static final String TRUE = "TRUE";
+    private static final String FALSE = "FALSE";
+    private static final String VERIFICATION_ONGOING = "Verification Ongoing";
+    private static final String RECORDS_DISCONTINUED = "Records Discontinued Archived";
+    private static final String RECORDS_VERIFIED = "Records Verified";
+    private static final String PENDING = "Pending";
+    private static final String VALID = "Valid";
+    private static final String INVALID = "Invalid";
+
     private final NdrMessageLogRepository ndrMessageLogRepository;
 
     public ClientVerificationType getClientVerifications(String patientId, long facilityId, LocalDate start, LocalDate end, List<NDRErrorDTO> ndrErrors) {
@@ -30,7 +39,7 @@ public class ClientVerificationTypeMapper {
             ClientVerificationDTO clientVerificationVal = ndrMessageLogRepository.getClientVerification(patientId, facilityId, start, end);
 
             if (clientVerificationVal != null) {
-//            log.info("Started client");
+
                 if (clientVerificationVal.getClientVerification() != null) {
                     clientVerificationType.setClientVerification("YES");
                 } else {
@@ -38,69 +47,69 @@ public class ClientVerificationTypeMapper {
                 }
 
                 if (clientVerificationVal.getPickupByProxy() != null) {
-                    clientVerificationType.setPickupByProxy("TRUE");
+                    clientVerificationType.setPickupByProxy(TRUE);
                 } else {
-                    clientVerificationType.setPickupByProxy("FALSE");
+                    clientVerificationType.setPickupByProxy(FALSE);
                 }
 
                 if (clientVerificationVal.getDuplicatedDemographic() != null) {
-                    clientVerificationType.setDuplicatedDemographic("TRUE");
+                    clientVerificationType.setDuplicatedDemographic(TRUE);
                 } else {
-                    clientVerificationType.setDuplicatedDemographic("FALSE");
+                    clientVerificationType.setDuplicatedDemographic(FALSE);
                 }
 
                 if (clientVerificationVal.getNoRecapture() != null) {
-                    clientVerificationType.setNoRecapture("TRUE");
+                    clientVerificationType.setNoRecapture(TRUE);
                 } else {
-                    clientVerificationType.setNoRecapture("FALSE");
+                    clientVerificationType.setNoRecapture(FALSE);
                 }
 
                 if (clientVerificationVal.getBatchPickupDates() != null) {
-                    clientVerificationType.setBatchPickupDates("TRUE");
+                    clientVerificationType.setBatchPickupDates(TRUE);
                 } else {
-                    clientVerificationType.setBatchPickupDates("FALSE");
+                    clientVerificationType.setBatchPickupDates(FALSE);
                 }
 
                 if (clientVerificationVal.getLastVisitIsOver18M() != null) {
-                    clientVerificationType.setLastVisitIsOver18M("TRUE");
+                    clientVerificationType.setLastVisitIsOver18M(TRUE);
                 } else {
-                    clientVerificationType.setLastVisitIsOver18M("FALSE");
+                    clientVerificationType.setLastVisitIsOver18M(FALSE);
                 }
 
                 if (clientVerificationVal.getArtStartPickupDate() != null) {
-                    clientVerificationType.setARTStartPickupDate("TRUE");
+                    clientVerificationType.setARTStartPickupDate(TRUE);
                 } else {
-                    clientVerificationType.setARTStartPickupDate("FALSE");
+                    clientVerificationType.setARTStartPickupDate(FALSE);
                 }
 
                 if (clientVerificationVal.getNoInitBiometric() != null) {
-                    clientVerificationType.setNoInitBiometric("TRUE");
+                    clientVerificationType.setNoInitBiometric(TRUE);
                 } else {
-                    clientVerificationType.setNoInitBiometric("FALSE");
+                    clientVerificationType.setNoInitBiometric(FALSE);
                 }
 
                 if (clientVerificationVal.getIncompleteVisitData() != null) {
-                    clientVerificationType.setIncompleteVisitData("TRUE");
+                    clientVerificationType.setIncompleteVisitData(TRUE);
                 } else {
-                    clientVerificationType.setIncompleteVisitData("FALSE");
+                    clientVerificationType.setIncompleteVisitData(FALSE);
                 }
 
                 if (clientVerificationVal.getRepeatEncounterNoPrint() != null) {
-                    clientVerificationType.setRepeatEncounterNoPrint("TRUE");
+                    clientVerificationType.setRepeatEncounterNoPrint(TRUE);
                 } else {
-                    clientVerificationType.setRepeatEncounterNoPrint("FALSE");
+                    clientVerificationType.setRepeatEncounterNoPrint(FALSE);
                 }
 
                 if (clientVerificationVal.getLongIntervalsARVPickup() != null) {
-                    clientVerificationType.setLongIntervalsARVPickup("TRUE");
+                    clientVerificationType.setLongIntervalsARVPickup(TRUE);
                 } else {
-                    clientVerificationType.setLongIntervalsARVPickup("FALSE");
+                    clientVerificationType.setLongIntervalsARVPickup(FALSE);
                 }
 
                 if (clientVerificationVal.getSameSexDOBARTStartDate() != null) {
-                    clientVerificationType.setSameSexDOBARTStartDate("TRUE");
+                    clientVerificationType.setSameSexDOBARTStartDate(TRUE);
                 } else {
-                    clientVerificationType.setSameSexDOBARTStartDate("FALSE");
+                    clientVerificationType.setSameSexDOBARTStartDate(FALSE);
                 }
 
                 if (clientVerificationVal.getOtherSpecifyForCV() != null) {
@@ -108,7 +117,7 @@ public class ClientVerificationTypeMapper {
                 }
 
                 if (clientVerificationVal.getCt1STDate() != null) {
-//            log.info("122 {}", clientVerificationVal.ct1STDate());
+
                     Date ct1STDate = java.sql.Date.valueOf(clientVerificationVal.getCt1STDate());
                     try {
                         clientVerificationType.setCT1STDate(DateUtil.getXmlDate(ct1STDate));
@@ -126,7 +135,7 @@ public class ClientVerificationTypeMapper {
                 }
 
                 if (clientVerificationVal.getCt2NdDate() != null) {
-//                    log.info("122 {}", clientVerificationVal.getCt2NdDate());
+
                     Date ct2NdDate = java.sql.Date.valueOf(clientVerificationVal.getCt2NdDate());
                     try {
                         clientVerificationType.setCT2NdDate(DateUtil.getXmlDate(ct2NdDate));
@@ -144,7 +153,7 @@ public class ClientVerificationTypeMapper {
                 }
 
                 if (clientVerificationVal.getCtLastDate() != null) {
-//                    log.info("123 {}", clientVerificationVal.getCtLastDate());
+
                     Date ctLastDate = java.sql.Date.valueOf(clientVerificationVal.getCtLastDate());
                     try {
                         clientVerificationType.setCTLastDate(DateUtil.getXmlDate(ctLastDate));
@@ -170,62 +179,62 @@ public class ClientVerificationTypeMapper {
     }
 
     private void getFirstStatus(String firstStatus, ClientVerificationType clientVerificationType) {
-        if (firstStatus.contains("Verification Ongoing")) {
+        if (firstStatus.contains(VERIFICATION_ONGOING)) {
             clientVerificationType.setFirstStatus("VerificationOngoing");
-        } else if (firstStatus.contains("Records Discontinued Archived")) {
+        } else if (firstStatus.contains(RECORDS_DISCONTINUED)) {
             clientVerificationType.setFirstStatus("RecordDiscontinued");
-        } else if (firstStatus.contains("Records Verified")) {
+        } else if (firstStatus.contains(RECORDS_VERIFIED)) {
             clientVerificationType.setFirstStatus("RecordVerified");
         }
     }
 
     private void getFirstOutcome(String firstOutcome, ClientVerificationType clientVerificationType) {
-        if (firstOutcome.contains("Verification Ongoing")) {
-            clientVerificationType.setFirstOutcome("Pending");
+        if (firstOutcome.contains(VERIFICATION_ONGOING)) {
+            clientVerificationType.setFirstOutcome(PENDING);
         } else if (firstOutcome.contains("valid")) {
-            clientVerificationType.setFirstOutcome("Valid");
+            clientVerificationType.setFirstOutcome(VALID);
         } else if (firstOutcome.contains("invalid")) {
-            clientVerificationType.setFirstOutcome("Invalid");
+            clientVerificationType.setFirstOutcome(INVALID);
         }
     }
 
     private void getSecondStatus(String firstStatus, ClientVerificationType clientVerificationType) {
-        if (firstStatus.contains("Verification Ongoing")) {
+        if (firstStatus.contains(VERIFICATION_ONGOING)) {
             clientVerificationType.setSecondStatus("VerificationOngoing");
-        } else if (firstStatus.contains("Records Discontinued Archived")) {
+        } else if (firstStatus.contains(RECORDS_DISCONTINUED)) {
             clientVerificationType.setSecondStatus("RecordDiscontinued");
-        } else if (firstStatus.contains("Records Verified")) {
+        } else if (firstStatus.contains(RECORDS_VERIFIED)) {
             clientVerificationType.setSecondStatus("RecordVerified");
         }
     }
 
     private void getSecondOutcome(String firstOutcome, ClientVerificationType clientVerificationType) {
-        if (firstOutcome.contains("Verification Ongoing")) {
-            clientVerificationType.setSecondOutcome("Pending");
+        if (firstOutcome.contains(VERIFICATION_ONGOING)) {
+            clientVerificationType.setSecondOutcome(PENDING);
         } else if (firstOutcome.contains("valid")) {
-            clientVerificationType.setSecondOutcome("Valid");
+            clientVerificationType.setSecondOutcome(VALID);
         } else if (firstOutcome.contains("invalid")) {
-            clientVerificationType.setSecondOutcome("Invalid");
+            clientVerificationType.setSecondOutcome(INVALID);
         }
     }
 
     private void getThirdStatus(String firstStatus, ClientVerificationType clientVerificationType) {
-        if (firstStatus.contains("Verification Ongoing")) {
+        if (firstStatus.contains(VERIFICATION_ONGOING)) {
             clientVerificationType.setLastStatus("VerificationOngoing");
-        } else if (firstStatus.contains("Records Discontinued Archived")) {
+        } else if (firstStatus.contains(RECORDS_DISCONTINUED)) {
             clientVerificationType.setLastStatus("RecordDiscontinued");
-        } else if (firstStatus.contains("Records Verified")) {
+        } else if (firstStatus.contains(RECORDS_VERIFIED)) {
             clientVerificationType.setLastStatus("RecordVerified");
         }
     }
 
     private void getThirdOutcome(String firstOutcome, ClientVerificationType clientVerificationType) {
-        if (firstOutcome.contains("Verification Ongoing")) {
-            clientVerificationType.setLastOutcome("Pending");
+        if (firstOutcome.contains(VERIFICATION_ONGOING)) {
+            clientVerificationType.setLastOutcome(PENDING);
         } else if (firstOutcome.contains("valid")) {
-            clientVerificationType.setLastOutcome("Valid");
+            clientVerificationType.setLastOutcome(VALID);
         } else if (firstOutcome.contains("invalid")) {
-            clientVerificationType.setLastOutcome("Invalid");
+            clientVerificationType.setLastOutcome(INVALID);
         }
     }
 

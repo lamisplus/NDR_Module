@@ -15,8 +15,6 @@ public interface HtsReportDto extends
     String getSetting();
     String getFirstTimeVisit();
     LocalDate getVisitDate();
-
-//    String getSessionType();
     String getReferredFrom();
 
     String getMaritalStatus();
@@ -28,8 +26,6 @@ public interface HtsReportDto extends
     String getIsIndexClient();
 
     String getIndexClientId();
-
-//    String getReTestingForResultVerification();
     String getSyphilisTestResult();
 
     String getHbvTestResult();

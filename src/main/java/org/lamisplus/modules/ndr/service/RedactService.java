@@ -59,13 +59,16 @@ public class RedactService {
     public static final String JAXB_ENCODING = "UTF-8";
     public static final String XML_WAS_GENERATED_FROM_LAMISPLUS_APPLICATION = "\n<!-- This XML was generated from LAMISPlus application -->";
     public static final String HEADER_BIND_COMMENT = "com.sun.xml.bind.xmlHeaders";
+
+    private static final String TEMP = "temp/";
+    private static final String REDACTED = "redacted";
     /**
      * NDR REDACTED XML FOR PATIENT IN LAMISPLUS
      * IMPLEMENTED BY VICTOR AJOR
      *
      * **/
     public void generatePatientsRedactedXml(long facilityId, boolean initial) {
-        final String pathname = BASE_DIR + "temp/" + facilityId + "/";
+        final String pathname = BASE_DIR + TEMP + facilityId + "/";
         log.info("folder -> "+ pathname);
         ndrService.cleanupFacility(facilityId, pathname);
         AtomicInteger generatedCount = new AtomicInteger();
@@ -79,7 +82,7 @@ public class RedactService {
         }else {
             log.info("starting updated redaction....");
             Optional<Timestamp> lastGenerateDateTimeByFacilityId =
-                    ndrXmlStatusRepository.getLastGenerateDateTimeByFacilityId(facilityId, "redacted");
+                    ndrXmlStatusRepository.getLastGenerateDateTimeByFacilityId(facilityId, REDACTED);
             if (lastGenerateDateTimeByFacilityId.isPresent()) {
                 LocalDateTime lastModified =
                         lastGenerateDateTimeByFacilityId.get().toLocalDateTime();
@@ -104,10 +107,10 @@ public class RedactService {
                 });
         log.info("generated  {}/{}", generatedCount.get(), patientIds.size());
         log.info("files not generated  {}/{}", errorCount.get(), patientIds.size());
-        File folder = new File(BASE_DIR + "temp/" + facilityId + "/");
+        File folder = new File(BASE_DIR + TEMP + facilityId + "/");
         log.info("fileSize {} bytes ", ZipUtility.getFolderSize(folder));
         if (ZipUtility.getFolderSize(folder) >= 15_000_000) {
-            log.info(BASE_DIR + "temp/" + facilityId + "/" + " will be split into two");
+            log.info(BASE_DIR + TEMP + facilityId + "/" + " will be split into two");
         }
         if (generatedCount.get() > 0) {
             zipAndSaveTheFilesforDownload(
@@ -116,7 +119,7 @@ public class RedactService {
                     generatedCount,
                     patientRedactedDemographicDTO[0],
                     ndrErrors,
-                    "redacted", pushIdentifier
+                    REDACTED, pushIdentifier
             );
         }
         log.error("error list size {}", ndrErrors.size());
@@ -133,13 +136,6 @@ public class RedactService {
         PatientRedactedDemographicDTO patientDemographic =
                 getPatientDemographic(patientId, facilityId, ndrErrors);
 
-//        if (!initial && patientDemographic != null) {
-//            Optional<NdrMessageLog> messageLog =
-//                    data.findFirstByIdentifierAndFileType(patientDemographic.getPatientIdentifier(), "treatment");
-//            if (messageLog.isPresent()) {
-//                start = messageLog.get().getLastUpdated().toLocalDate();
-//            }
-//        }
         //redacted visits
         if (patientDemographic == null) return false;
 
@@ -148,7 +144,7 @@ public class RedactService {
                 initial,
                 ndrErrors, pushIdentifier);
         if (fileName != null) {
-            saveTheXmlFile(patientDemographic.getPatientIdentifier(), fileName,"redacted");
+            saveTheXmlFile(patientDemographic.getPatientIdentifier(), fileName,REDACTED);
         }
         return fileName != null;
     }
@@ -266,7 +262,7 @@ public class RedactService {
             List<File> files = new ArrayList<>();
             files = ndrService.getFiles(sourceFolder, files);
             long thirtyMB = (FileUtils.ONE_MB * 15)*2;
-            File folder = new File(BASE_DIR + "temp/" + facilityId + "/");
+            File folder = new File(BASE_DIR + TEMP + facilityId + "/");
             if (ZipUtility.getFolderSize(folder) > thirtyMB) {
                 List<List<File>> splitFiles = split(files, thirtyMB);
                 for (int i = 0; i < splitFiles.size(); i++) {

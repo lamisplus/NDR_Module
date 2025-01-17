@@ -55,12 +55,11 @@ public class HtsService {
 	public final HtsTypeMapper htsTypeMapper;
 
 	private final NdrOptimizationService ndrOptimizationService;
-
-
+	private static final String TEMP = "temp/";
 
     public void generateOnePatientHtsNDRXml(long facilityId, boolean initial, String clientCode) {
         ObjectFactory objectFactory = new ObjectFactory();
-        final String pathname = BASE_DIR + "temp/" + facilityId + "/";
+        final String pathname = BASE_DIR + TEMP + facilityId + "/";
         log.info("folder -> "+ pathname);
         ndrService.cleanupFacility(facilityId, pathname);
         AtomicInteger generatedCount = new AtomicInteger();
@@ -86,10 +85,10 @@ public class HtsService {
 
         log.info("generated  {}/{}", generatedCount.get(), patientIds.size());
         log.info("files not generated  {}/{}", errorCount.get(), patientIds.size());
-        File folder = new File(BASE_DIR + "temp/" + facilityId + "/");
+        File folder = new File(BASE_DIR + TEMP + facilityId + "/");
         log.info("fileSize {} bytes ", ZipUtility.getFolderSize(folder));
         if (ZipUtility.getFolderSize(folder) >= 15_000_000) {
-            log.info(BASE_DIR + "temp/" + facilityId + "/" + " will be split into two");
+            log.info(BASE_DIR + TEMP + facilityId + "/" + " will be split into two");
         }
         if (generatedCount.get() > 0) {
             ndrOptimizationService.zipAndSaveTheFilesforDownload(
@@ -155,13 +154,66 @@ public class HtsService {
 		return data.getHstReportByClientCodeAndLastModified(facilityId, clientCode,lastModified);
 	  }
 
-	//List<PartnerNotificationTypeDto> getPartnerNotifications (long facilityId, String clientCode ){
-	//return data.getPartnerNotifications(facilityId, clientCode);
-	//}
+	public void generateSelectedPatientsHtsNDRXml(long facilityId, boolean initial, List<String> patientIds) {
+		ObjectFactory objectFactory = new ObjectFactory();
+		final String pathname = BASE_DIR + TEMP + facilityId + "/";
+		log.info("folder -> "+ pathname);
+		ndrService.cleanupFacility(facilityId, pathname);
+		AtomicInteger generatedCount = new AtomicInteger();
+		AtomicInteger errorCount = new AtomicInteger();
+		LocalDateTime start = LocalDateTime.of(1984, 1, 1, 0, 0);
 
+		List<NDRErrorDTO> ndrErrors = new ArrayList<NDRErrorDTO>();
+		PatientDemographicDTO[] patientDemographicDTO = new PatientDemographicDTO[1];
+//		if (initial) {
+//			patientIds = data.getHtsClientCode(facilityId, start);
+//			log.info("generating initial ....");
+//		}else {
+//			log.info("generating updated....");
+//			Optional<Timestamp> lastGenerateDateTimeByFacilityId =
+//					ndrXmlStatusRepository.getLastGenerateDateTimeByFacilityId(facilityId,"hts");
+//			if (lastGenerateDateTimeByFacilityId.isPresent()) {
+//				start = lastGenerateDateTimeByFacilityId.get().toLocalDateTime();
+//				log.info("Last Generated Date: " + start);
+//				patientIds = data.getHtsClientCode(facilityId,start);
+//			}
+//		}
+
+
+		log.info("patient size -> "+ patientIds.size());
+		log.info("patient ids -> "+ patientIds);
+		LocalDateTime finalStart = start;
+		patientIds.parallelStream()
+				.forEach(id -> {
+					if (getPatientHtsNDRXml(id, facilityId, initial,objectFactory, ndrErrors)) {
+						generatedCount.getAndIncrement();
+						patientDemographicDTO[0] = data.getHtsPatientDemographics(facilityId, id , finalStart).get();
+					} else {
+						errorCount.getAndIncrement();
+					}
+				});
+		log.info("generated  {}/{}", generatedCount.get(), patientIds.size());
+		log.info("files not generated  {}/{}", errorCount.get(), patientIds.size());
+		File folder = new File(BASE_DIR + TEMP + facilityId + "/");
+		log.info("fileSize {} bytes ", ZipUtility.getFolderSize(folder));
+		if (ZipUtility.getFolderSize(folder) >= 15_000_000) {
+			log.info(BASE_DIR + TEMP + facilityId + "/" + " will be split into two");
+		}
+		if (generatedCount.get() > 0) {
+			ndrOptimizationService.zipAndSaveTheFilesforDownload(
+					facilityId,
+					pathname,
+					generatedCount,
+					patientDemographicDTO[0],
+					ndrErrors,
+					"hts", patientDemographicDTO[0].getPatientIdentifier()
+			);
+		}
+		log.error("error list size {}", ndrErrors.size());
+	}
 	public void generatePatientsHtsNDRXml(long facilityId, boolean initial) {
 		ObjectFactory objectFactory = new ObjectFactory();
-		final String pathname = BASE_DIR + "temp/" + facilityId + "/";
+		final String pathname = BASE_DIR + TEMP + facilityId + "/";
 		log.info("folder -> "+ pathname);
 		ndrService.cleanupFacility(facilityId, pathname);
 		AtomicInteger generatedCount = new AtomicInteger();
@@ -198,10 +250,10 @@ public class HtsService {
 				});
 		log.info("generated  {}/{}", generatedCount.get(), patientIds.size());
 		log.info("files not generated  {}/{}", errorCount.get(), patientIds.size());
-		File folder = new File(BASE_DIR + "temp/" + facilityId + "/");
+		File folder = new File(BASE_DIR + TEMP + facilityId + "/");
 		log.info("fileSize {} bytes ", ZipUtility.getFolderSize(folder));
 		if (ZipUtility.getFolderSize(folder) >= 15_000_000) {
-			log.info(BASE_DIR + "temp/" + facilityId + "/" + " will be split into two");
+			log.info(BASE_DIR + TEMP + facilityId + "/" + " will be split into two");
 		}
 		if (generatedCount.get() > 0) {
 			ndrOptimizationService.zipAndSaveTheFilesforDownload(
@@ -259,7 +311,9 @@ public class HtsService {
 						individualReportType.getCondition().add(conditionType);
 					}
 					if(individualReportType.getHIVTestingReport().isEmpty()){
-						throw new IllegalArgumentException("No HTS test was found for patient with client code "+ patientDemographic.getClientCode());
+						return null;
+						//throw new IllegalArgumentException("No HTS test was found for patient with client code "+ patientDemographic.getClientCode());
+
 					}
 				}
 				log.info("converting treatment details to xml... ");

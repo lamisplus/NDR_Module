@@ -46,11 +46,6 @@ public interface MortalityDTO {
     LocalDate getDateofTermination();
 
     String getReasonforTermination();
-
-//    String getIndicationforClientVerification();
-//
-//    String getClientVerificationOther();
-
     String getTransferredOutTo();
 
     String getDeath();

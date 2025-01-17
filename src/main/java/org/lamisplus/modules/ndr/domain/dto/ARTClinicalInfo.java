@@ -14,8 +14,6 @@ public interface ARTClinicalInfo {
 	
 	Long getCd4();
 	
-	//Boolean isCommencement();
-	
 	Long getFunctionalStatusId();
 	
 	Long getClinicalStageId();

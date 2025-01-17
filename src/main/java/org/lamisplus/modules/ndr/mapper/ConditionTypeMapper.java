@@ -215,6 +215,10 @@ public class ConditionTypeMapper {
     public ConditionType getConditionType(PatientDemographicDTO demographics, boolean isHts) {
         ConditionType condition = new ConditionType();
         log.info("I am in address");
+
+        if (isHts) {
+            //dynamic check
+        }
         //List of applications code set
         setProgramCodeAndArea(condition);
         //Address
