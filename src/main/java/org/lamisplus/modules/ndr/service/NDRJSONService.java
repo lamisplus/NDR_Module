@@ -36,14 +36,9 @@ import java.util.*;
 public class NDRJSONService {
     //TODO: Save the hard-coded values in database
     String pingUrl = "https://emr-ndrpushsandbox.phis3project.org.ng/api/Cronbox";
-    
-    //"https://emr-ndrpush.phis3project.org.ng/api/Cronbox";
-
-    private final int BATCHMAX = 10;
     String authEndPoint = "/auth";
     String pushEndPoint = "/beep";
     String logsEndPoint = "/errorLogs";
-   // String baseUrl = "";
     String baseUrl = "******";
     String email = "*******";
     String password = "********";
@@ -57,6 +52,7 @@ public class NDRJSONService {
     private final NDRPusherConfigRepository ndrPusherConfigRepository;
 
     private final NdrXmlStatusRepository ndrXmlStatusRepository;
+    private static final String SUCCESS = "success";
 
     private String ConvertContainerToString(Container2 container) throws JsonProcessingException {
         ObjectMapper mapper = new ObjectMapper();
@@ -73,7 +69,7 @@ public class NDRJSONService {
         ResponseEntity<NDRPingResponseDTO> response = GetRestTemplate().exchange(pingUrl, HttpMethod.GET,
                 entity, NDRPingResponseDTO.class);
         NDRPingResponseDTO responseDTO = response.getBody();
-        return "success";
+        return SUCCESS;
     }
 
     public NDRAuthResponseDTO AuthenticateUser(String email, String password) {
@@ -172,20 +168,6 @@ public class NDRJSONService {
         return ndrPusherConfigRepository.save(ndrPusherConfig);
     }
 
-//    public NDRPusherConfig  updateAutoPushConfig (Long id, NDRAuthRequestDTO ndrAuthRequestDTO)
-//    {
-//        NDRPusherConfig ndrPusherConfig = new NDRPusherConfig();
-//        Optional<NDRPusherConfig> ndrPusherConfigOptional = ndrPusherConfigRepository.findById(id);
-//        if(ndrPusherConfigOptional.isPresent()){
-//            ndrPusherConfig = ndrPusherConfigOptional.get();
-//            ndrPusherConfig.setPassword(ndrAuthRequestDTO.getPassword());
-//            ndrPusherConfig.setUsername(ndrAuthRequestDTO.getEmail());
-//            //ndrPusherConfig.setFacilityId(facilityId);
-//            return ndrPusherConfigRepository.save(ndrPusherConfig);
-//        }
-//        return null;
-//    }
-
     public NDRPusherConfig updateAutoPushConfig(NDRAuthRequestDTO ndrAuthRequestDTO) {
         try {
             Long facilityId = 0L;
@@ -194,12 +176,12 @@ public class NDRJSONService {
                 facilityId = currentUser.get().getCurrentOrganisationUnitId();
             }
             Optional<NDRPusherConfig> ndrPusherConfigOptional = this.ndrPusherConfigRepository.findByFacilityId(facilityId);
-            // Optional<NDRPusherConfig> ndrPusherConfigOptional = ndrPusherConfigRepository.findById(id);
+
             if (ndrPusherConfigOptional.isPresent()) {
                 NDRPusherConfig ndrPusherConfig = ndrPusherConfigOptional.get();
                 ndrPusherConfig.setPassword(ndrAuthRequestDTO.getPassword());
                 ndrPusherConfig.setUsername(ndrAuthRequestDTO.getEmail());
-                //ndrPusherConfig.setFacilityId(facilityId);
+
                 return ndrPusherConfigRepository.save(ndrPusherConfig);
             }
         } catch (Exception e) {
@@ -274,7 +256,7 @@ public class NDRJSONService {
             facilityId = currentUser.get().getCurrentOrganisationUnitId();
         }
 
-        if (PingNDRServer().equals("success")) {
+        if (PingNDRServer().equals(SUCCESS)) {
             System.out.println("successfully ping");
             String token = GetJWT();
             String identifier = "";
@@ -296,21 +278,20 @@ public class NDRJSONService {
                 while (iterator.hasNext()) {
                     NDRMessages msg = (NDRMessages) iterator.next();
                     batches++; counter++;
-                    if(batches%BATCHMAX != 0){
+                    int BATCHMAX = 10;
+                    if(batches% BATCHMAX != 0){
                         data.add(msg.getDeMessage().replace("null,", ""));
                         messages.add(msg);
                         continue;
                     }
-                    else if ( (batches%BATCHMAX == 0) || (counter == size)) {
+                    else if ( (batches% BATCHMAX == 0) || (counter == size)) {
                         if (batches == BATCHMAX) {
                             data.add(msg.getDeMessage());
                             messages.add(msg);
                         }
                         NDRDataResponseDTO ndrDataResponseDTO = PushData(token, data);
-                        if (ndrDataResponseDTO.getMessage().contains("success")) {
-                            //msg.setIsPushed(Boolean.TRUE);
-                            //msg.setMessageDate(LocalDate.now());
-                            //ndrMessagesRepository.save(msg);
+                        if (ndrDataResponseDTO.getMessage().contains(SUCCESS)) {
+
                             log.info("data:{}", ndrDataResponseDTO);
                             log.info("batchId from server : {}", ndrDataResponseDTO.getBatchNumber());
                             for (NDRMessages message:messages) {

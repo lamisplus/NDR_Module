@@ -79,63 +79,6 @@ public class ConditionTypeMapper {
         return condition;
     }
     
-    public ConditionType getConditionType(
-            PatientDemographics demographics,
-            ArtCommencementDTO commencementDTO,
-            List<ARTClinicalInfo> encounterDTOList,
-            List<ArtPharmacy> pharmacies,
-            List<LabDTO> labs) {
-        //List code Sets
-        ConditionType condition = new ConditionType();
-        setProgramCodeAndArea(condition);
-    
-        //Address
-        // consider saving address somewhere
-        if (demographics != null) {
-            AddressType address = addressTypeMapper.getPatientAddress(demographics);
-            if (address.getStateCode() != null && address.getLGACode() != null) {
-                condition.setPatientAddress(address);
-            }
-            
-            //common questions
-            CommonQuestionsType common = commonQuestionsTypeMapper.getPatientCommonQuestion(demographics);
-            if (common != null) {
-                condition.setCommonQuestions(common);
-            }
-            
-        }
-        
-        //specific questions
-        if (demographics != null && commencementDTO != null) {
-            ConditionSpecificQuestionsType disease =
-                    specificQuestionsTypeMapper.getConditionSpecificQuestionsType(demographics, commencementDTO);
-            if (disease != null) {
-                condition.setConditionSpecificQuestions(disease);
-                
-            }
-        }
-        if (demographics != null
-                && (encounterDTOList != null && !encounterDTOList.isEmpty())
-                && (pharmacies != null && !pharmacies.isEmpty())) {
-            //encounter
-            EncountersType encounter = encountersTypeMapper.encounterType(demographics, encounterDTOList, pharmacies);
-            if (encounter != null) {
-                condition.setEncounters(encounter);
-            }
-        }
-        //
-        if (demographics != null && (pharmacies != null && !pharmacies.isEmpty())) {
-            regimenTypeMapper.regimenType(demographics, condition, pharmacies);
-        }
-        
-        if ((labs != null && !labs.isEmpty())) {
-            LocalDateTime lastUpdated = LocalDateTime.of(1990, 1, 1, 0, 0);
-            laboratoryReportTypeMapper.laboratoryReportType(demographics.getPersonUuid(), lastUpdated, condition, labs);
-        }
-        
-        return condition;
-    }
-    
     private static void setProgramCodeAndArea(ConditionType condition) {
         condition.setConditionCode("86406008");
         ProgramAreaType programArea = new ProgramAreaType();
@@ -215,6 +158,7 @@ public class ConditionTypeMapper {
     public ConditionType getConditionType(PatientDemographicDTO demographics, boolean isHts) {
         ConditionType condition = new ConditionType();
         log.info("I am in address");
+
         //List of applications code set
         setProgramCodeAndArea(condition);
         //Address

@@ -48,7 +48,6 @@ import java.util.zip.ZipOutputStream;
 public class RedactService {
     private static final String BASE_DIR = "runtime/ndr_redact/transfer/";
     @Autowired
-    private NdrMessageLogRepository ndrMessageLogRepository;
     private final NdrRedactService ndrService;
     private final NdrMessageLogRepository data;
     private final NdrXmlStatusRepository ndrXmlStatusRepository;
@@ -59,27 +58,29 @@ public class RedactService {
     public static final String JAXB_ENCODING = "UTF-8";
     public static final String XML_WAS_GENERATED_FROM_LAMISPLUS_APPLICATION = "\n<!-- This XML was generated from LAMISPlus application -->";
     public static final String HEADER_BIND_COMMENT = "com.sun.xml.bind.xmlHeaders";
+
+    private static final String TEMP = "temp/";
+    private static final String REDACTED = "redacted";
     /**
      * NDR REDACTED XML FOR PATIENT IN LAMISPLUS
      * IMPLEMENTED BY VICTOR AJOR
-     *
      * **/
     public void generatePatientsRedactedXml(long facilityId, boolean initial) {
-        final String pathname = BASE_DIR + "temp/" + facilityId + "/";
+        final String pathname = BASE_DIR + TEMP + facilityId + "/";
         log.info("folder -> "+ pathname);
         ndrService.cleanupFacility(facilityId, pathname);
         AtomicInteger generatedCount = new AtomicInteger();
         AtomicInteger errorCount = new AtomicInteger();
         LocalDateTime start = LocalDateTime.of(1984, 1, 1, 0, 0);
-        List<String> patientIds = new ArrayList<String>();
-        List<NDRErrorDTO> ndrErrors = new ArrayList<NDRErrorDTO>();
+        List<String> patientIds = new ArrayList<>();
+        List<NDRErrorDTO> ndrErrors = new ArrayList<>();
         if (initial) {
             patientIds = data.getPatientIdsEligibleForRedaction(start, facilityId);
             log.info("starting initial redaction....");
         }else {
             log.info("starting updated redaction....");
             Optional<Timestamp> lastGenerateDateTimeByFacilityId =
-                    ndrXmlStatusRepository.getLastGenerateDateTimeByFacilityId(facilityId, "redacted");
+                    ndrXmlStatusRepository.getLastGenerateDateTimeByFacilityId(facilityId, REDACTED);
             if (lastGenerateDateTimeByFacilityId.isPresent()) {
                 LocalDateTime lastModified =
                         lastGenerateDateTimeByFacilityId.get().toLocalDateTime();
@@ -104,10 +105,10 @@ public class RedactService {
                 });
         log.info("generated  {}/{}", generatedCount.get(), patientIds.size());
         log.info("files not generated  {}/{}", errorCount.get(), patientIds.size());
-        File folder = new File(BASE_DIR + "temp/" + facilityId + "/");
+        File folder = new File(BASE_DIR + TEMP + facilityId + "/");
         log.info("fileSize {} bytes ", ZipUtility.getFolderSize(folder));
         if (ZipUtility.getFolderSize(folder) >= 15_000_000) {
-            log.info(BASE_DIR + "temp/" + facilityId + "/" + " will be split into two");
+            log.info(BASE_DIR + TEMP + facilityId + "/" + " will be split into two");
         }
         if (generatedCount.get() > 0) {
             zipAndSaveTheFilesforDownload(
@@ -116,14 +117,14 @@ public class RedactService {
                     generatedCount,
                     patientRedactedDemographicDTO[0],
                     ndrErrors,
-                    "redacted", pushIdentifier
+                    REDACTED, pushIdentifier
             );
         }
         log.error("error list size {}", ndrErrors.size());
     }
 
     private boolean getPatientRedactedXml(String patientId, long facilityId, boolean initial, List<NDRErrorDTO> ndrErrors, String pushIdentifier) {
-        ObjectMapper objectMapper = new ObjectMapper();
+
         log.info("starting process patient xml file information");
         log.info("facilityId {}, patientId {}", facilityId, patientId);
         LocalDate start = LocalDate.of(1985, Month.JANUARY, 1);
@@ -133,13 +134,6 @@ public class RedactService {
         PatientRedactedDemographicDTO patientDemographic =
                 getPatientDemographic(patientId, facilityId, ndrErrors);
 
-//        if (!initial && patientDemographic != null) {
-//            Optional<NdrMessageLog> messageLog =
-//                    data.findFirstByIdentifierAndFileType(patientDemographic.getPatientIdentifier(), "treatment");
-//            if (messageLog.isPresent()) {
-//                start = messageLog.get().getLastUpdated().toLocalDate();
-//            }
-//        }
         //redacted visits
         if (patientDemographic == null) return false;
 
@@ -148,7 +142,7 @@ public class RedactService {
                 initial,
                 ndrErrors, pushIdentifier);
         if (fileName != null) {
-            saveTheXmlFile(patientDemographic.getPatientIdentifier(), fileName,"redacted");
+            saveTheXmlFile(patientDemographic.getPatientIdentifier(), fileName,REDACTED);
         }
         return fileName != null;
     }
@@ -167,13 +161,9 @@ public class RedactService {
 
             if (patientRedactedDemographic != null) {
                MessageHeaderType messageHeader = messageHeaderTypeMapper.getMessageHeader(patientDemographic);
-                String messageStatusCode = "INITIAL";
                 if (!initial) {
                     Optional<NdrMessageLog> firstByIdentifier =
                             data.findFirstByIdentifier(patientDemographic.getPatientIdentifier());
-                    if (firstByIdentifier.isPresent()) {
-                        messageStatusCode = "UPDATED";
-                    }
                 }
 
                 messageHeader.setMessageUniqueID(Long.toString(id));
@@ -207,7 +197,7 @@ public class RedactService {
         } catch (Exception e) {
             log.error("An error occur when generating person with hospital number {}",
                     patientDemographic.getHospitalNumber());
-            log.error("error: " + e.toString());
+            log.error("error: " + e);
             e.printStackTrace();
             ndrErrors.add(new NDRErrorDTO(patientDemographic.getPersonUuid(),
                     patientDemographic.getHospitalNumber(), e.toString()));
@@ -266,7 +256,7 @@ public class RedactService {
             List<File> files = new ArrayList<>();
             files = ndrService.getFiles(sourceFolder, files);
             long thirtyMB = (FileUtils.ONE_MB * 15)*2;
-            File folder = new File(BASE_DIR + "temp/" + facilityId + "/");
+            File folder = new File(BASE_DIR + TEMP + facilityId + "/");
             if (ZipUtility.getFolderSize(folder) > thirtyMB) {
                 List<List<File>> splitFiles = split(files, thirtyMB);
                 for (int i = 0; i < splitFiles.size(); i++) {
@@ -318,8 +308,6 @@ public class RedactService {
                     }
                 }
             }
-        } catch (FileNotFoundException e) {
-            throw new RuntimeException(e);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

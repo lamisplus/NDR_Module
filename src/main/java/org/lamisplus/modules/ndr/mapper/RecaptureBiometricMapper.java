@@ -25,13 +25,8 @@ import java.util.stream.Collectors;
 public class RecaptureBiometricMapper {
 	private final NdrMessageLogRepository ndrMessageLogRepository;
 	
-	private final ModuleService moduleService;
-	
 	private final NDRCodeSetRepository ndrCodeSetRepository;
-	
-	
-	
-	
+
 	public Container getRecaptureBiometricMapper(PatientDemographics demographics) {
 		log.info("Start fetching and mapping finger-print for patient with hospital number {}", demographics.getHospitalNumber());
 		ObjectFactory objectFactory  = new ObjectFactory();
@@ -89,22 +84,17 @@ public class RecaptureBiometricMapper {
 			String patientUuid,
 			PatientDemographicsType patientDemographicsType) {
 		
-		//offset
-		
 		String patientIdentifier = patientDemographicsType.getPatientIdentifier();
 		Optional<NdrMessageLog> messageLog =
 				ndrMessageLogRepository.findFirstByIdentifierAndFileType(patientIdentifier, "recaptured-biometric");
-		List<RecaptureBiometricDTO> biometricDTOList = new ArrayList<>();
+		List<RecaptureBiometricDTO> biometricDTOList;
 		if(messageLog.isPresent()) {
-			// find the new value;
+
 			LocalDate lastUpdated =
 					messageLog.get().getLastUpdated().toLocalDate();
 			log.info("last recapture Date " + lastUpdated);
 			biometricDTOList =
 					ndrCodeSetRepository.getPatientRecapturedBiometricByPatientUuid(patientUuid, lastUpdated);
-//			biometricDTOList =
-//					ndrCodeSetRepository.getPatientRecapturedBiometricByPatientUuid(patientUuid);
-			
 		}else {
 			biometricDTOList =
 					ndrCodeSetRepository.getPatientRecapturedBiometricByPatientUuid(patientUuid);
