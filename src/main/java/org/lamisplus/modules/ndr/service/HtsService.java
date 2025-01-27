@@ -105,6 +105,8 @@ public class HtsService {
     }
 
 	private boolean getPatientHtsNDRXml(String clientCode, long facilityId, boolean initial, ObjectFactory obj, List<NDRErrorDTO> ndrErrors) {
+		log.info("Got here for deleting*********");
+		ndrXmlStatusRepository.deleteNdrXmlStatusByErrorIsNotNull();
 		log.info("starting process patient xml file information");
 		log.info("facilityId {}, patientId {}", facilityId, clientCode);
 		LocalDateTime start = LocalDateTime.of(1985, Month.JANUARY, 1,0,0);
