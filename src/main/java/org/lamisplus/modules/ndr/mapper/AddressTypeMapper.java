@@ -55,16 +55,10 @@ public class AddressTypeMapper {
 		}
 		
 	}
-
-
-
 	
 	private void processAndSetPatientCurrentAddress(AddressType addressType, PatientDemographicDTO patientDemographics) {
 		log.info("Processing address...");
 		try {
-//			if (patientDemographics.!= null) {
-//				addressType.setTown(patientDemographics.getTown());
-//			}
 			if(patientDemographics.getLgaCode() != null) {
 				addressType.setLGACode(patientDemographics.getLgaCode() );
 			}

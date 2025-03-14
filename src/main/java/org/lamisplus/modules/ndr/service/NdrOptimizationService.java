@@ -55,7 +55,6 @@ public class NdrOptimizationService {
 	private final PatientDemographicsMapper patientDemographicsMapper;
 	private final ConditionTypeMapper conditionTypeMapper;
 	private final MortalityTypeMapper mortalityTypeMapper;
-
 	private final NdrXmlStatusRepository ndrXmlStatusRepository;
 
 	public static final String BASE_DIR = "runtime/ndr/transfer/";
@@ -68,6 +67,7 @@ public class NdrOptimizationService {
 	public final AtomicLong messageId = new AtomicLong(0);
 
 	public void generatePatientOneNDRXml(long facilityId, boolean initial, String patientId) {
+		ndrXmlStatusRepository.deleteNdrXmlStatusByErrorIsNotNull();
 		final String pathname = BASE_DIR + "temp/" + facilityId + "/";
 		log.info("folder -> "+ pathname);
 		ndrService.cleanupFacility(facilityId, pathname);
@@ -103,7 +103,7 @@ public class NdrOptimizationService {
 
 
 	public void generatePatientsNDRXml(long facilityId, boolean initial){
-
+		ndrXmlStatusRepository.deleteNdrXmlStatusByErrorIsNotNull();
 		List<String> patientIds = new ArrayList<String>();
 		LocalDateTime start = LocalDateTime.of(1984, 1, 1, 0, 0);
 		if (initial) {
@@ -325,6 +325,8 @@ public class NdrOptimizationService {
 	private boolean getPatientNDRXml(String patientId, long facilityId, boolean initial,
 									 List<NDRErrorDTO> ndrErrors,
 									 String pushIdentifier) {
+		log.info("Got here for deleting*********");
+		ndrXmlStatusRepository.deleteNdrXmlStatusByErrorIsNotNull();
 		PatientDemographicDTO patientDemographic =
 				getPatientDemographic(patientId, facilityId, ndrErrors);
 		if (patientDemographic == null)
@@ -418,6 +420,8 @@ public class NdrOptimizationService {
 												LocalDateTime endDate,
 									 List<NDRErrorDTO> ndrErrors,
 									 String pushIdentifier) {
+		log.info("Got here for deleting*********");
+		ndrXmlStatusRepository.deleteNdrXmlStatusByErrorIsNotNull();
 		PatientDemographicDTO patientDemographic =
 				getPatientDemographic(patientId, facilityId, ndrErrors);
 		if (patientDemographic == null)
@@ -506,6 +510,8 @@ public class NdrOptimizationService {
 	private boolean getPatientNDRXml_lastRecord(String patientId, long facilityId, boolean initial,
 									 List<NDRErrorDTO> ndrErrors,
 									 String pushIdentifier) {
+		log.info("Got here for deleting*********");
+		ndrXmlStatusRepository.deleteNdrXmlStatusByErrorIsNotNull();
 		ObjectMapper objectMapper = new ObjectMapper();
 		log.info("starting process patient xml file information");
 		log.info("facilityId {}, patientId {}", facilityId, patientId);

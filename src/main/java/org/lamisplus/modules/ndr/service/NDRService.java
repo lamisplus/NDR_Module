@@ -1,6 +1,5 @@
 package org.lamisplus.modules.ndr.service;
 
-import com.esotericsoftware.minlog.Log;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
@@ -15,13 +14,9 @@ import org.apache.commons.lang3.RegExUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.lamisplus.modules.base.controller.apierror.EntityNotFoundException;
 import org.lamisplus.modules.base.domain.entities.OrganisationUnit;
-import org.lamisplus.modules.base.domain.entities.User;
-import org.lamisplus.modules.base.domain.repositories.OrganisationUnitRepository;
 import org.lamisplus.modules.base.service.OrganisationUnitService;
-import org.lamisplus.modules.base.service.UserService;
 import org.lamisplus.modules.hiv.domain.entity.ARTClinical;
 import org.lamisplus.modules.hiv.repositories.ARTClinicalRepository;
-import org.lamisplus.modules.hiv.repositories.ArtPharmacyRepository;
 import org.lamisplus.modules.ndr.domain.dto.*;
 import org.lamisplus.modules.ndr.domain.entities.NDRMessages;
 import org.lamisplus.modules.ndr.domain.entities.NdrMessageLog;
@@ -36,7 +31,6 @@ import org.lamisplus.modules.ndr.repositories.NdrMessageLogRepository;
 import org.lamisplus.modules.ndr.repositories.NdrXmlStatusRepository;
 import org.lamisplus.modules.ndr.schema.*;
 import org.lamisplus.modules.ndr.utility.ZipUtility;
-import org.lamisplus.modules.patient.repository.PersonRepository;
 import org.springframework.stereotype.Service;
 
 
@@ -67,9 +61,6 @@ import java.util.stream.Stream;
 @Slf4j
 public class NDRService {
     private final NDRCodeSetRepository nDRCodeSetRepository;
-    
-    private int MAX = 2;
-    private final OrganisationUnitRepository organisationUnitRepository;
 
     private final MessageHeaderTypeMapper messageHeaderTypeMapper;
 
@@ -89,173 +80,28 @@ public class NDRService {
 
     private final NdrXmlStatusRepository ndrXmlStatusRepository;
     
-    private final ArtPharmacyRepository pharmacyRepository;
-    
     private final NDREligibleClientMapper clientMap;
 
-    private final PersonRepository personRepository;
-
     private final NDRMessagesRepository ndrMessagesRepository;
-    
-    private final BootData bootData;
-
-    private final UserService userService;
 
     public static final String BASE_DIR = "runtime/ndr/transfer/";
     public static final String BASE_REDACTED_DIR = "runtime/ndr_redact/transfer/";
-
-    public static final String   USER_DIR = "user.dir";
 
     public static final String JAXB_ENCODING = "UTF-8";
     public static final String XML_WAS_GENERATED_FROM_LAMISPLUS_APPLICATION = "\n<!-- This XML was generated from LAMISPlus application -->";
     public static final String HEADER_BIND_COMMENT = "com.sun.xml.bind.xmlHeaders";
     public final AtomicLong messageId = new AtomicLong (0);
-
-//    public void shouldPrintMessageHeaderTypeXml(Long id) {
-//        try {
-//            new MessageHeaderType ();
-//            MessageHeaderType messageHeaderType;
-//            JAXBContext jaxbContext = JAXBContext.newInstance (MessageHeaderType.class);
-//            messageHeaderType = messageHeaderTypeMapper.getMessageHeader (id);
-//            messageHeaderType.setMessageUniqueID (String.valueOf (id));
-//            messageHeaderType.setMessageStatusCode ("INITIAL");
-//            Marshaller jaxbMarshaller = getMarshaller (jaxbContext);
-//            jaxbMarshaller.setProperty (HEADER_BIND_COMMENT, XML_WAS_GENERATED_FROM_LAMISPLUS_APPLICATION);
-//            jaxbMarshaller.setProperty (Marshaller.JAXB_FORMATTED_OUTPUT, true);
-//
-//            jaxbMarshaller.setProperty (Marshaller.JAXB_ENCODING, JAXB_ENCODING);
-//            String currentPath = System.getProperty (USER_DIR);
-//            String fileName = "message-header.xml";
-//            File file = new File (String.format ("%s/temp/%d/%s", currentPath, id, fileName));
-//            jaxbMarshaller.marshal (messageHeaderType, file);
-//        } catch (Exception e) {
-//            e.printStackTrace ();
-//        }
-//    }
-
-//    public void shouldPrintPatientDemographicsTypeXml(Long id) {
-//        try {
-//            new PatientDemographicsType ();
-//            PatientDemographicsType patientDemographicsType;
-//            JAXBContext jaxbContext = JAXBContext.newInstance (PatientDemographicsType.class);
-//            patientDemographicsType = patientDemographicsMapper.getPatientDemographics (id);
-//            Marshaller jaxbMarshaller = getMarshaller (jaxbContext);
-//            jaxbMarshaller.setProperty (HEADER_BIND_COMMENT, XML_WAS_GENERATED_FROM_LAMISPLUS_APPLICATION);
-//            jaxbMarshaller.setProperty (Marshaller.JAXB_FORMATTED_OUTPUT, true);
-//            jaxbMarshaller.setProperty (Marshaller.JAXB_ENCODING, JAXB_ENCODING);
-//            String currentPath = System.getProperty (USER_DIR);
-//            String fileName = "patient_demographics.xml";
-//            File file = new File (String.format ("%s/temp/%d/%s", currentPath, id, fileName));
-//            jaxbMarshaller.marshal (patientDemographicsType, file);
-//        } catch (Exception e) {
-//            e.printStackTrace ();
-//        }
-//    }
+    private static final String DATEFORMAT = "ddMMyyyy";
+    private static final String STATES = "STATES";
 
     public Marshaller getMarshaller(JAXBContext jaxbContext) throws JAXBException {
         return jaxbContext.createMarshaller ();
     }
 
-
-//    public void shouldPrintPatientAddressTypeXml(Long personId) {
-//        try {
-//            new AddressType ();
-//            AddressType addressType;
-//            JAXBContext jaxbContext = JAXBContext.newInstance (AddressType.class);
-//            addressType = addressTypeMapper.getPatientAddress (personId);
-//            Marshaller jaxbMarshaller = getMarshaller (jaxbContext);
-//            jaxbMarshaller.setProperty (HEADER_BIND_COMMENT, XML_WAS_GENERATED_FROM_LAMISPLUS_APPLICATION);
-//            jaxbMarshaller.setProperty (Marshaller.JAXB_FORMATTED_OUTPUT, true);
-//            jaxbMarshaller.setProperty (Marshaller.JAXB_ENCODING, JAXB_ENCODING);
-//            String currentPath = System.getProperty (USER_DIR);
-//            String fileName = "patient_address.xml";
-//            File file = new File (String.format ("%s/temp/%d/%s", currentPath, personId, fileName));
-//            jaxbMarshaller.marshal (addressType, file);
-//        } catch (Exception ignore) {
-//            ignore.printStackTrace ();
-//        }
-//    }
-
-//    public void shouldPrintPatientCommonQuestionsTypeXml(Long personId) {
-//        try {
-//            new AddressType ();
-//            CommonQuestionsType commonQuestionsType;
-//            JAXBContext jaxbContext = JAXBContext.newInstance (CommonQuestionsType.class);
-//            commonQuestionsType = commonQuestionsTypeMapper.getPatientCommonQuestion (personId);
-//            Marshaller jaxbMarshaller = getMarshaller (jaxbContext);
-//            jaxbMarshaller.setProperty (HEADER_BIND_COMMENT, XML_WAS_GENERATED_FROM_LAMISPLUS_APPLICATION);
-//            jaxbMarshaller.setProperty (Marshaller.JAXB_FORMATTED_OUTPUT, true);
-//            jaxbMarshaller.setProperty (Marshaller.JAXB_ENCODING, JAXB_ENCODING);
-//            String currentPath = System.getProperty (USER_DIR);
-//            String fileName = "patient_common_question.xml";
-//            File file = new File (String.format ("%s/temp/%d/%s", currentPath, personId, fileName));
-//            jaxbMarshaller.marshal (commonQuestionsType, file);
-//        } catch (Exception ignore) {
-//            ignore.printStackTrace ();
-//        }
-//    }
-
-//    public void shouldPrintPatientConditionSpecificQuestionsTypeXml(Long personId) {
-//        try {
-//            new AddressType ();
-//            ConditionSpecificQuestionsType conditionSpecificQuestionsType;
-//            JAXBContext jaxbContext = JAXBContext.newInstance (ConditionSpecificQuestionsType.class);
-//            conditionSpecificQuestionsType = specificQuestionsTypeMapper.getConditionSpecificQuestionsType (personId);
-//            Marshaller jaxbMarshaller = getMarshaller (jaxbContext);
-//            jaxbMarshaller.setProperty (HEADER_BIND_COMMENT, XML_WAS_GENERATED_FROM_LAMISPLUS_APPLICATION);
-//            jaxbMarshaller.setProperty (Marshaller.JAXB_FORMATTED_OUTPUT, true);
-//            jaxbMarshaller.setProperty (Marshaller.JAXB_ENCODING, JAXB_ENCODING);
-//            String currentPath = System.getProperty (USER_DIR);
-//            String fileName = "patient_specific_hiv_questions.xml";
-//            File file = new File (String.format ("%s/temp/%d/%s", currentPath, personId, fileName));
-//            jaxbMarshaller.marshal (conditionSpecificQuestionsType, file);
-//        } catch (Exception ignore) {
-//            ignore.printStackTrace ();
-//        }
-//    }
-
-//    public void shouldPrintPatientConditionEncountersTypeXml(Long personId) {
-//        try {
-//            new EncountersType ();
-//            EncountersType encountersType;
-//            JAXBContext jaxbContext = JAXBContext.newInstance (EncountersType.class);
-//            encountersType = encountersTypeMapper.encounterType (personId);
-//            Marshaller jaxbMarshaller = getMarshaller (jaxbContext);
-//            jaxbMarshaller.setProperty (HEADER_BIND_COMMENT, XML_WAS_GENERATED_FROM_LAMISPLUS_APPLICATION);
-//            jaxbMarshaller.setProperty (Marshaller.JAXB_FORMATTED_OUTPUT, true);
-//            jaxbMarshaller.setProperty (Marshaller.JAXB_ENCODING, JAXB_ENCODING);
-//            String currentPath = System.getProperty (USER_DIR);
-//            String fileName = "patient_encounters.xml";
-//            File file = new File (String.format ("%s/temp/%d/%s", currentPath, personId, fileName));
-//            jaxbMarshaller.marshal (encountersType, file);
-//        } catch (Exception ignore) {
-//            ignore.printStackTrace ();
-//        }
-//    }
-
-//    public void shouldPrintPatientConditionTypeXml(Long personId) {
-//        try {
-//            new ConditionType ();
-//            ConditionType conditionType;
-//            JAXBContext jaxbContext = JAXBContext.newInstance (ConditionType.class);
-//            conditionType = conditionTypeMapper.getConditionType (personId);
-//            Marshaller jaxbMarshaller = getMarshaller (jaxbContext);
-//            jaxbMarshaller.setProperty (HEADER_BIND_COMMENT, XML_WAS_GENERATED_FROM_LAMISPLUS_APPLICATION);
-//            jaxbMarshaller.setProperty (Marshaller.JAXB_FORMATTED_OUTPUT, true);
-//            jaxbMarshaller.setProperty (Marshaller.JAXB_ENCODING, JAXB_ENCODING);
-//            String currentPath = System.getProperty (USER_DIR);
-//            String fileName = "patient.xml";
-//            File file = new File (String.format ("%s/temp/%s", currentPath, fileName));
-//            jaxbMarshaller.marshal (conditionType, file);
-//        } catch (Exception ignore) {
-//            ignore.printStackTrace ();
-//        }
-//    }
-
     public NDRStatus shouldPrintPatientContainerXml(String personUuid , Long facilityId, boolean isInitial, String pushIdentifier) {
         log.info("generating ndr xml of patient with uuid {}" , personUuid);
         try {
-           
+
             log.info("fetching patient demographics");
             Optional<PatientDemographics> demographicsOptional =
                     ndrXmlStatusRepository.getPatientDemographicsByUUID(personUuid);
@@ -270,7 +116,6 @@ public class NDRService {
                 //save this somewhere...
                 PatientDemographicsType patientDemographics =
                         patientDemographicsMapper.getPatientDemographics(demographics);
-                //
                 if (patientDemographics != null) {
                     IndividualReportType individualReportType = new IndividualReportType();
                     log.info("fetching treatment details ");
@@ -321,7 +166,7 @@ public class NDRService {
                 long id = messageId.incrementAndGet();
                 Container container = new Container();
                 JAXBContext jaxbContext = JAXBContext.newInstance(Container.class);
-                //caching this because is static
+
                 PatientDemographicsType patientDemographics =
                         patientDemographicsMapper.getPatientDemographics(demographics);
                 if (patientDemographics != null) {
@@ -354,7 +199,6 @@ public class NDRService {
                     //====================Dr Karim coding session ends
                     log.info("NDR xml for patient with uuid {}  was created successfully", personUuid);
                     return ndrStatus;
-                    //return processAndGenerateNDRFile(jaxbMarshaller, container, demographics, identifier, id);
                 }
             }
         } catch(Exception e){
@@ -397,9 +241,7 @@ public class NDRService {
         }
     }
     
-   
-    
-   
+
     private void processAndGenerateNDRFiles(Long facilityId, List<String> personUuidsForNDR) {
         String pushIdentifier = UUID.randomUUID().toString();
         List<NDRStatus> ndrStatusList =
@@ -447,13 +289,12 @@ public class NDRService {
                 ndrXmlStatus.setLastModified (LocalDateTime.now ());
                 ndrXmlStatus.setPushIdentifier(pushIdentifier);
                 ndrXmlStatus.setCompletelyPushed(Boolean.FALSE);
-                ndrXmlStatus.setPercentagePushed(0l);
+                ndrXmlStatus.setPercentagePushed(0L);
                 ndrXmlStatusRepository.save (ndrXmlStatus);
             }
         }
     }
-    
-    
+
     private  NdrMessageLog  saveMessageLog (NdrMessageLog ndrStatus) {
        Optional<NdrMessageLog> list = ndrMessageLogRepository.findFirstByIdentifier(ndrStatus.getIdentifier());
        if (list.isPresent()) {
@@ -527,11 +368,11 @@ public class NDRService {
     
     
     public String zipFileWithType(PatientDemographics demographics) {
-        SimpleDateFormat dateFormat = new SimpleDateFormat ("ddMMyyyy");
+        SimpleDateFormat dateFormat = new SimpleDateFormat (DATEFORMAT);
         String sCode = "";
         String lCode = "";
         Optional<String> stateCode =
-                ndrCodeSetResolverService.getNDRCodeSetCode("STATES", demographics.getState());
+                ndrCodeSetResolverService.getNDRCodeSetCode(STATES, demographics.getState());
         if(stateCode.isPresent()) sCode = stateCode.get();
         Optional<String> lgaCode =
                 ndrCodeSetResolverService.getNDRCodeSetCode("LGA", demographics.getLga());
@@ -564,11 +405,11 @@ public class NDRService {
     }
     
     public String zipFileWithType(PatientDemographics demographics, String sourceFolder, String type) {
-        SimpleDateFormat dateFormat = new SimpleDateFormat ("ddMMyyyy");
+        SimpleDateFormat dateFormat = new SimpleDateFormat (DATEFORMAT);
         String sCode = "";
         String lCode = "";
         Optional<String> stateCode =
-                ndrCodeSetResolverService.getNDRCodeSetCode("STATES", demographics.getState());
+                ndrCodeSetResolverService.getNDRCodeSetCode(STATES, demographics.getState());
         if(stateCode.isPresent()) sCode = stateCode.get();
         Optional<String> lgaCode =
                 ndrCodeSetResolverService.getNDRCodeSetCode("LGA", demographics.getLga());
@@ -653,27 +494,14 @@ public class NDRService {
         } catch (IOException ignored) {
         }
     }
-        public void cleanupFacility(Long facilityId, String folder) {
-            try {
-                if (Files.isDirectory(Paths.get(folder))) {
-                    FileUtils.deleteDirectory(new File(folder));
-                }
-            } catch (IOException ignored) {
+    public void cleanupFacility(Long facilityId, String folder) {
+        try {
+            if (Files.isDirectory(Paths.get(folder))) {
+                FileUtils.deleteDirectory(new File(folder));
             }
+        } catch (IOException ignored) {
         }
-//        String file = BASE_DIR + "ndr/";
-//        try (Stream<Path> list = Files.list (Paths.get (BASE_DIR + "ndr/"))) {
-//            list.filter (path -> path.getFileName ().toString ().contains (file))
-//                    .forEach (path -> {
-//                        try {
-//                            Files.delete (path);
-//                        } catch (IOException e) {
-//                            e.printStackTrace ();
-//                        }
-//                    });
-//        } catch (IOException e) {
-//        }
-    
+    }
 
     public Set<String> listFilesUsingDirectoryStream(String dir) throws IOException {
         Set<String> fileList = new HashSet<> ();
@@ -693,27 +521,6 @@ public class NDRService {
         return listFilesUsingDirectoryStream (folder);
     }
 
-//    @SneakyThrows
-//    public List<NdrXmlStatusDto> getNdrStatus() {
-//        return ndrXmlStatusRepository.findAll ()
-//                .stream ()
-//                .map (ndrXmlStatus -> NdrXmlStatusDto
-//                        .builder ()
-//                        .facility (organisationUnitService.getOrganizationUnit (ndrXmlStatus.getFacilityId ()).getName ())
-//                        .fileName (ndrXmlStatus.getFileName ())
-//                        .files (ndrXmlStatus.getFiles ())
-//                        .lastModified (ndrXmlStatus.getLastModified ())
-//                        .id (ndrXmlStatus.getId ())
-//                        .percentagePushed (ndrXmlStatus.getPercentagePushed())
-//                        .completelyPushed (ndrXmlStatus.getCompletelyPushed())
-//                        .pushIdentifier (ndrXmlStatus.getPushIdentifier())
-//                        .build ()
-//                )
-//                .sorted(Comparator.comparing(NdrXmlStatusDto::getLastModified).reversed())
-//                .collect (Collectors.toList ());
-//    }
-
-
     public String getLga(OrganisationUnit facility) {
         Long lgaId = facility.getParentOrganisationUnitId ();
         OrganisationUnit lgaSystem = organisationUnitService.getOrganizationUnit (lgaId);
@@ -728,7 +535,7 @@ public class NDRService {
         Long stateId = lgaOrgUnit.getParentOrganisationUnitId ();
         OrganisationUnit stateSystem = organisationUnitService.getOrganizationUnit (stateId);
         Optional<CodedSimpleType> stateNdr = ndrCodeSetResolverService
-                .getNDRCodeSet ("STATES", stateSystem.getName ());
+                .getNDRCodeSet (STATES, stateSystem.getName ());
         log.info ("System State {}", stateSystem.getName ());
         StringBuilder state = new StringBuilder ();
         stateNdr.ifPresent(codedSimpleType -> state.append(codedSimpleType.getCode()));
@@ -760,13 +567,13 @@ public class NDRService {
 
 
 //  Here my coding begins Dr Karim
-private String ConvertContainerToString(Container container) throws JsonProcessingException {
-        ObjectMapper mapper = new ObjectMapper();
-        mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-        mapper.setDefaultPropertyInclusion(JsonInclude.Value.construct(JsonInclude.Include.NON_NULL, JsonInclude.Include.ALWAYS));
-        DateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-        mapper.setDateFormat(df);
-        return mapper.writeValueAsString(container);
+    private String ConvertContainerToString(Container container) throws JsonProcessingException {
+            ObjectMapper mapper = new ObjectMapper();
+            mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+            mapper.setDefaultPropertyInclusion(JsonInclude.Value.construct(JsonInclude.Include.NON_NULL, JsonInclude.Include.ALWAYS));
+            DateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+            mapper.setDateFormat(df);
+            return mapper.writeValueAsString(container);
     }
 
     public void creatNDRMessages(Container container, String identifier, Long facilityId){
@@ -776,12 +583,10 @@ private String ConvertContainerToString(Container container) throws JsonProcessi
             ndrMessages.setDeMessage(msg);
             ndrMessages.setMessageDate(LocalDate.now());
             ndrMessages.setIsPushed(Boolean.FALSE);
-            //Optional<User> currentUser = this.userService.getUserWithRoles();
-            //currentUser.ifPresent(user -> ndrMessages.setFacilityId(user.getCurrentOrganisationUnitId()));
             ndrMessages.setFacilityId(facilityId);
             ndrMessages.setIdentifier(identifier);
             ndrMessagesRepository.save(ndrMessages);
-        }catch (Exception e){}
+        }catch (Exception ignored){}
 
     }
 
@@ -790,7 +595,7 @@ private String ConvertContainerToString(Container container) throws JsonProcessi
     public List<NdrXmlStatusDto> getNdrStatus() {
         List<NdrXmlStatus> ndrXmlStatusList= ndrXmlStatusRepository.getAllFiles ();
         List<NdrXmlStatusDto> ndrXmlStatusDtos = new ArrayList<>();
-        Iterator iterator = ndrXmlStatusList.iterator();
+        Iterator<NdrXmlStatus> iterator = ndrXmlStatusList.iterator();
         log.info("SIZE = "+ndrXmlStatusList.size());
         while (iterator.hasNext()){
             NdrXmlStatus ndrXmlStatus = (NdrXmlStatus) iterator.next();
@@ -801,13 +606,9 @@ private String ConvertContainerToString(Container container) throws JsonProcessi
             ndrXmlStatusDto.setLastModified(ndrXmlStatus.getLastModified());
             ndrXmlStatusDto.setId(ndrXmlStatus.getId());
             try {
-                if(ndrXmlStatus.getError() != null){
-                    ndrXmlStatusDto.setError(true);
-                }else {
-                    ndrXmlStatusDto.setError(false );
-                }
+                ndrXmlStatusDto.setError(ndrXmlStatus.getError() != null);
                 if (null == ndrXmlStatus.getPercentagePushed()) {
-                    ndrXmlStatusDto.setPercentagePushed(100l);
+                    ndrXmlStatusDto.setPercentagePushed(100L);
                     ndrXmlStatusDto.setCompletelyPushed(Boolean.TRUE);
                     ndrXmlStatusDto.setPushIdentifier("Not Linked");
                 } else {
@@ -816,7 +617,7 @@ private String ConvertContainerToString(Container container) throws JsonProcessi
                     ndrXmlStatusDto.setPushIdentifier(ndrXmlStatus.getPushIdentifier());
 
                 }
-            }catch (Exception e){
+            }catch (Exception ignored){
             }
             ndrXmlStatusDtos.add(ndrXmlStatusDto);
 
@@ -842,13 +643,13 @@ private String ConvertContainerToString(Container container) throws JsonProcessi
         String sCode = "";
         String lCode = "";
         Optional<String> stateCode =
-                ndrCodeSetResolverService.getNDRCodeSetCode("STATES", demographics.getState());
+                ndrCodeSetResolverService.getNDRCodeSetCode(STATES, demographics.getState());
         if(stateCode.isPresent()) sCode = stateCode.get();
         Optional<String> lgaCode =
                 ndrCodeSetResolverService.getNDRCodeSetCode("LGA", demographics.getLga());
         if(lgaCode.isPresent()) lCode = lgaCode.get();
         Date date = new Date ();
-        SimpleDateFormat dateFormat = new SimpleDateFormat ("ddMMyyyy");
+        SimpleDateFormat dateFormat = new SimpleDateFormat (DATEFORMAT);
         String fileName = StringUtils.leftPad (sCode, 2, "0") +"_"+
                 StringUtils.leftPad (lCode, 3, "0") +
                 "_" + demographics.getDatimId() + "_" + StringUtils.replace (identifier, "/", "-")
@@ -861,7 +662,7 @@ private String ConvertContainerToString(Container container) throws JsonProcessi
         String sCode = demographics.getStateCode();
         String lCode = demographics.getLgaCode();
         Date date = new Date ();
-        SimpleDateFormat dateFormat = new SimpleDateFormat ("ddMMyyyy");
+        SimpleDateFormat dateFormat = new SimpleDateFormat (DATEFORMAT);
         String fileName = StringUtils.leftPad (sCode, 2, "0") +"_"+
                 StringUtils.leftPad (lCode, 3, "0") +
                 "_" + demographics.getFacilityId() + "_" + StringUtils.replace (demographics.getPatientIdentifier(), "/", "-")

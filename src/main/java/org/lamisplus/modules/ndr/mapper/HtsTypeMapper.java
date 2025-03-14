@@ -67,20 +67,6 @@ public class HtsTypeMapper {
                     indexNotificationServicesType.getPartner().addAll(partnerNotifications);
                     hivTestingReportType.setIndexNotificationServices(indexNotificationServicesType);
 
-
-
-                    //IndexNotificationServicesType indexNotificationServicesType = objectFactory.createIndexNotificationServicesType();
-                    //List<PartnerNotificationType> partnerNotifications = getPartnerNotification(Hts);
-                    //define a method pass partnernotificationtype and HTSdto return a list partnerNotifications
-                    // should loop and set partner notifications variables
-                    //IndexNotificationServicesType indexNotificationServicesType =  new IndexNotificationServicesType();
-                    //indexNotificationServicesType.getPartner().addAll(getAllPartnerNotification);
-                    //hivTestingReportType.setIndexNotificationServices(indexNotificationServicesType);
-                    //PartnerNotificationType partnerNotificationType = setPartnerNotification(objectFactory, h);
-                    //hivTestingReportType.setIndexNotificationServices(partnerNotificationType);
-
-
-
                     hivTestingReportType.setPostTestCounselling(postTestCounsellingType);
                     HIVTestResultType hivTestResultType = setResult(objectFactory, h);
                     hivTestingReportType.setHIVTestResult(hivTestResultType);
@@ -107,7 +93,6 @@ public class HtsTypeMapper {
         }
         return new ArrayList<>();
     }
-
 
     private List<PartnerNotificationType> getAllPartnerNotification (HtsReportDto h, List<NDRErrorDTO> ndrErrors ) {
         List<PartnerNotificationType> partnerNotifications = new ArrayList<>();
@@ -146,48 +131,128 @@ public class HtsTypeMapper {
         return partnerNotifications;
     }
 
+//    private HIVTestResultType setResult(ObjectFactory objectFactory, HtsReportDto h) {
+//        HIVTestResultType hivTestResultType = objectFactory.createHIVTestResultType();
+//        try {
+//
+//            TestResultType testResult = objectFactory.createTestResultType();
+//            if (h.getScreeningTestResult() != null) {
+//                if (h.getScreeningTestResult().equalsIgnoreCase("positive")) {
+//                    testResult.setScreeningTestResult("R");
+//                } else {
+//                    testResult.setScreeningTestResult("NR");
+//                }
+//            } else {
+//                log.error("ScreeningTestResult can not be null kindly correct");
+//                throw new IllegalArgumentException("ScreeningTestResult can not be null kindly correct");
+//            }
+//            validateAndSetTestResultDate(h.getScreeningTestResultDate(), testResult);
+//            if (h.getConfirmatoryTestResult().equalsIgnoreCase("positive")) {
+//                testResult.setConfirmatoryTestResult("R");
+//                testResult.setFinalTestResult("Pos");
+//                testResult.setTieBreakerTestResult("R");
+//            } else {
+//                testResult.setConfirmatoryTestResult("NR");
+//                testResult.setFinalTestResult("Neg");
+//                testResult.setTieBreakerTestResult("NR");
+//            }
+//
+//            validateAndSetConfirmatoryTestResultDate(h.getConfirmatoryTestResultDate(), testResult);
+//            validateAndSetTieBreakerTestResultDate(h.getScreeningTestResultDate(), testResult);
+//            hivTestResultType.setTestResult(testResult);
+//
+////            if(h.getRecencyNumber() == null && h.getConfirmatoryTestResult().equalsIgnoreCase("positive")) {
+////                log.error("Recency number is null for client {}", h.getClientCode());
+////                throw new IllegalArgumentException("Recency Number can not be null kindly correct");
+////            }else {
+//////                if (testResult.getFinalTestResult().equals("Pos") && !StringUtils.isBlank(h.getRecencyNumber())) {
+////                if (!StringUtils.isBlank(h.getRecencyNumber()) && h.getConfirmatoryTestResult().equalsIgnoreCase("positive")) {
+////                    processAndSetRecencyResult(hivTestResultType, objectFactory, h);
+////                }
+////            }
+//
+//            if (!StringUtils.isBlank(h.getRecencyNumber()) && h.getConfirmatoryTestResult().equalsIgnoreCase("positive")) {
+//                processAndSetRecencyResult(hivTestResultType, objectFactory, h);
+//                return hivTestResultType;
+//            }
+//            if (h.getConfirmatoryTestResult().equalsIgnoreCase("negative")){
+//                return hivTestResultType;
+//            }
+//            if (h.getConfirmatoryTestResult().equalsIgnoreCase("positive") && StringUtils.isBlank(h.getRecencyNumber()) ){
+//                return hivTestResultType;
+//            }
+//
+//        }catch (Exception e) {
+//            log.error("An error occur while fetching recency records for patient with information {}", e.getMessage());
+//        }
+//        return null;
+//    }
+
+
+
     private HIVTestResultType setResult(ObjectFactory objectFactory, HtsReportDto h) {
+        HIVTestResultType hivTestResultType = objectFactory.createHIVTestResultType();
         try {
-            HIVTestResultType hivTestResultType = objectFactory.createHIVTestResultType();
             TestResultType testResult = objectFactory.createTestResultType();
+
+            // Validate and set Screening Test Result
             if (h.getScreeningTestResult() != null) {
-                if (h.getScreeningTestResult().equalsIgnoreCase("negative")) {
-                    testResult.setScreeningTestResult("NR");
-                } else {
-                    testResult.setScreeningTestResult("R");
-                }
+                testResult.setScreeningTestResult(
+                        h.getScreeningTestResult().equalsIgnoreCase("positive") ? "R" : "NR"
+                );
             } else {
-                throw new IllegalArgumentException("ScreeningTestResult can not be null kindly correct");
+                log.error("ScreeningTestResult cannot be null. Kindly correct this.");
+                throw new IllegalArgumentException("ScreeningTestResult cannot be null.");
             }
+
             validateAndSetTestResultDate(h.getScreeningTestResultDate(), testResult);
-            if (h.getConfirmatoryTestResult().equalsIgnoreCase("negative")) {
+
+            // Validate and set Confirmatory Test Result
+            if (h.getConfirmatoryTestResult() == null || h.getConfirmatoryTestResult().isEmpty()) {
+                log.error("Test Result is null for client {}", h.getClientCode());
+                throw new IllegalArgumentException("Test Result cannot be null. Kindly correct this.");
+            } else if ("positive".equalsIgnoreCase(h.getConfirmatoryTestResult())) {
+                testResult.setConfirmatoryTestResult("R");
+                testResult.setFinalTestResult("Pos");
+                testResult.setTieBreakerTestResult("R");
+            } else if ("negative".equalsIgnoreCase(h.getConfirmatoryTestResult())) {
                 testResult.setConfirmatoryTestResult("NR");
                 testResult.setFinalTestResult("Neg");
                 testResult.setTieBreakerTestResult("NR");
             } else {
-                testResult.setConfirmatoryTestResult("R");
-                testResult.setFinalTestResult("Pos");
-                testResult.setTieBreakerTestResult("R");
+                log.error("Invalid ConfirmatoryTestResult for client {}", h.getClientCode());
+                throw new IllegalArgumentException("Invalid ConfirmatoryTestResult. Kindly correct this.");
             }
+
             validateAndSetConfirmatoryTestResultDate(h.getConfirmatoryTestResultDate(), testResult);
             validateAndSetTieBreakerTestResultDate(h.getScreeningTestResultDate(), testResult);
+
             hivTestResultType.setTestResult(testResult);
 
-            if(h.getRecencyNumber() == null) {
-                log.error("Recency number is null for client {}", h.getClientCode());
-                throw new IllegalArgumentException("Recency Number can not be null kindly correct");
-            }else {
-                if (testResult.getFinalTestResult().equals("Pos") && !StringUtils.isBlank(h.getRecencyNumber())) {
-                    processAndSetRecencyResult(hivTestResultType, objectFactory, h);
-                }
+            // Process Recency Results based on conditions
+            if (("positive".equalsIgnoreCase(h.getConfirmatoryTestResult()) //&& (StringUtils.isBlank(h.getRecencyNumber()) || h.getRecencyNumber().isEmpty() || h.getRecencyNumber() == null)
+                    && (StringUtils.isBlank(h.getFinalRecencyTestResult()) || h.getFinalRecencyTestResult().isEmpty() || h.getFinalRecencyTestResult() == null ))) {
+                log.info("Processing recency result: {} {}", h.getRecencyNumber(), h.getFinalRecencyTestResult());
+                return hivTestResultType;
             }
 
-            return hivTestResultType;
-        }catch (Exception e) {
-            log.error("An error occur while fetching recency records for patient with information {}", e.getMessage());
+            if ((!StringUtils.isBlank(h.getRecencyNumber()) && "positive".equalsIgnoreCase(h.getConfirmatoryTestResult()) && !StringUtils.isBlank(h.getFinalRecencyTestResult()))) {
+                log.info("Processing recency result: {} {}", h.getRecencyNumber(), h.getFinalRecencyTestResult());
+                processAndSetRecencyResult(hivTestResultType, objectFactory, h);
+                return hivTestResultType;
+            }
+
+            if ("negative".equalsIgnoreCase(h.getConfirmatoryTestResult())) {
+                return hivTestResultType;
+            }
+
+
+        } catch (Exception e) {
+            log.error("An error occurred while fetching recency records for client: {}", e.getMessage());
         }
         return null;
     }
+
 
     private void processAndSetRecencyResult(HIVTestResultType testResult, ObjectFactory objectFactory, HtsReportDto h) {
         RecencyTestingType recency = objectFactory.createRecencyTestingType();
@@ -228,7 +293,8 @@ public class HtsTypeMapper {
                 throw new RuntimeException(e);
             }
         } else {
-            throw new IllegalArgumentException("DateSampleSent can not be null kindly correct this");
+            log.info("DateSampleSent can not be null kindly correct this");
+            //throw new IllegalArgumentException("DateSampleSent can not be null kindly correct this");
         }
 
         if (h.getDateSampleCollected() != null) {
@@ -238,7 +304,8 @@ public class HtsTypeMapper {
                 throw new RuntimeException(e);
             }
         } else {
-            throw new IllegalArgumentException("DateSampleCollected can not be null kindly correct this");
+            log.info("DateSampleCollected can not be null kindly correct this");
+            //throw new IllegalArgumentException("DateSampleCollected can not be null kindly correct this");
         }
 
         if (h.getViralLoadConfirmationTestDate() != null) {
@@ -423,60 +490,6 @@ public class HtsTypeMapper {
 
     }
 
-
-//    private static List<PartnerNotificationType> getPartnerNotification(ObjectFactory objectFactory, HtsReportDto h) {
-//        List<PartnerNotificationType> partnerNotifications = new ArrayList<>();
-//
-//        PartnerNotificationType partner = objectFactory.createPartnerNotificationType();
-//
-//        partner.setPartnername(h.getPartnername());
-//        partner.setDescriptiveAddress(h.getDescriptiveAddress());
-//        partner.setPhoneNumber(h.getPhoneNumber());
-//
-//        String gender = h.getPartnerGender();
-//        if (gender != null) {
-//            if (gender.contains("Male")) {
-//                gender = "M";
-//            } else {
-//                gender = "F";
-//            }
-//            partner.setPartnerGender(gender);
-//        }
-//
-//        String indexRelation = h.getIndexRelation();
-//        if (indexRelation != null) {
-//            if (indexRelation.contains("Biological")) {
-//                indexRelation = "1";
-//            } else if (indexRelation.contains("Sexual")) {
-//                indexRelation = "2";
-//            } else if (indexRelation.contains("Social")) {
-//                indexRelation = "3";
-//            }
-//            partner.setIndexRelation(indexRelation);
-//        }
-//        partnerNotifications.add(partner);
-//
-//        return partnerNotifications;
-//    }
-//                gender = "F";
-//            }
-//            partner.setPartnerGender(h.getPartnerGender());
-//        }
-//        partner.setDescriptiveAddress(h.getDescriptiveAddress());
-//        if (indexRelation != null){
-//            if (indexRelation.contains("Biological")){
-//                indexRelation = "1";
-//            } else if (indexRelation.contains("Sexual")) {
-//               indexRelation = "2";
-//            } else if (indexRelation.contains("Social")) {
-//                indexRelation = "3";
-//            }
-//            partner.setIndexRelation(h.getIndexRelation());
-//        }
-//        partner.setPhoneNumber(h.getPhoneNumber());
-//        return partner;
-//    }
-
     private static PostTestCounsellingType setPostTest(ObjectFactory objectFactory, HtsReportDto h) {
         PostTestCounsellingType postTest = objectFactory.createPostTestCounsellingType();
         String testedForHIVBeforeWithinThisYear = h.getTestedForHIVBeforeWithinThisYear();
@@ -655,7 +668,7 @@ public class HtsTypeMapper {
         }
     }
 
-public static void validateAndSetIsIndex (String isIndex, HIVTestingReportType hivTestingReportType) {
+    public static void validateAndSetIsIndex (String isIndex, HIVTestingReportType hivTestingReportType) {
         if(isIndex != null) {
             if(isIndex.equalsIgnoreCase("true")){
                 isIndex = "Y";
@@ -667,7 +680,7 @@ public static void validateAndSetIsIndex (String isIndex, HIVTestingReportType h
 }
 
 
-public static void validateAndSetMaritalStatus (String maritalStatus, HIVTestingReportType hivTestingReportType) {
+    public static void validateAndSetMaritalStatus (String maritalStatus, HIVTestingReportType hivTestingReportType) {
         if (maritalStatus != null){
             if (maritalStatus.contains("Married")) {
                 maritalStatus = "M";
@@ -708,11 +721,11 @@ public static void validateAndSetMaritalStatus (String maritalStatus, HIVTesting
         }
     }
 
-public static void validateAndSetIsIndexClientId (String indexClientId, HIVTestingReportType hivTestingReportType){
+    public static void validateAndSetIsIndexClientId (String indexClientId, HIVTestingReportType hivTestingReportType){
         if(indexClientId != null && !indexClientId.isEmpty()) {
             hivTestingReportType.setIsIndexClient(indexClientId);
         }
-}
+    }
 
     public static boolean isNotNull(Object obj) {
         return obj != null;

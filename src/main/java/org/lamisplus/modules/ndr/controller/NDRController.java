@@ -33,14 +33,16 @@ public class NDRController {
     private final SimpMessageSendingOperations messagingTemplate;
     private final HtsService htsService;
     private final RedactService redactService;
-
+    public static class Constants {
+        public static final String FILE_GENERATION_TIME = "Total time taken to generate a file: {}";
+    }
 
     @GetMapping("/generate/{personId}")
     public void generatePatientXml(@PathVariable("personId") String personId, @RequestParam("facility") Long facility) {
         Stopwatch stopwatch = Stopwatch.createStarted();
         String pushIdentifier = UUID.randomUUID().toString();
         ndrService.shouldPrintPatientContainerXml (personId, facility, true, pushIdentifier);
-        log.info("Total time taken to generate a file: {}", stopwatch.elapsed().toMillis());
+        log.info(Constants.FILE_GENERATION_TIME.replace("{}", String.valueOf(stopwatch.elapsed().toMillis())));
     }
 
     //testing single file
@@ -48,7 +50,7 @@ public class NDRController {
     public void generateOnePatientXml(@PathVariable("personId") String personId, @RequestParam("facility") Long facility) {
         Stopwatch stopwatch = Stopwatch.createStarted();
         ndrOptmizationService.generatePatientOneNDRXml(facility, true, personId);
-        log.info("Total time taken to generate a file: {}", stopwatch.elapsed().toMillis());
+        log.info(Constants.FILE_GENERATION_TIME.replace("{}", String.valueOf(stopwatch.elapsed().toMillis())));
     }
     @GetMapping("/generate")
     public boolean generateFacilityPatientXmls(@RequestParam List<Long> facilityIds, @RequestParam boolean isInitial ){
@@ -61,7 +63,7 @@ public class NDRController {
                     result.add(result1);
                 });
         messagingTemplate.convertAndSend("/topic/ndr-status", "end");
-        log.info("Total time taken to generate a file: {}", stopwatch.elapsed().toMillis());
+        log.info(Constants.FILE_GENERATION_TIME.replace("{}", String.valueOf(stopwatch.elapsed().toMillis())));
         return result.contains(true);
     }
     
@@ -72,10 +74,9 @@ public class NDRController {
             @RequestParam List<String> patientIds){
         messagingTemplate.convertAndSend("/topic/ndr-status", "start");
         Stopwatch stopwatch = Stopwatch.createStarted();
-        System.out.println("calling patients api with initial value  = " + initial);
         facilityIds.forEach (facilityId -> ndrOptmizationService.generateNDRXMLByFacilityAndListOfPatient(facilityId,initial,patientIds));
         messagingTemplate.convertAndSend("/topic/ndr-status", "end");
-        log.info("Total time taken to generate a file: {}", stopwatch.elapsed().toMillis());
+        log.info(Constants.FILE_GENERATION_TIME.replace("{}", String.valueOf(stopwatch.elapsed().toMillis())));
     }
     
     @GetMapping("/patients")
@@ -87,7 +88,7 @@ public class NDRController {
     public ResponseEntity<Void> generateWithDateRange(@RequestParam List<Long> facilityIds, @RequestParam LocalDateTime startDate, @RequestParam LocalDateTime endDate) {
         Stopwatch stopwatch = Stopwatch.createStarted();
         facilityIds.forEach(facilityId -> ndrOptmizationService.generatePatientsNDRXml(facilityId, startDate, endDate));
-        log.info("Total time taken to generate the NDR files: {}", stopwatch.elapsed().toMinutes());
+        log.info(Constants.FILE_GENERATION_TIME.replace("{}", String.valueOf(stopwatch.elapsed().toMinutes())));
         return ResponseEntity.ok().build();
     }
 
@@ -95,7 +96,19 @@ public class NDRController {
     public ResponseEntity<Void> generateWithOptimization(@RequestParam List<Long> facilityIds, @RequestParam boolean isInitial) {
         Stopwatch stopwatch = Stopwatch.createStarted();
         facilityIds.forEach(facilityId -> ndrOptmizationService.generatePatientsNDRXml(facilityId, isInitial));
-        log.info("Total time taken to generate the NDR files: {}", stopwatch.elapsed().toMinutes());
+        log.info(Constants.FILE_GENERATION_TIME.replace("{}", String.valueOf(stopwatch.elapsed().toMinutes())));
+        return ResponseEntity.ok().build();
+    }
+
+
+    @GetMapping("/generate/hts")
+    public ResponseEntity<Void> generateHTSSelectedPatientXmls(
+            @RequestParam List<Long> facilityIds,
+            @RequestParam boolean isInitial,
+            @RequestParam List<String> patientIds){
+        Stopwatch stopwatch = Stopwatch.createStarted();
+        facilityIds.forEach(facilityId -> htsService.generateSelectedPatientsHtsNDRXml(facilityId, isInitial, patientIds));
+        log.info(Constants.FILE_GENERATION_TIME.replace("{}", String.valueOf(stopwatch.elapsed().toMinutes())));
         return ResponseEntity.ok().build();
     }
 
@@ -103,10 +116,17 @@ public class NDRController {
     public ResponseEntity<Void> generateHts(@RequestParam List<Long> facilityIds, @RequestParam boolean isInitial) {
         Stopwatch stopwatch = Stopwatch.createStarted();
         facilityIds.forEach(facilityId -> htsService.generatePatientsHtsNDRXml(facilityId, isInitial));
-        log.info("Total time taken to generate the NDR files: {}", stopwatch.elapsed().toMinutes());
+        log.info(Constants.FILE_GENERATION_TIME.replace("{}", String.valueOf(stopwatch.elapsed().toMinutes())));
         return ResponseEntity.ok().build();
     }
-    
+
+    //testing single HTS file
+    @GetMapping("/generate_one_hts")
+    public void generateOneHTSPatientXml(@RequestParam("clientCode") String clientCode, @RequestParam("facility") Long facility) {
+        Stopwatch stopwatch = Stopwatch.createStarted();
+        htsService.generateOnePatientHtsNDRXml(facility, true, clientCode);
+        log.info(Constants.FILE_GENERATION_TIME.replace("{}", String.valueOf(stopwatch.elapsed().toMillis())));
+    }
     
 
     @GetMapping("/download/{file}")
@@ -136,8 +156,7 @@ public class NDRController {
     public ResponseEntity<Void> generateRedactedXML(@RequestParam List<Long> facilityIds, @RequestParam boolean isInitial) {
         Stopwatch stopwatch = Stopwatch.createStarted();
         facilityIds.forEach(facilityId -> redactService.generatePatientsRedactedXml(facilityId, isInitial));
-
-        log.info("Total time taken to generate a redacted NDR files: {}", stopwatch.elapsed().toMinutes());
+        log.info(Constants.FILE_GENERATION_TIME.replace("{}", String.valueOf(stopwatch.elapsed().toMinutes())));
         return ResponseEntity.ok().build();
     }
 
