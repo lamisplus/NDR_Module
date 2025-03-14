@@ -22,6 +22,8 @@ public class MortalityTypeMapper {
 
     private final NdrMessageLogRepository ndrMessageLogRepository;
     private final ClientVerificationTypeMapper clientVerificationTypeMapper;
+    private static final String OTHERSPECIFY = "OthersSpecify";
+    private static final String OTHER= "Other";
     public MortalityType getMortalityType(String patientId, long facilityId, LocalDate start, LocalDate end, List<NDRErrorDTO> ndrErrors) {
         MortalityType mortalityType = new MortalityType();
         try {
@@ -29,14 +31,13 @@ public class MortalityTypeMapper {
             List<MortalityDTO> mortalityVariables = ndrMessageLogRepository.getPatientMortalities(patientId, facilityId, start, end);
 
             if (mortalityVariables != null && !mortalityVariables.isEmpty()) {
-//            log.info("mortality init");
+
                 mortalityVariables.forEach(mortality -> {
 
                     if (clientVerification != null) {
                         mortalityType.setClientVerification(clientVerification);
                     }
 
-//                log.info("patient mortality visit Id {}", mortality.getVisitID());
                     if(mortality.getVisitID() != null) {
                         mortalityType.setVisitID(mortality.getVisitID());
                     }else {
@@ -110,23 +111,11 @@ public class MortalityTypeMapper {
                     if(mortality.getOtherReasonforDefaulting() != null) {
                         mortalityType.setOtherReasonforDefaulting(mortality.getOtherReasonforDefaulting());
                     }
-//                if(mortality.getLosttoFollowup() != null) {
-//                    log.info("110 {}", mortality.getLosttoFollowup());
-//                    mortalityType.setLosttoFollowup(true);
-//                }
+
                     if(mortality.getReasonforLosttoFollowup() != null) {
                         reasonforLosttoFollowup(mortality.getReasonforLosttoFollowup(), mortalityType);
                     }
-//                if(mortality.getDateLosttoFollowup() != null) {
-//                    log.info("121 {}", mortality.getReasonforLosttoFollowup());
-//                    Date lostOtFollowUpDate = java.sql.Date.valueOf(mortality.getDateLosttoFollowup());
-//                    try {
-//                        mortalityType.setDateLosttoFollowup(DateUtil.getXmlDate(lostOtFollowUpDate));
-//                    } catch (DatatypeConfigurationException e) {
-//                        throw new RuntimeException(e);
-//                    }
-//
-//                };
+
                     if(mortality.getPreviousARVExposure() != null) {
 
                         if(mortality.getPreviousARVExposure().contains("previousARVExposure")) {
@@ -187,15 +176,6 @@ public class MortalityTypeMapper {
                         log.info("124 {}", mortality.getNameofContactTracer());
                         mortalityType.setNameofContactTracer(mortality.getNameofContactTracer());
                     }
-//                if(mortality.getContactTrackerSignatureDate() != null) {
-//                    Date trackDate = java.sql.Date.valueOf(mortality.getContactTrackerSignatureDate());
-//                    try {
-//                        mortalityType.setContactTrackerSignatureDate(DateUtil.getXmlDate(trackDate));
-//                    } catch (DatatypeConfigurationException e) {
-//                        throw new RuntimeException(e);
-//                    }
-//
-//                };
                 });
                 return  mortalityType;
             }
@@ -242,11 +222,11 @@ public class MortalityTypeMapper {
 
     private void reasonforDefaulting(String reasonforDefaulting, MortalityType mortalityType) {
         if (reasonforDefaulting.contains("REASON_DEFAULTING_OTHERS_(PLS_SPECIFY)")) {
-            mortalityType.setReasonforDefaulting("OthersSpecify");
+            mortalityType.setReasonforDefaulting(OTHERSPECIFY);
         }else if (reasonforDefaulting.contains("REASON_DEFAULTING_TRANSFERRED_TO_NEW_SITE")) {
-            mortalityType.setReasonforDefaulting("OthersSpecify");
+            mortalityType.setReasonforDefaulting(OTHERSPECIFY);
         }else if (reasonforDefaulting.contains("REASON_DEFAULTING_INTENSIVE_FOLLOW-UP")) {
-            mortalityType.setReasonforDefaulting("OthersSpecify");
+            mortalityType.setReasonforDefaulting(OTHERSPECIFY);
         }
     }
 
@@ -401,16 +381,16 @@ public class MortalityTypeMapper {
             mortalityType.setDiscontinuedCare("ForcedDiscontinuation");
         }else if (discontinuedCare.contains("Moved Out of Area")) {
             mortalityType.setDiscontinuedCare("MovedOutofArea");
-        }else if (discontinuedCare.contains("Other")) {
-            mortalityType.setDiscontinuedCare("Other");
+        }else if (discontinuedCare.contains(OTHER)) {
+            mortalityType.setDiscontinuedCare(OTHER);
         }
     }
 
     private void reffferedFor(String reffferedFor, MortalityType mortalityType) {
         if (reffferedFor.contains("Adherence Counseling")) {
             mortalityType.setReffferedFor("AdherenceCounseling");
-        }else if (reffferedFor.contains("Other")) {
-            mortalityType.setReffferedFor("Other");
+        }else if (reffferedFor.contains(OTHER)) {
+            mortalityType.setReffferedFor(OTHER);
         }
     }
 

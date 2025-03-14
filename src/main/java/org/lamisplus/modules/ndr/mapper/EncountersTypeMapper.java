@@ -48,7 +48,11 @@ public class EncountersTypeMapper {
 	private final ApplicationCodesetService applicationCodesetService;
 	
 	private final PregnancyStatus pregnancyStatus;
-	
+
+
+	public static class LogMessages {
+		public static final String GENERATING_COMMON_QUESTIONS = "encounter list size {}";
+	}
 	
 	public EncountersType encounterType(PatientDemographics demographics) {
 		EncountersType encountersType = new EncountersType();
@@ -57,7 +61,7 @@ public class EncountersTypeMapper {
 			List<HIVEncounterType> hivEncounter = encountersType.getHIVEncounter();
 			List<ARTClinicalInfo> clinicalInfoList =
 					ndrXmlStatusRepository.getClinicalInfoByPersonUuid(demographics.getPersonUuid());
-			log.info("encounter list size {}", clinicalInfoList.size());
+			log.info(LogMessages.GENERATING_COMMON_QUESTIONS, clinicalInfoList.size());
 			
 			clinicalInfoList.forEach(
 					artClinical -> {
@@ -86,7 +90,7 @@ public class EncountersTypeMapper {
 	public EncountersType encounterType(List<EncounterDTO> encounterDTOList, PatientDemographicDTO demographicDTO) {
 		    EncountersType encountersType = new EncountersType();
 		   List<HIVEncounterType> hivEncounters = encountersType.getHIVEncounter();
-			log.info("encounter list size {}", encounterDTOList.size());
+			log.info(LogMessages.GENERATING_COMMON_QUESTIONS, encounterDTOList.size());
 			try {
 				encounterDTOList.parallelStream()
 						.forEach( encounterDTO -> {
@@ -139,10 +143,7 @@ public class EncountersTypeMapper {
 			}catch (Exception e) {
 			 log.error("An exception occurred while processing  the patient encounters error {}", e.getMessage());
 			}
-			if (hivEncounters.isEmpty()){
-				//return null;
-			}
-			
+
 		return encountersType;
 	}
 	
@@ -156,7 +157,7 @@ public class EncountersTypeMapper {
 		if (demographics != null) {
 			// Optional<Person> person = personRepository.findById(demographics.getId());
 			List<HIVEncounterType> hivEncounter = encountersType.getHIVEncounter();
-			log.info("encounter list size {}", clinicalInfoList.size());
+			log.info(LogMessages.GENERATING_COMMON_QUESTIONS, clinicalInfoList.size());
 			
 			clinicalInfoList.forEach(
 					artClinical -> {
@@ -190,7 +191,7 @@ public class EncountersTypeMapper {
 			List<HIVEncounterType> hivEncounter = encountersType.getHIVEncounter();
 			List<ARTClinicalInfo> clinicalInfoList =
 					ndrXmlStatusRepository.getClinicalInfoByPersonUuidByLastModifiedDate(demographics.getPersonUuid(), lastDateTime);
-			log.info("encounter list size {}", clinicalInfoList.size());
+			log.info(LogMessages.GENERATING_COMMON_QUESTIONS, clinicalInfoList.size());
 			clinicalInfoList.forEach(
 					artClinical -> {
 						HIVEncounterType hivEncounterType = new HIVEncounterType();
@@ -220,7 +221,7 @@ public class EncountersTypeMapper {
 		Optional<String> tbStatusOptional =
 				ndrXmlStatusRepository.getTbStatusByPersonUuid(personUuid);
 		tbStatusOptional.ifPresent(tbStatus -> {
-			log.debug("tbStatus: {} " + tbStatus);
+			log.debug("tbStatus:" + tbStatus);
 			Optional<String> ndrTBStatus = ndrCodeSetResolverService.getNDRCodeSetCode("TB_STATUS", tbStatus);
 			ndrTBStatus.ifPresent(hivEncounterType::setTBStatus);
 		});
@@ -267,10 +268,7 @@ public class EncountersTypeMapper {
 				}
 		);
 	}
-	
-	
-	
-	
+
 	private void handleARVs(HIVEncounterType hivEncounterType, List<Long> regimenTypeIds, Set<Regimen> regimens) {
 		regimens.stream()
 				.filter(regimen -> regimenTypeIds.contains(regimen.getRegimenType().getId()))

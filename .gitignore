@@ -39,3 +39,4 @@ src/main/resources/views/static/patient/*
 classes/
 ### VS Code ###
 .vscode/
+package-lock.json

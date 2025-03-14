@@ -11,8 +11,4 @@ public interface BiometricDto {
     LocalDate getEnrollmentDate();
     
     Integer getQuality();
-
-//    LocalDate getReplaceDate();
-//
-//    Integer getReplacePrintCount();
 }

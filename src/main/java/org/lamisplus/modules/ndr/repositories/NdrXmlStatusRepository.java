@@ -4,8 +4,10 @@ import org.lamisplus.modules.ndr.domain.dto.ARTClinicalInfo;
 import org.lamisplus.modules.ndr.domain.dto.LabDTO;
 import org.lamisplus.modules.ndr.domain.entities.NdrXmlStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 
+import javax.transaction.Transactional;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -189,5 +191,13 @@ public interface NdrXmlStatusRepository extends JpaRepository<NdrXmlStatus, Inte
 
 	@Query (value = "SELECT * FROM public.ndr_xml_status ORDER BY  id DESC", nativeQuery = true)
 	List<NdrXmlStatus> getAllFiles();
+
+
+	@Modifying
+	@Transactional
+	@Query(value = "delete from ndr_xml_status WHERE error is not null", nativeQuery = true)
+	int deleteNdrXmlStatusByErrorIsNotNull();
+
+
 	
 }
