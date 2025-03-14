@@ -81,14 +81,10 @@
 - Mathew Adegbite https://github.com/mathewade
 - Emeka https://github.com/drjavanew
 - Joshua Gabriel https://github.com/joshuagabriel-datafi
-- Ugo-Basil https://github.com/Ugo-Basil
-- Abisayo Peter Abiodun https://github.com/Asquarep
 - Okafor Chukwuma https://github.com/baronearl
 
 ## Special mentions
 - Aniwange Tertese Amos https://github.com/aniwange33
 - https://github.com/stomzy
 - Anana Aristotle https://github.com/legendaryA3
-- Adebisi Timothy https://github.com/SundayT29
 - Emeka madubuko https://github.com/emadubuko
-- Hafiz Mohammad Danmanu https://github.com/Danmanu44
