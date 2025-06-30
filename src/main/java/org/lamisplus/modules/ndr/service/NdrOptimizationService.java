@@ -566,7 +566,7 @@ public class NdrOptimizationService {
 				jaxbMarshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, true);
 				jaxbMarshaller.setProperty(Marshaller.JAXB_ENCODING, JAXB_ENCODING);
 				SchemaFactory sf = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI);
-				Schema schema = sf.newSchema(getClass().getClassLoader().getResource("NDR1_6_6_1.xsd"));
+				Schema schema = sf.newSchema(getClass().getClassLoader().getResource("NDR1_6_6_2_R.xsd"));
 				jaxbMarshaller.setSchema(schema);
 
 

@@ -2,7 +2,6 @@ package org.lamisplus.modules.ndr.mapper;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.lamisplus.modules.hiv.domain.entity.ArtPharmacy;
 import org.lamisplus.modules.ndr.domain.dto.*;
 import org.lamisplus.modules.ndr.schema.*;
 import org.lamisplus.modules.ndr.service.NDRCodeSetResolverService;

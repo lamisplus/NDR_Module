@@ -85,6 +85,7 @@ import javax.xml.datatype.XMLGregorianCalendar;
     "visitID",
     "visitDate",
     "prescribedRegimen",
+    "ndrRegimenCode",
     "prescribedRegimenTypeCode",
     "prescribedRegimenLineCode",
     "prescribedRegimenDuration",
@@ -109,6 +110,7 @@ public class RegimenType {
                 "visitID='" + visitID + '\'' +
                 ", visitDate=" + visitDate +
                 ", prescribedRegimen=" + prescribedRegimen +
+                ", ndrRegimenCode=" + ndrRegimenCode +
                 ", prescribedRegimenTypeCode='" + prescribedRegimenTypeCode + '\'' +
                 ", prescribedRegimenLineCode='" + prescribedRegimenLineCode + '\'' +
                 ", prescribedRegimenDuration='" + prescribedRegimenDuration + '\'' +
@@ -135,6 +137,8 @@ public class RegimenType {
     protected XMLGregorianCalendar visitDate;
     @XmlElement(name = "PrescribedRegimen", required = true)
     protected CodedSimpleType prescribedRegimen;
+    @XmlElement(name = "NDRRegimenCode", required = true)
+    protected String ndrRegimenCode;
     @XmlElement(name = "PrescribedRegimenTypeCode", required = true)
     protected String prescribedRegimenTypeCode;
     @XmlElement(name = "PrescribedRegimenLineCode")
@@ -242,6 +246,29 @@ public class RegimenType {
      */
     public void setPrescribedRegimen(CodedSimpleType value) {
         this.prescribedRegimen = value;
+    }
+    /**
+     * Gets the value of the ndrRegimenCode property.
+     *
+     * @return
+     *     possible object is
+     *     {@link String }
+     *
+     */
+    public String getNDRRegimenCode() {
+        return ndrRegimenCode;
+    }
+
+    /**
+     * Sets the value of the ndrRegimenCode property.
+     *
+     * @param value
+     *     allowed object is
+     *     {@link String }
+     *
+     */
+    public void setNDRRegimenCode(String value) {
+        this.ndrRegimenCode = value;
     }
 
     /**

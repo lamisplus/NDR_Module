@@ -403,41 +403,6 @@ public class NDRService {
         }
         return null;
     }
-    
-    public String zipFileWithType(PatientDemographics demographics, String sourceFolder, String type) {
-        SimpleDateFormat dateFormat = new SimpleDateFormat (DATEFORMAT);
-        String sCode = "";
-        String lCode = "";
-        Optional<String> stateCode =
-                ndrCodeSetResolverService.getNDRCodeSetCode(STATES, demographics.getState());
-        if(stateCode.isPresent()) sCode = stateCode.get();
-        Optional<String> lgaCode =
-                ndrCodeSetResolverService.getNDRCodeSetCode("LGA", demographics.getLga());
-        if(lgaCode.isPresent()) lCode = lgaCode.get();
-        String fileName = StringUtils.leftPad (sCode, 2, "0") +
-                StringUtils.leftPad ( lCode, 3, "0") + "_" + demographics.getDatimId() +
-                "_" + demographics.getFacilityName()+"_"+type+ "_" + dateFormat.format (new Date());
-        
-        fileName = RegExUtils.replaceAll (fileName, "/", "-");
-        log.info ("file name for download {}", fileName);
-        String finalFileName = fileName.replace(" ", "").replace(",", "")
-                .replace(".", "");
-        String outputZipFile = null;
-        try {
-            outputZipFile = BASE_DIR + "ndr/" + finalFileName;
-            new File (BASE_DIR + "ndr").mkdirs ();
-            new File (Paths.get (outputZipFile).toAbsolutePath ().toString ()).createNewFile ();
-            List<File> files = new ArrayList<> ();
-            files = getFiles (sourceFolder, files);
-            log.info ("Files: {}", files);
-            long fifteenMB = FileUtils.ONE_MB * 15;
-            ZipUtility.zip (files, Paths.get (outputZipFile).toAbsolutePath ().toString (), fifteenMB);
-            return finalFileName;
-        } catch (Exception exception) {
-            log.error ("An error occurred while creating temporary file " + outputZipFile);
-        }
-        return null;
-    }
 
     public List<File> getFiles(String sourceFolder, List<File> files) {
         try (Stream<Path> walk = Files.walk (Paths.get (sourceFolder))) {

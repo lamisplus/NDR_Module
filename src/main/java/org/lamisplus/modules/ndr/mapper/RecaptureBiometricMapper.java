@@ -3,7 +3,6 @@ package org.lamisplus.modules.ndr.mapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
-import org.lamisplus.modules.base.module.ModuleService;
 import org.lamisplus.modules.ndr.domain.dto.PatientDemographics;
 import org.lamisplus.modules.ndr.domain.dto.RecaptureBiometricDTO;
 import org.lamisplus.modules.ndr.domain.entities.NdrMessageLog;

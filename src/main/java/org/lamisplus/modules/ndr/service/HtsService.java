@@ -202,7 +202,7 @@ public class HtsService {
 		AtomicInteger errorCount = new AtomicInteger();
 		LocalDateTime start = LocalDateTime.of(1984, 1, 1, 0, 0);
 		List<String> patientIds = new ArrayList<>();
-		List<NDRErrorDTO> ndrErrors = new ArrayList<NDRErrorDTO>();
+		List<NDRErrorDTO> ndrErrors = new ArrayList<>();
 		PatientDemographicDTO[] patientDemographicDTO = new PatientDemographicDTO[1];
 		if (initial) {
 			patientIds = data.getHtsClientCode(facilityId, start);

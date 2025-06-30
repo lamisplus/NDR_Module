@@ -2,9 +2,9 @@ package org.lamisplus.modules.ndr.mapper;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.lamisplus.modules.base.service.ApplicationCodesetService;
+
 import org.lamisplus.modules.hiv.domain.dto.HIVStatusDisplay;
-import org.lamisplus.modules.hiv.repositories.RegimenRepository;
+
 import org.lamisplus.modules.hiv.service.StatusManagementService;
 import org.lamisplus.modules.ndr.domain.dto.PatientDemographicDTO;
 import org.lamisplus.modules.ndr.domain.dto.PatientDemographics;
@@ -82,42 +82,6 @@ public class ConditionSpecificQuestionsTypeMapper {
 
     }
     
-    
-    public ConditionSpecificQuestionsType getConditionSpecificQuestionsType(
-            PatientDemographics demographics,
-            ArtCommencementDTO artCommencement) {
-        log.info(LogMessages.GENERATING_COMMON_QUESTIONS, demographics.getPersonUuid());
-        try {
-            ConditionSpecificQuestionsType hivQuestions = new ConditionSpecificQuestionsType ();
-            HIVQuestionsType hiv = new HIVQuestionsType ();
-            processAndSetDateOfRegistration (hiv, demographics.getDateOfRegistration(), demographics.getStatusAtRegistration());
-            processAndSetCareEntryPoint (hiv, demographics.getCareEntryPoint());
-            if (demographics.getDateOfRegistration() != null) {
-                String enrollmentStatus = demographics.getStatusAtRegistration();
-                processAndHandleARTStatus (hiv, demographics.getId (), enrollmentStatus);
-            }
-             log.info("ART Commencement: {}", artCommencement);
-                processAndSetArtStartDate (hiv, artCommencement.getArtStartDate());
-                processAndSetWHOStagingAndFunctionalStatus (hiv, artCommencement.getWhoStage(), artCommencement.getFunctionStatus());
-                String regimen = artCommencement.getRegimen();
-                if(regimen != null) {
-                    Optional<CodedSimpleType> simpleCodeSet = ndrCodeSetResolverService.getRegimen(regimen);
-                    log.info("First ndrRegimen: " + regimen);
-                    simpleCodeSet.ifPresent(hiv::setFirstARTRegimen);
-                }
-                processAndSetCD4 (hiv, demographics.getAge(), artCommencement);
-            
-            hivQuestions.setHIVQuestions (hiv);
-            return hivQuestions;
-        } catch (Exception e) {
-            log.error(LogErrorMessages.GENERATING_ERROR_MSG,
-                    demographics.getPersonUuid());
-            log.error("Error Message:" + e.getMessage());
-        }
-        return null;
-        
-    }
-    
     public ConditionSpecificQuestionsType getConditionSpecificQuestionsType(PatientDemographicDTO demographics) {
         //@XmlElement(name = "EnrolledInHIVCareDate", required = true)
         log.info(LogMessages.GENERATING_COMMON_QUESTIONS, demographics.getPersonUuid());
@@ -186,27 +150,6 @@ public class ConditionSpecificQuestionsTypeMapper {
         }
         return null;
         
-    }
-
-    
-    
-    private void processAndSetHeightAndWeight(HIVQuestionsType hiv, VitalSign vitalSign) {
-        Double bodyWeight = vitalSign.getBodyWeight ();
-        if (bodyWeight > 0) {
-            hiv.setWeightAtARTStart (bodyWeight.intValue ());
-        }
-        if (bodyWeight.intValue () > 200) {
-            int weight = bodyWeight.intValue () / 10;
-            hiv.setWeightAtARTStart (weight);
-        }
-        Double height = vitalSign.getHeight ();
-        if (height > 0) {
-            int heightInCm = (int) (height * 100);
-            if (heightInCm > 200) {
-                heightInCm = heightInCm / 10;
-            }
-            hiv.setChildHeightAtARTStart (heightInCm);
-        }
     }
 
     private void processAndSetWHOStagingAndFunctionalStatus(HIVQuestionsType hiv, String whoStage, String functionalStatus) {

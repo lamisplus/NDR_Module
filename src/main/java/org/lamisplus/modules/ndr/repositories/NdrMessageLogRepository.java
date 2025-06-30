@@ -117,84 +117,86 @@ public interface NdrMessageLogRepository extends JpaRepository<NdrMessageLog, In
     Optional<PatientEncounterDTO> getPatientLastEncounter(String identifier, Long facilityId);
 
     @Query(value = "SELECT \n" +
-            "  person_uuid, \n" +
-            "  cast(\n" +
-            "    json_agg(\n" +
-            "      DISTINCT jsonb_build_object(\n" +
-            "        'visitID', \n" +
-            "        phar.uuid, \n" +
-            "        'visitDate', \n" +
-            "        phar.visitDate, \n" +
-            "        'prescribedRegimenCode', \n" +
-            "        phar.prescribedRegimenCode, \n" +
-            "        'prescribedRegimenCodeDescTxt', \n" +
-            "        phar.prescribedRegimenCodeDescTxt, \n" +
-            "        'prescribedRegimenTypeCode', \n" +
-            "        (\n" +
-            "          CASE WHEN regimen_type_id IN (8, 9) THEN 'OI' WHEN regimen_type_id IN (10, 11, 15) THEN 'TB' ELSE 'ART' END\n" +
-            "        ), \n" +
-            "        'prescribedRegimenDuration', \n" +
-            "        phar.duration, \n" +
-            "        'dateRegimenStarted', \n" +
-            "        phar.visitDate, \n" +
-            "        'differentiatedServiceDelivery', \n" +
-            "        phar.dsd_model, \n" +
-            "        'dispensing', \n" +
-            "        phar.dsd_type, \n" +
-            "        'multiMonthDispensing', \n" +
-            "        phar.mmd_type\n" +
-            "      )\n" +
-            "    ) as varchar\n" +
-            "  ) AS regimens \n" +
-            "FROM \n" +
-            "  (\n" +
-            "    select \n" +
-            "      * \n" +
-            "    from \n" +
-            "      (\n" +
-            "        SELECT \n" +
-            "          DISTINCT pharmacy.person_uuid, \n" +
-            "          pharmacy.uuid, \n" +
-            "          pharmacy.visit_date AS visitDate, \n" +
-            "          pharmacy_object ->> 'name' as name, \n" +
-            "          cast(\n" +
-            "            pharmacy_object ->> 'duration' as VARCHAR\n" +
-            "          ) as duration, \n" +
-            "          hr.regimen_type_id, \n" +
-            "          (\n" +
-            "            Case when ncs_reg.code is not null then ncs_reg.code_description when ncs_others.code is not null then ncs_others.code_description when ncs_tpt.code is not null then ncs_tpt.code_description end\n" +
-            "          ) AS prescribedRegimenCodeDescTxt, \n" +
-            "          (\n" +
-            "            CASE WHEN ncs_reg.code IS NOT NULL THEN ncs_reg.code WHEN ncs_others.code IS NOT NULL THEN ncs_others.code WHEN ncs_tpt.code IS NOT NULL THEN ncs_tpt.code END\n" +
-            "          ) AS prescribedRegimenCode, \n" +
-            "          dd.dsd_model, \n" +
-            "          dd.dsd_type, \n" +
-            "          mmd_type \n" +
-            "        FROM \n" +
-            "          hiv_art_pharmacy pharmacy CROSS \n" +
-            "          JOIN LATERAL jsonb_array_elements(extra -> 'regimens') with ordinality p(pharmacy_object) \n" +
-            "          INNER JOIN hiv_regimen hr ON hr.description = CAST(\n" +
-            "            pharmacy_object ->> 'regimenName' AS VARCHAR\n" +
-            "          ) \n" +
-            "          LEFT JOIN hiv_regimen_resolver hrr ON hrr.regimensys = hr.description \n" +
-            "          LEFT JOIN ndr_code_set ncs_reg ON ncs_reg.code_description = hrr.regimen \n" +
-            "          LEFT JOIN ndr_code_set ncs_others ON ncs_others.code_description = hr.description \n" +
-            "          LEFT JOIN dsd_devolvement dd ON dd.person_uuid = pharmacy.person_uuid \n" +
-            "          LEFT JOIN ndr_code_set ncs_tpt ON hr.description = any(\n" +
-            "            string_to_array(ncs_tpt.alt_description, ',')\n" +
-            "          ) \n" +
-            "        WHERE \n" +
-            "          pharmacy.archived = 0 \n" +
-            "          AND pharmacy.person_uuid = ?1 \n" +
-            "          AND pharmacy.facility_id = ?2 \n" +
-            "          AND pharmacy.visit_date >= ?3 \n" +
-            "          AND pharmacy.visit_date <= ?4\n" +
-            "      ) as dt \n" +
-            "    where \n" +
-            "      prescribedRegimenCode is not null\n" +
-            "  ) phar \n" +
-            "GROUP BY \n" +
-            "  person_uuid\n", nativeQuery = true)
+            "            person_uuid, \n" +
+            "            cast(\n" +
+            "              json_agg(\n" +
+            "                DISTINCT jsonb_build_object(\n" +
+            "                  'visitID', \n" +
+            "                  phar.uuid, \n" +
+            "                  'visitDate', \n" +
+            "                  phar.visitDate, \n" +
+            "                  'prescribedRegimenCode', \n" +
+            "                  phar.prescribedRegimenCode,\n" +
+            "                  'ndrRegimenCode',\n" +
+            "                  'NDR00093', \n" +
+            "                  'prescribedRegimenCodeDescTxt', \n" +
+            "                  phar.prescribedRegimenCodeDescTxt, \n" +
+            "                  'prescribedRegimenTypeCode', \n" +
+            "                  (\n" +
+            "                    CASE WHEN regimen_type_id IN (8, 9) THEN 'OI' WHEN regimen_type_id IN (10, 11, 15) THEN 'TB' ELSE 'ART' END\n" +
+            "                  ), \n" +
+            "                  'prescribedRegimenDuration', \n" +
+            "                  phar.duration, \n" +
+            "                  'dateRegimenStarted', \n" +
+            "                  phar.visitDate, \n" +
+            "                  'differentiatedServiceDelivery', \n" +
+            "                  phar.dsd_model, \n" +
+            "                  'dispensing', \n" +
+            "                  phar.dsd_type, \n" +
+            "                  'multiMonthDispensing', \n" +
+            "                  phar.mmd_type\n" +
+            "                )\n" +
+            "              ) as varchar\n" +
+            "            ) AS regimens \n" +
+            "            FROM \n" +
+            "            (\n" +
+            "              select \n" +
+            "                * \n" +
+            "              from \n" +
+            "                (\n" +
+            "                  SELECT \n" +
+            "                    DISTINCT pharmacy.person_uuid, \n" +
+            "                    pharmacy.uuid, \n" +
+            "                    pharmacy.visit_date AS visitDate, \n" +
+            "                    pharmacy_object ->> 'name' as name, \n" +
+            "                    cast(\n" +
+            "                      pharmacy_object ->> 'duration' as VARCHAR\n" +
+            "                    ) as duration, \n" +
+            "                    hr.regimen_type_id, \n" +
+            "                    (\n" +
+            "                      Case when ncs_reg.code is not null then ncs_reg.code_description when ncs_others.code is not null then ncs_others.code_description when ncs_tpt.code is not null then ncs_tpt.code_description end\n" +
+            "                    ) AS prescribedRegimenCodeDescTxt, \n" +
+            "                    (\n" +
+            "                      CASE WHEN ncs_reg.code IS NOT NULL THEN ncs_reg.code WHEN ncs_others.code IS NOT NULL THEN ncs_others.code WHEN ncs_tpt.code IS NOT NULL THEN ncs_tpt.code END\n" +
+            "                    ) AS prescribedRegimenCode, \n" +
+            "                    dd.dsd_model, \n" +
+            "                    dd.dsd_type, \n" +
+            "                    mmd_type \n" +
+            "                  FROM \n" +
+            "                    hiv_art_pharmacy pharmacy CROSS \n" +
+            "                    JOIN LATERAL jsonb_array_elements(extra -> 'regimens') with ordinality p(pharmacy_object) \n" +
+            "                    INNER JOIN hiv_regimen hr ON hr.description = CAST(\n" +
+            "                      pharmacy_object ->> 'regimenName' AS VARCHAR\n" +
+            "                    ) \n" +
+            "                    LEFT JOIN hiv_regimen_resolver hrr ON hrr.regimensys = hr.description \n" +
+            "                    LEFT JOIN ndr_code_set ncs_reg ON ncs_reg.code_description = hrr.regimen \n" +
+            "                    LEFT JOIN ndr_code_set ncs_others ON ncs_others.code_description = hr.description \n" +
+            "                    LEFT JOIN dsd_devolvement dd ON dd.person_uuid = pharmacy.person_uuid \n" +
+            "                    LEFT JOIN ndr_code_set ncs_tpt ON hr.description = any(\n" +
+            "                      string_to_array(ncs_tpt.alt_description, ',')\n" +
+            "                    ) \n" +
+            "                  WHERE \n" +
+            "                    pharmacy.archived = 0 \n" +
+            "                    AND pharmacy.person_uuid = ?1 \n" +
+            "                    AND pharmacy.facility_id = ?2 \n" +
+            "                    AND pharmacy.visit_date >= ?3 \n" +
+            "                    AND pharmacy.visit_date <= ?4\n" +
+            "                ) as dt \n" +
+            "              where \n" +
+            "                prescribedRegimenCode is not null\n" +
+            "            ) phar \n" +
+            "            GROUP BY \n" +
+            "            person_uuid", nativeQuery = true)
     Optional<PatientPharmacyEncounterDTO> getPatientPharmacyEncounter(String identifier, Long facilityId, LocalDate start, LocalDate end);
 
     @Query(value = "SELECT person_uuid, phar.visitDate, cast(json_agg(DISTINCT  jsonb_build_object('visitID', phar.uuid,\n" +

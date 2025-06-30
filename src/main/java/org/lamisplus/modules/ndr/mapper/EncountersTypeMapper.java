@@ -146,44 +146,6 @@ public class EncountersTypeMapper {
 
 		return encountersType;
 	}
-	
-	
-	public EncountersType encounterType(
-			PatientDemographics demographics,
-			List<ARTClinicalInfo> clinicalInfoList,
-			List<ArtPharmacy> pharmacyList
-			) {
-		EncountersType encountersType = new EncountersType();
-		if (demographics != null) {
-			// Optional<Person> person = personRepository.findById(demographics.getId());
-			List<HIVEncounterType> hivEncounter = encountersType.getHIVEncounter();
-			log.info(LogMessages.GENERATING_COMMON_QUESTIONS, clinicalInfoList.size());
-			
-			clinicalInfoList.forEach(
-					artClinical -> {
-						HIVEncounterType hivEncounterType = new HIVEncounterType();
-						hivEncounterType.setVisitID(artClinical.getclinicalUuid());
-						processAndSetVisitDate(artClinical, hivEncounterType);
-						processAndSetNextAppointment(artClinical, hivEncounterType);
-						processAndSetWeightAndHeight(hivEncounterType, artClinical);
-						processAndSetBloodPressure(hivEncounterType, artClinical);
-						processAndSetWhoStageAndFunctionalStatus(artClinical, hivEncounterType);
-						processClinicalEncounterRegimens(artClinical, hivEncounterType, pharmacyList);
-						processAndSetTBStatus(demographics.getPersonUuid(), hivEncounterType);
-						Map<String, Object> status =
-								pregnancyStatus.getPregnancyStatus(demographics.getPersonUuid());
-						if (demographics.getSex() != null && demographics.getSex().contains("F")) {
-							hivEncounterType.setEDDandPMTCTLink((String) status.get("status"));
-						}
-						hivEncounter.add(hivEncounterType);
-					});
-			if (hivEncounter.isEmpty()) return null;
-			
-		}
-		return encountersType;
-	}
-	
-	
 	public EncountersType encounterType(PatientDemographics demographics, LocalDateTime lastDateTime) {
 		EncountersType encountersType = new EncountersType();
 		if (demographics != null) {
