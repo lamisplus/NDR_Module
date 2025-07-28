@@ -116,7 +116,7 @@ public interface NdrMessageLogRepository extends JpaRepository<NdrMessageLog, In
             "\tGROUP BY hac.person_uuid, hac.visit_date order by hac.visit_date desc limit 1", nativeQuery = true)
     Optional<PatientEncounterDTO> getPatientLastEncounter(String identifier, Long facilityId);
 
-    @Query(value = "SELECT \n" +
+    @Query(value = " SELECT \n" +
             "            person_uuid, \n" +
             "            cast(\n" +
             "              json_agg(\n" +
@@ -128,7 +128,7 @@ public interface NdrMessageLogRepository extends JpaRepository<NdrMessageLog, In
             "                  'prescribedRegimenCode', \n" +
             "                  phar.prescribedRegimenCode,\n" +
             "                  'ndrRegimenCode',\n" +
-            "                  'NDR00093', \n" +
+            "                  phar.ndrCode, \n" +
             "                  'prescribedRegimenCodeDescTxt', \n" +
             "                  phar.prescribedRegimenCodeDescTxt, \n" +
             "                  'prescribedRegimenTypeCode', \n" +
@@ -169,6 +169,9 @@ public interface NdrMessageLogRepository extends JpaRepository<NdrMessageLog, In
             "                    (\n" +
             "                      CASE WHEN ncs_reg.code IS NOT NULL THEN ncs_reg.code WHEN ncs_others.code IS NOT NULL THEN ncs_others.code WHEN ncs_tpt.code IS NOT NULL THEN ncs_tpt.code END\n" +
             "                    ) AS prescribedRegimenCode, \n" +
+            "\t\t\t\t\t(\n" +
+            "                      CASE WHEN ncs_reg.ndr_code IS NOT NULL THEN ncs_reg.ndr_code WHEN ncs_others.ndr_code IS NOT NULL THEN ncs_others.ndr_code WHEN ncs_tpt.ndr_code IS NOT NULL THEN ncs_tpt.ndr_code END\n" +
+            "                    ) AS ndrCode, \n" +
             "                    dd.dsd_model, \n" +
             "                    dd.dsd_type, \n" +
             "                    mmd_type \n" +
