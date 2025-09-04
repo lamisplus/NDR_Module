@@ -100,10 +100,10 @@ UPDATE ndr_code_set SET ndr_code = 'NDR9a0172', code = '9a' WHERE code_descripti
 UPDATE ndr_code_set SET ndr_code = 'NDR3b0081', code = '3b' WHERE code_description = 'DRV/r-DTG + 1-2 NRTIs';
 UPDATE ndr_code_set SET ndr_code = 'NDR6d0161', code = '6d' WHERE code_description = 'DRV/r +DTG or (RAL) ± 1-2 NRTIs';
 
-UPDATE ndr_code_set SET ndr_code = 'NDR3b0080', code = '3b', alt_description = 'DRV/r+TDF+3TC±ETV' WHERE description = 'TDF/3TC(300mg/300mg)+DRV/r(600mg/100mg)+DTG(50mg)+ETV(200mg)' code = '6b' AND code_description = 'DRV/r +2NRTIs ± ETV';
-UPDATE ndr_code_set SET ndr_code = 'NDR3b0081', code = '3b', alt_description = 'DRV/r+TDF+3TC±ETV' WHERE description = 'AZT/3TC(300mg/150mg)+DRV/r(600mg/100mg)+ETV(200mg)+DTG(50mg)' code = '6b' AND code_description = 'DRV/r +2NRTIs ± ETV';
-UPDATE ndr_code_set SET ndr_code = 'NDR3b0080', code = '3b', alt_description = 'DRV/r+TDF+3TC±ETV' WHERE description = 'TDF/3TC(300mg/300mg)+DRV/r(600mg/100mg)+DTG(50mg)+ETV(200mg)' code = '3b' AND code_description = 'DRV/r +2NRTIs ± ETV';
-UPDATE ndr_code_set SET ndr_code = 'NDR3b0081', code = '3b', alt_description = 'DRV/r+TDF+3TC±ETV' WHERE description = 'AZT/3TC(300mg/150mg)+DRV/r(600mg/100mg)+ETV(200mg)+DTG(50mg)' code = '3b' AND code_description = 'DRV/r +2NRTIs ± ETV';
+UPDATE ndr_code_set SET ndr_code = 'NDR3b0080', code = '3b', alt_description = 'DRV/r+TDF+3TC±ETV' WHERE code = '6b' AND code_description = 'DRV/r +2NRTIs ± ETV';
+UPDATE ndr_code_set SET ndr_code = 'NDR3b0081', code = '3b', alt_description = 'DRV/r+TDF+3TC±ETV' WHERE code = '6b' AND code_description = 'DRV/r +2NRTIs ± ETV';
+UPDATE ndr_code_set SET ndr_code = 'NDR3b0080', code = '3b', alt_description = 'DRV/r+TDF+3TC±ETV' WHERE code = '3b' AND code_description = 'DRV/r +2NRTIs ± ETV';
+UPDATE ndr_code_set SET ndr_code = 'NDR3b0081', code = '3b', alt_description = 'DRV/r+TDF+3TC±ETV' WHERE code = '3b' AND code_description = 'DRV/r +2NRTIs ± ETV';
 
 UPDATE ndr_code_set SET ndr_code = 'NDR2y0075' WHERE code_description = 'TDF-3TC-DRV/r';
 UPDATE ndr_code_set SET ndr_code = 'NDR2f0055', code = '2f2' WHERE code_description = 'AZT-3TC-ATV/r';
