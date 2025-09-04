@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.5.xsd">
+    <property name="autoIncrement" value="true"/>
+
+    <changeSet id="2025090603" author="victor">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="ndr_code_set" columnName="ndr_code" />
+            </not>
+        </preConditions>
+        <sql>
+            ALTER TABLE ndr_code_set
+            ADD COLUMN ndr_code VARCHAR(50)
+        </sql>
+    </changeSet>
+
+    <changeSet id="20250906156" author="victor">
+        <sqlFile dbms="postgresql"
+                 path="sql/update_regimen_code.sql"
+                 relativeToChangelogFile="true"
+                 splitStatements="false"
+                 stripComments="true"/>
+    </changeSet>
+
+</databaseChangeLog>
