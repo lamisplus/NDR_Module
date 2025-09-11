@@ -7,10 +7,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.lamisplus.modules.ndr.domain.dto.NDREligibleClient;
 import org.lamisplus.modules.ndr.domain.dto.NDRErrorDTO;
 import org.lamisplus.modules.ndr.domain.dto.NdrXmlStatusDto;
-import org.lamisplus.modules.ndr.service.HtsService;
-import org.lamisplus.modules.ndr.service.NDRService;
-import org.lamisplus.modules.ndr.service.NdrOptimizationService;
-import org.lamisplus.modules.ndr.service.RedactService;
+import org.lamisplus.modules.ndr.service.*;
 import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.simp.SimpMessageSendingOperations;
 import org.springframework.web.bind.annotation.*;
@@ -29,6 +26,7 @@ import java.util.*;
 public class NDRController {
     private final NDRService ndrService;
     private final NdrOptimizationService ndrOptmizationService;
+    private final NDROptimization4SpeedService ndrOptimization4SpeedService;
 
     private final SimpMessageSendingOperations messagingTemplate;
     private final HtsService htsService;
@@ -74,7 +72,8 @@ public class NDRController {
             @RequestParam List<String> patientIds){
         messagingTemplate.convertAndSend("/topic/ndr-status", "start");
         Stopwatch stopwatch = Stopwatch.createStarted();
-        facilityIds.forEach (facilityId -> ndrOptmizationService.generateNDRXMLByFacilityAndListOfPatient(facilityId,initial,patientIds));
+        //facilityIds.forEach (facilityId -> ndrOptmizationService.generateNDRXMLByFacilityAndListOfPatient(facilityId,initial,patientIds));
+        facilityIds.forEach (facilityId -> ndrOptimization4SpeedService.generatePatientsNDRXml(facilityId,initial,patientIds));
         messagingTemplate.convertAndSend("/topic/ndr-status", "end");
         log.info(Constants.FILE_GENERATION_TIME.replace("{}", String.valueOf(stopwatch.elapsed().toMillis())));
     }
@@ -96,6 +95,7 @@ public class NDRController {
     public ResponseEntity<Void> generateWithOptimization(@RequestParam List<Long> facilityIds, @RequestParam boolean isInitial) {
         Stopwatch stopwatch = Stopwatch.createStarted();
         facilityIds.forEach(facilityId -> ndrOptmizationService.generatePatientsNDRXml(facilityId, isInitial));
+        //facilityIds.forEach(facilityId -> ndrOptimization4SpeedService.generatePatientsNDRXml(facilityId, isInitial));
         log.info(Constants.FILE_GENERATION_TIME.replace("{}", String.valueOf(stopwatch.elapsed().toMinutes())));
         return ResponseEntity.ok().build();
     }

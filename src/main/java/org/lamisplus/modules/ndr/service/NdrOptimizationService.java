@@ -27,14 +27,19 @@ import javax.xml.bind.Marshaller;
 import javax.xml.validation.Schema;
 import javax.xml.validation.SchemaFactory;
 import java.io.*;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
 import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.Month;
 import java.util.*;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
@@ -101,7 +106,6 @@ public class NdrOptimizationService {
 		log.error("error list size {}", ndrErrors.size());
 	}
 
-
 	public void generatePatientsNDRXml(long facilityId, boolean initial){
 
 		List<String> patientIds;
@@ -155,13 +159,13 @@ public class NdrOptimizationService {
 
 		patientIds.parallelStream()
 				.forEach(id -> {
-			if (getPatientNDRXmlByDateRange(id, facilityId, startDate, endDate, ndrErrors, pushIdentifier)) {
-				generatedCount.getAndIncrement();
-				patientDemographicDTO[0] = data.getPatientDemographics(id, facilityId).get();
-			} else {
-				errorCount.getAndIncrement();
-			}
-		});
+					if (getPatientNDRXmlByDateRange(id, facilityId, startDate, endDate, ndrErrors, pushIdentifier)) {
+						generatedCount.getAndIncrement();
+						patientDemographicDTO[0] = data.getPatientDemographics(id, facilityId).get();
+					} else {
+						errorCount.getAndIncrement();
+					}
+				});
 		log.info("generated  {}/{}", generatedCount.get(), patientIds.size());
 		log.info("files not generated  {}/{}", errorCount.get(), patientIds.size());
 		File folder = new File(BASE_DIR + TEMP + facilityId + "/");
@@ -178,7 +182,7 @@ public class NdrOptimizationService {
 					patientDemographicDTO[0],
 					ndrErrors,
 					"treatment", pushIdentifier
-					);
+			);
 		}
 		log.error("error list size {}", ndrErrors.size());
 	}
@@ -199,13 +203,13 @@ public class NdrOptimizationService {
 
 		patientIds.parallelStream()
 				.forEach(id -> {
-			if (getPatientNDRXml(id, facilityId, initial, ndrErrors, pushIdentifier)) {
-				generatedCount.getAndIncrement();
-				patientDemographicDTO[0] = data.getPatientDemographics(id, facilityId).get();
-			} else {
-				errorCount.getAndIncrement();
-			}
-		});
+					if (getPatientNDRXml(id, facilityId, initial, ndrErrors, pushIdentifier)) {
+						generatedCount.getAndIncrement();
+						patientDemographicDTO[0] = data.getPatientDemographics(id, facilityId).get();
+					} else {
+						errorCount.getAndIncrement();
+					}
+				});
 		log.info("generated  {}/{}", generatedCount.get(), patientIds.size());
 		log.info("files not generated  {}/{}", errorCount.get(), patientIds.size());
 		File folder = new File(BASE_DIR + TEMP + facilityId + "/");
@@ -222,7 +226,7 @@ public class NdrOptimizationService {
 					patientDemographicDTO[0],
 					ndrErrors,
 					"treatment", pushIdentifier
-					);
+			);
 		}
 		log.error("error list size {}", ndrErrors.size());
 	}
@@ -312,46 +316,46 @@ public class NdrOptimizationService {
 
 		//check if xml is eligible for update generation
 		if (!initial && messageLog.isPresent() ) {
-				log.info("updated part 2");
-				start = messageLog.get().getLastUpdated().toLocalDate();
-				List<EncounterDTO> patientEncounters =
-						getPatientEncounters(patientId, facilityId, objectMapper, start, end, ndrErrors);
+			log.info("updated part 2");
+			start = messageLog.get().getLastUpdated().toLocalDate();
+			List<EncounterDTO> patientEncounters =
+					getPatientEncounters(patientId, facilityId, objectMapper, start, end, ndrErrors);
 
-				if(patientEncounters.isEmpty()){
-					patientEncounters = getPatientEncounters_lastRecord(patientId, facilityId, objectMapper, ndrErrors);
-				}
+			if(patientEncounters.isEmpty()){
+				patientEncounters = getPatientEncounters_lastRecord(patientId, facilityId, objectMapper, ndrErrors);
+			}
 
-				List<RegimenDTO> patientRegimens =
-						getPatientRegimens(patientId, facilityId, objectMapper, start, end, ndrErrors);
+			List<RegimenDTO> patientRegimens =
+					getPatientRegimens(patientId, facilityId, objectMapper, start, end, ndrErrors);
 
-				if(patientRegimens.isEmpty()){
-					patientRegimens =  getPatientLastRegimen(patientId, facilityId, objectMapper, ndrErrors);
-				}
+			if(patientRegimens.isEmpty()){
+				patientRegimens =  getPatientLastRegimen(patientId, facilityId, objectMapper, ndrErrors);
+			}
 
-				List<LaboratoryEncounterDTO> patientLabEncounters =
-						getPatientLabEncounter(patientId, facilityId, objectMapper, start, end, ndrErrors);
+			List<LaboratoryEncounterDTO> patientLabEncounters =
+					getPatientLabEncounter(patientId, facilityId, objectMapper, start, end, ndrErrors);
 
-				if(patientLabEncounters.isEmpty()){
-					System.out.println("getting last lab record");
-					patientLabEncounters = getPatientLastLabEncounter(patientId, facilityId, objectMapper, ndrErrors);
-				}
-				// those that have updated
+			if(patientLabEncounters.isEmpty()){
+				System.out.println("getting last lab record");
+				patientLabEncounters = getPatientLastLabEncounter(patientId, facilityId, objectMapper, ndrErrors);
+			}
+			// those that have updated
 
 
-				MortalityType mortality = mortalityTypeMapper.getMortalityType(patientId, facilityId, start, end, ndrErrors);
-				String 	fileName = generatePatientNDRXml(
-						facilityId, patientDemographic,
-						patientEncounters,
-						patientRegimens,
-						patientLabEncounters,
-						mortality,
-						initial,
-						ndrErrors, pushIdentifier);
+			MortalityType mortality = mortalityTypeMapper.getMortalityType(patientId, facilityId, start, end, ndrErrors);
+			String fileName = generatePatientNDRXml(
+					facilityId, patientDemographic,
+					patientEncounters,
+					patientRegimens,
+					patientLabEncounters,
+					mortality,
+					initial,
+					ndrErrors, pushIdentifier);
 
-				if (fileName != null) {
-					saveTheXmlFile(patientDemographic.getPatientIdentifier(), fileName,"treatment");
-					return true;
-				}
+			if (fileName != null) {
+				saveTheXmlFile(patientDemographic.getPatientIdentifier(), fileName,"treatment");
+				return true;
+			}
 
 		}else {
 
@@ -383,10 +387,11 @@ public class NdrOptimizationService {
 		}
 		return false;
 	}
+
 	private boolean getPatientNDRXmlByDateRange(String patientId, long facilityId, LocalDateTime startDate,
 												LocalDateTime endDate,
-									 List<NDRErrorDTO> ndrErrors,
-									 String pushIdentifier) {
+												List<NDRErrorDTO> ndrErrors,
+												String pushIdentifier) {
 		PatientDemographicDTO patientDemographic =
 				getPatientDemographic(patientId, facilityId, ndrErrors);
 		if (patientDemographic == null)
@@ -400,44 +405,44 @@ public class NdrOptimizationService {
 				data.findFirstByIdentifierAndFileType(patientDemographic.getPatientIdentifier(), "treatment");
 
 		if ( messageLog.isPresent()) {
-				log.info("updated part 2");
-				List<EncounterDTO> patientEncounters =
-						getPatientEncounters(patientId, facilityId, objectMapper, startDate.toLocalDate(), endDate.toLocalDate(), ndrErrors);
+			log.info("updated part 2");
+			List<EncounterDTO> patientEncounters =
+					getPatientEncounters(patientId, facilityId, objectMapper, startDate.toLocalDate(), endDate.toLocalDate(), ndrErrors);
 
-				if(patientEncounters.isEmpty()){
-					patientEncounters = getPatientEncounters_lastRecord(patientId, facilityId, objectMapper, ndrErrors);
-				}
+			if(patientEncounters.isEmpty()){
+				patientEncounters = getPatientEncounters_lastRecord(patientId, facilityId, objectMapper, ndrErrors);
+			}
 
-				List<RegimenDTO> patientRegimens =
-						getPatientRegimens(patientId, facilityId, objectMapper,startDate.toLocalDate(), endDate.toLocalDate(), ndrErrors);
+			List<RegimenDTO> patientRegimens =
+					getPatientRegimens(patientId, facilityId, objectMapper,startDate.toLocalDate(), endDate.toLocalDate(), ndrErrors);
 
-				if(patientRegimens.isEmpty()){
-					patientRegimens =  getPatientLastRegimen(patientId, facilityId, objectMapper, ndrErrors);
-				}
+			if(patientRegimens.isEmpty()){
+				patientRegimens =  getPatientLastRegimen(patientId, facilityId, objectMapper, ndrErrors);
+			}
 
-				List<LaboratoryEncounterDTO> patientLabEncounters =
-						getPatientLabEncounter(patientId, facilityId, objectMapper, startDate.toLocalDate(), endDate.toLocalDate(), ndrErrors);
+			List<LaboratoryEncounterDTO> patientLabEncounters =
+					getPatientLabEncounter(patientId, facilityId, objectMapper, startDate.toLocalDate(), endDate.toLocalDate(), ndrErrors);
 
-				if(patientLabEncounters.isEmpty()){
-					System.out.println("getting last lab record");
-					patientLabEncounters = getPatientLastLabEncounter(patientId, facilityId, objectMapper, ndrErrors);
-				}
-				// those that have updated
+			if(patientLabEncounters.isEmpty()){
+				System.out.println("getting last lab record");
+				patientLabEncounters = getPatientLastLabEncounter(patientId, facilityId, objectMapper, ndrErrors);
+			}
+			// those that have updated
 
-				MortalityType mortality = mortalityTypeMapper.getMortalityType(patientId, facilityId,startDate.toLocalDate(), endDate.toLocalDate(), ndrErrors);
-				String 	fileName = generatePatientNDRXml(
-						facilityId, patientDemographic,
-						patientEncounters,
-						patientRegimens,
-						patientLabEncounters,
-						mortality,
-						false,
-						ndrErrors, pushIdentifier);
+			MortalityType mortality = mortalityTypeMapper.getMortalityType(patientId, facilityId,startDate.toLocalDate(), endDate.toLocalDate(), ndrErrors);
+			String fileName = generatePatientNDRXml(
+					facilityId, patientDemographic,
+					patientEncounters,
+					patientRegimens,
+					patientLabEncounters,
+					mortality,
+					false,
+					ndrErrors, pushIdentifier);
 
-				if (fileName != null) {
-					saveTheXmlFile(patientDemographic.getPatientIdentifier(), fileName,"treatment");
-					return true;
-				}
+			if (fileName != null) {
+				saveTheXmlFile(patientDemographic.getPatientIdentifier(), fileName,"treatment");
+				return true;
+			}
 		}else {//generate initial for the patient because there is no previous generation attempt
 			LocalDate start = LocalDate.of(1985, Month.JANUARY, 1);
 			LocalDate end = LocalDate.now().plusDays(1);
@@ -472,8 +477,8 @@ public class NdrOptimizationService {
 	}
 
 	private boolean getPatientNDRXml_lastRecord(String patientId, long facilityId, boolean initial,
-									 List<NDRErrorDTO> ndrErrors,
-									 String pushIdentifier) {
+												List<NDRErrorDTO> ndrErrors,
+												String pushIdentifier) {
 		ObjectMapper objectMapper = new ObjectMapper();
 		log.info("facilityId {}, patientId {}", facilityId, patientId);
 		LocalDate start = LocalDate.of(1985, Month.JANUARY, 1);
@@ -489,13 +494,13 @@ public class NdrOptimizationService {
 
 		List<RegimenDTO> patientRegimens = getPatientLastRegimen(patientId, facilityId, objectMapper, ndrErrors);
 
-		List<LaboratoryEncounterDTO> patientLabEncounters =	getPatientLastLabEncounter(patientId, facilityId, objectMapper, ndrErrors);
+		List<LaboratoryEncounterDTO> patientLabEncounters = getPatientLastLabEncounter(patientId, facilityId, objectMapper, ndrErrors);
 
 		if (patientDemographic == null)
 			return false;
 
 		MortalityType mortality = mortalityTypeMapper.getMortalityType(patientId, facilityId, start, end, ndrErrors);
-		String 	fileName = generatePatientNDRXml(
+		String fileName = generatePatientNDRXml(
 				facilityId, patientDemographic,
 				patientEncounters,
 				patientRegimens,
@@ -513,11 +518,11 @@ public class NdrOptimizationService {
 	}
 
 	public String generatePatientNDRXml(long facilityId, PatientDemographicDTO patientDemographic,
-	                                    List<EncounterDTO> patientEncounters,
-	                                    List<RegimenDTO> patientRegimens,
-	                                    List<LaboratoryEncounterDTO> patientLabEncounters,
+										List<EncounterDTO> patientEncounters,
+										List<RegimenDTO> patientRegimens,
+										List<LaboratoryEncounterDTO> patientLabEncounters,
 										MortalityType mortality,
-	                                    boolean initial, List<NDRErrorDTO> ndrErrors, String pushIdentifier) {
+										boolean initial, List<NDRErrorDTO> ndrErrors, String pushIdentifier) {
 		try {
 			//log.info("generating ndr xml of patient with uuid {}", patientDemographic.getPatientIdentifier());
 			log.info("fetching patient demographics....");
@@ -592,7 +597,7 @@ public class NdrOptimizationService {
 
 
 	private List<RegimenDTO> getPatientRegimens(String patientId, long facilityId,
-	                                            ObjectMapper objectMapper, LocalDate start, LocalDate end, List<NDRErrorDTO> ndrErrors) {
+												ObjectMapper objectMapper, LocalDate start, LocalDate end, List<NDRErrorDTO> ndrErrors) {
 		try {
 			PatientPharmacyEncounterDTO patientPharmacyEncounterDTO;
 			Optional<PatientPharmacyEncounterDTO> patientPharmacyEncounter =
@@ -640,7 +645,7 @@ public class NdrOptimizationService {
 		return new ArrayList<>();
 	}
 
-	private List<EncounterDTO> getPatientEncounters_lastRecord(String patientId, long facilityId,	ObjectMapper objectMapper,
+	private List<EncounterDTO> getPatientEncounters_lastRecord(String patientId, long facilityId, ObjectMapper objectMapper,
 															   List<NDRErrorDTO> ndrErrors) {
 		PatientEncounterDTO patientEncounterDTO;
 		Optional<PatientEncounterDTO> patientEncounter = data.getPatientLastEncounter(patientId, facilityId);
@@ -657,7 +662,7 @@ public class NdrOptimizationService {
 			ObjectMapper objectMapper,
 			LocalDate start, LocalDate end,
 			List<NDRErrorDTO> ndrErrors
-	){
+    ){
 		try{
 			PatientLabEncounterDTO laboratoryEncounter;
 
@@ -679,7 +684,7 @@ public class NdrOptimizationService {
 	private List<LaboratoryEncounterDTO> getPatientLastLabEncounter(String patientId, long facilityId, ObjectMapper objectMapper, List<NDRErrorDTO> ndrErrors){
 		try{
 			PatientLabEncounterDTO laboratoryEncounter;
-			Optional<PatientLabEncounterDTO> patientLabEncounter = 	data.getPatientLastLabEncounter(patientId, facilityId);
+			Optional<PatientLabEncounterDTO> patientLabEncounter = data.getPatientLastLabEncounter(patientId, facilityId);
 			if(patientLabEncounter.isPresent()){
 				System.out.println("Last lab is present");
 				laboratoryEncounter = patientLabEncounter.get();
@@ -807,9 +812,9 @@ public class NdrOptimizationService {
 	}
 
 	public void zipFiles(PatientDemographicDTO demographic,
-	                       long facilityId,
-	                       String sourceFolder,
-	                       List<NDRErrorDTO> ndrErrors, String type, String identifier) {
+						 long facilityId,
+						 String sourceFolder,
+						 List<NDRErrorDTO> ndrErrors, String type, String identifier) {
 		SimpleDateFormat dateFormat = new SimpleDateFormat("ddMMyyyy");
 		String sCode = demographic.getStateCode();
 		String lCode = demographic.getLgaCode();
