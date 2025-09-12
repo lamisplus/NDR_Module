@@ -95,6 +95,15 @@ public class RegimenTypeMapper {
 
 							throw new IllegalArgumentException("Regimen duration cannot be null");
 						}
+
+						//NDR Regimen Code
+						if (StringUtils.isNotBlank(regimen.getNdrRegimenCode())) {
+							regimenType.setNDRRegimenCode(regimen.getNdrRegimenCode());
+						} else {
+							regimenType.setNDRRegimenCode("NDR00000");
+							log.info("Regimen is null");
+							//throw new IllegalArgumentException("NDR Regimen Code cannot be null");
+						}
 						
 						if (StringUtils.isNotBlank(regimen.getPrescribedRegimenTypeCode())) {
 							regimenType.setPrescribedRegimenTypeCode(regimen.getPrescribedRegimenTypeCode());
@@ -125,15 +134,6 @@ public class RegimenTypeMapper {
 							processDSD(regimenType, regimen);
 						} else {
 							log.info("Differentiated Service Delivery is null");
-						}
-
-						//NDR Regimen Code
-						if (StringUtils.isNotBlank(regimen.getNdrRegimenCode())) {
-							regimenType.setNDRRegimenCode(regimen.getNdrRegimenCode());
-						} else {
-							regimenType.setNDRRegimenCode("NDR00000");
-							log.info("Regimen is null");
-							//throw new IllegalArgumentException("NDR Regimen Code cannot be null");
 						}
 
 						if (StringUtils.isNotBlank(regimen.getDispensing())) {

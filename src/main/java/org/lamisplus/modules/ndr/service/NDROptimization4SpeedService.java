@@ -3,9 +3,9 @@ package org.lamisplus.modules.ndr.service;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.type.TypeFactory;
 import io.jsonwebtoken.io.IOException;
+import liquibase.pro.packaged.C;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.dom4j.io.XMLResult;
 import org.lamisplus.modules.ndr.domain.dto.*;
 import org.lamisplus.modules.ndr.domain.entities.NdrMessageLog;
 import org.lamisplus.modules.ndr.mapper.ConditionTypeMapper;
@@ -21,7 +21,11 @@ import javax.xml.bind.JAXBContext;
 import javax.xml.bind.Marshaller;
 import javax.xml.validation.Schema;
 import javax.xml.validation.SchemaFactory;
+import java.io.BufferedOutputStream;
+import java.io.BufferedWriter;
+import java.io.OutputStream;
 import java.io.StringWriter;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -56,14 +60,20 @@ public class NDROptimization4SpeedService {
     private static JAXBContext JAXB_CONTEXT;
     private static Schema NDR_SCHEMA;
     public final AtomicLong messageId = new AtomicLong(0);
+    private static final long MAX_BATCH_SIZE = 15_000_000L;
 
     private static final ThreadLocal<Marshaller> MARSHALLER_CACHE = ThreadLocal.withInitial(() -> {
         try{
             Marshaller marshaller = JAXB_CONTEXT.createMarshaller();
             marshaller.setProperty(HEADER_BIND_COMMENT, XML_WAS_GENERATED_FROM_LAMISPLUS_APPLICATION);
-            marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, true);
+            marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE);
             marshaller.setProperty(Marshaller.JAXB_ENCODING, JAXB_ENCODING);
             marshaller.setSchema(NDR_SCHEMA);
+
+            marshaller.setEventHandler(event -> {
+                log.warn("JAXB Validation Error: {}", event.getMessage());
+                return false;
+            });
             return marshaller;
         }catch(Exception e) {
             throw new IllegalStateException("Failed to create marshaller", e);
@@ -74,7 +84,7 @@ public class NDROptimization4SpeedService {
         try{
             JAXB_CONTEXT = JAXBContext.newInstance(Container.class);
             SchemaFactory sf = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI);
-            NDR_SCHEMA = sf.newSchema(NdrOptimizationService.class.getClassLoader().getResource("NDR1_6_6_1.xsd"));
+            NDR_SCHEMA = sf.newSchema(NdrOptimizationService.class.getClassLoader().getResource("NDR1_6_6_2_R.xsd"));
 
         }catch(Exception e) {
             throw new RuntimeException("Failed to initialize JAXB context/schema", e);
@@ -92,7 +102,7 @@ public class NDROptimization4SpeedService {
     }
 
     public void generatePatientsNDRXml(long facilityId, boolean initial, List<String> patientUuidList){
-        log.info("Speed generation started.");
+        log.info("NDR XML Speed generation started.");
         LocalDateTime start = LocalDateTime.of(1984, 1, 1, 0, 0);
         String pushIdentifier = UUID.randomUUID().toString();
         List<String> patientIds = null;
@@ -102,137 +112,214 @@ public class NDROptimization4SpeedService {
         AtomicInteger errorCount = new AtomicInteger();
 
         if (initial) {
-
             if (patientUuidList != null) {
                 generatePatientsNDRXml4Speed(patientUuidList, facilityId, true, pushIdentifier);
-//                patientUuidList.parallelStream()
-//                        .forEach(id -> {
-//                            if (getPatientNDRXml(id, facilityId, initial, ndrErrors, pushIdentifier)) {
-//                                generatedCount.getAndIncrement();
-//                                patientDemographicDTO[0] = data.getPatientDemographics(id, facilityId).get();
-//                            } else {
-//                                idsNotGenerated.add(id);
-//                                errorCount.getAndIncrement();
-//                            }
-//                        });
             }else{
                 patientIds = data.getPatientIdsEligibleForNDR(start, LocalDateTime.now(), facilityId);
                 log.info("generating initial ....");
                 generatePatientsNDRXml4Speed(patientIds, facilityId, true, pushIdentifier);
             }
-
-            //generatePatientsNDRXml(facilityId, initial, patientIds,0);
-
-
         }else { //updated
             log.info("generating updated....");
-//            Optional<Timestamp> lastGenerateDateTimeByFacilityId =
-//                    ndrXmlStatusRepository.getLastGenerateDateTimeByFacilityId(facilityId, "treatment");
-//            if (lastGenerateDateTimeByFacilityId.isPresent()) {
-//                LocalDateTime lastModified =
-//                        lastGenerateDateTimeByFacilityId.get().toLocalDateTime();
-//                log.info("Last Generated Date: " + lastModified);
-//                patientIds = data.getPatientIdsEligibleForNDR(lastModified, LocalDateTime.now(), facilityId);
-//                List<String> unModifiedPatients = fetchUnModifiedPatients(patientIds, start, LocalDateTime.now(), facilityId);
-//                //log
-//                generatePatientsNDRXml_ByLastRecord(facilityId, false, unModifiedPatients);
-//                generatePatientsNDRXml(facilityId, false, patientIds,unModifiedPatients.size());
-//            }
         }
 
-        log.info("generated  {}/{}", generatedCount.get(), patientUuidList.size());
-        log.info("files not generated  {}/{}", errorCount.get(), patientUuidList.size());
-        log.info("patientIds of files not generated: {}", idsNotGenerated);
+        assert patientUuidList != null;
+//        log.info("generated  {}/{}", generatedCount.get(), patientUuidList.size());
+//        log.info("files not generated  {}/{}", errorCount.get(), patientUuidList.size());
+//        log.info("patientIds of files not generated: {}", idsNotGenerated);
     }
 
     public void generatePatientsNDRXml4Speed(List<String> patientIds, Long facilityId, boolean initial, String pushIdentifier) {
-        List<NDRErrorDTO> ndrErrors = null;
-
+        List<NDRErrorDTO> ndrErrors = Collections.synchronizedList(new ArrayList<>());
         if (patientIds == null || patientIds.isEmpty()) {
             log.warn("No patient IDs provided for NDR XML generation");
+            return;
         }
 
-        Path outputDir = Paths.get("ndr-output", facilityId.toString());
+        Path outputDir = Paths.get(BASE_DIR + TEMP, facilityId.toString());
         try {
             Files.createDirectories(outputDir);
         } catch (Exception e) {
             throw new RuntimeException("Failed to create output directory: " + e);
         }
 
-        Path zipFile = outputDir.resolve("ndr_" + pushIdentifier + ".zip");
-
         int availableCores = Runtime.getRuntime().availableProcessors();
-        int poolSize = Math.max(4, availableCores * 2);
-        log.info(availableCores + " Available cores: ... " + poolSize + " pool size ... ");
-        ExecutorService executor = Executors.newFixedThreadPool(poolSize);
+        int producerPoolSize = Math.max(4, availableCores * 2);
+        int writerPoolSize = Math.max(2, availableCores / 2);
+        log.info("{} cores available -> Producers: {} | writers: {}",
+                availableCores, producerPoolSize, writerPoolSize);
 
+        ExecutorService producerExecutor = Executors.newFixedThreadPool(producerPoolSize);
+        ExecutorService writerExecutor = Executors.newFixedThreadPool(writerPoolSize);
 
-        BlockingQueue<XmlResult> resultsQueue = new LinkedBlockingQueue<>();
-        List<Future<?>> futures = new ArrayList<>();
         AtomicInteger processedCount = new AtomicInteger(0);
 
-        assert patientIds != null;
-        for (final String patientId : patientIds) {
-            futures.add(executor.submit(() -> {
-                try {
-                    String xml = getPatientNDRXml(patientId, facilityId, initial, ndrErrors, pushIdentifier);
-                    log.info(xml);
-                    resultsQueue.add(new XmlResult(patientId, xml));
-                } catch (Exception e) {
-                    log.error("Failed processing patient {}: {}", patientId, e.getMessage());
-                    synchronized (ndrErrors) {
-                        ndrErrors.add(new NDRErrorDTO(patientId, "", e.getMessage()));
+
+        BlockingQueue<XmlResult> resultsQueue = new LinkedBlockingQueue<>(2000);
+
+        Runnable writerTask = () -> {
+            long currentBatchSize = 0;
+            int batchCounter = 1;
+            Path currentBatchDir = outputDir.resolve("batch_" + batchCounter);
+
+            try {
+                Files.createDirectories(currentBatchDir);
+            } catch (IOException | java.io.IOException e) {
+                throw new RuntimeException("Failed to create initial batch directory", e);
+            }
+
+            try {
+                while (true) {
+                    XmlResult result = resultsQueue.poll(2, TimeUnit.SECONDS);
+                    log.info("result worker.. {}", result);
+                    if (result == null) {
+                        if (producerExecutor.isTerminated() && resultsQueue.isEmpty()) {
+                            break;
+                        }
+                        continue;
                     }
+
+                    if (result.xmlContent == null || result.xmlContent.trim().isEmpty()) {
+                        log.error("Dropped empty XML for patient {}", result.patientId);
+                        continue;
+                    }
+
+
+                    byte[] data = result.xmlContent.getBytes(StandardCharsets.UTF_8);
+
+                    if (currentBatchSize + data.length > MAX_BATCH_SIZE){
+                        batchCounter++;
+                        currentBatchDir = outputDir.resolve("batch_" + batchCounter);
+                        Files.createDirectories(currentBatchDir);
+                    }
+
+                    Path patientXml = currentBatchDir.resolve("patient_" + result.patientId + ".xml");
+
+                    try (OutputStream os = new BufferedOutputStream(
+                            Files.newOutputStream(patientXml, StandardOpenOption.CREATE,
+                                    StandardOpenOption.TRUNCATE_EXISTING)
+                    )){
+                        os.write(data);
+                    }
+
+                    currentBatchSize += data.length;
+                }
+            } catch (Exception e) {
+                log.error("Writer thread error: " + e.getMessage());
+                e.printStackTrace();
+            }
+        };
+
+        for (int i = 0; i < writerPoolSize; i++) {
+            writerExecutor.submit(writerTask);
+        }
+
+        for (String patientId : patientIds) {
+            producerExecutor.submit(() -> {
+                try{
+                    String xml = getPatientNDRXml(patientId, facilityId, initial, ndrErrors, pushIdentifier);
+                    log.info("xml {}", xml);
+                    if (xml != null && !xml.trim().isEmpty()) {
+                        resultsQueue.add(new XmlResult(patientId, xml));
+                    }else {
+                        log.warn("Skipping patient {} - No XML generated", patientId);
+                    }
+                }catch(Exception e){
+                    log.error("Error generating XML: {}", e.getMessage());
+                }
+                processedCount.incrementAndGet();
+            });
+        }
+
+        producerExecutor.shutdown();
+
+        try {
+            producerExecutor.awaitTermination(1, TimeUnit.HOURS);
+        }catch (InterruptedException e){
+            Thread.currentThread().interrupt();
+            throw new RuntimeException("Producer Execution pool interrupted", e);
+        }
+
+        writerExecutor.shutdown();
+
+        try {
+            writerExecutor.awaitTermination(1, TimeUnit.HOURS);
+        }catch (InterruptedException e){
+            Thread.currentThread().interrupt();
+            throw new RuntimeException("Writer Execution pool interrupted", e);
+        }
+
+        if (!ndrErrors.isEmpty()) {
+            Path errorFile = outputDir.resolve("ndr_errors.txt");
+            try(BufferedWriter writer = Files.newBufferedWriter(errorFile, StandardCharsets.UTF_8,
+                    StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING)){
+                for (NDRErrorDTO err : ndrErrors) {
+                    writer.write(String.format("PatientID=%s | Hospital No=%s | Error=%s%n",
+                            err.getPatientUuid(), err.getHospitalNumber(), err.getErrorMessage()));
                 }
 
-                int count = processedCount.incrementAndGet();
-            }));
-        }
-
-        for (Future<?> f : futures) {
-            try {
-                f.get();
-            } catch (Exception e) {
-                log.error("Task execution error: {}", e.getMessage());
+            }catch(java.io.IOException e){
+                throw new RuntimeException("Failed in writing error log ti file: {} ", e);
             }
         }
 
-        executor.shutdown();
+        log.info("NDR XML generation completed for facility {}. Total patients: {}. Errors: {}",
+                facilityId, patientIds.size(), ndrErrors.size());
+    }
 
-        try(ZipOutputStream zos = new ZipOutputStream(Files.newOutputStream(zipFile))) {
-            for(XmlResult result : resultsQueue) {
-                ZipEntry entry = new ZipEntry("patient_" + result.patientId + ".xml");
-                zos.putNextEntry(entry);
-                byte[] data = result.xmlContent.getBytes(JAXB_ENCODING);
-                zos.write(data, 0, data.length);
-                zos.closeEntry();
-            }
-
-        }catch(IOException | java.io.IOException e) {
-            throw new RuntimeException("Failed to write ZIP file: " + e);
+    private void sanitizeContainer(Container container) {
+        if (container.getMessageHeader() == null) {
+            container.setMessageHeader(new MessageHeaderType());
         }
-        log.info("NDR XML generation completed. Total patients: {}", patientIds.size());
+
+        if (container.getIndividualReport() == null) {
+            container.setIndividualReport(new IndividualReportType());
+        }
+
+        IndividualReportType report = container.getIndividualReport();
+
+        for (ConditionType cond : report.getCondition()) {
+            if (cond.getEncounters() == null) {
+                cond.setEncounters(new EncountersType());
+            }
+        }
+
     }
 
     private String getPatientNDRXml(String patientId, Long facilityId, boolean initial, List<NDRErrorDTO> ndrErrors, String pushIdentifier) {
         try{
             Container container = createContainerForPatient(patientId, facilityId, initial, ndrErrors, pushIdentifier);
-            assert container != null;
 
-            Marshaller marshaller = MARSHALLER_CACHE.get();
-            StringWriter writer = new StringWriter();
-            synchronized (marshaller) {
-                marshaller.marshal(container, writer);
+            if (container == null) {
+                throw new IllegalStateException("Null container for patient " + patientId);
             }
 
-            return writer.toString();
+            sanitizeContainer(container);
+
+            try(StringWriter writer = new StringWriter()){
+                Marshaller marshaller = MARSHALLER_CACHE.get();
+                synchronized (marshaller) {
+                    marshaller.marshal(container, writer);
+                }
+                return writer.toString();
+            }catch (Exception e) {
+                throw new RuntimeException("Error marshalling patient " + patientId + ": " + e.getMessage());
+            }
+
+//            log.info("container {}", container);
+//            Marshaller marshaller = MARSHALLER_CACHE.get();
+//            StringWriter writer = new StringWriter();
+//
+//            synchronized (marshaller) {
+//                marshaller.marshal(container, writer);
+//            }
+//
+//            return writer.toString();
 
         } catch (Exception e) {
-            ndrErrors.add(new NDRErrorDTO(patientId, "", e.getMessage()));
-            throw new RuntimeException("Error processing patient " + patientId, e);
+            throw new RuntimeException("Error processing patient xml container " + patientId, e);
         }
     }
-
     private Container createContainerForPatient(
             String patientId,
             Long facilityId,
@@ -246,7 +333,9 @@ public class NDROptimization4SpeedService {
         // --- Demographics ---
         PatientDemographicDTO patientDemographic = getPatientDemographic(patientId, facilityId, ndrErrors);
         if (patientDemographic == null) {
+            String msg = "No demographic found for patient " + patientId;
             log.warn("No demographic found for patient {} at facility {}", patientId, facilityId);
+            ndrErrors.add(new NDRErrorDTO(patientId, "", msg));
             return null;
         }
 
