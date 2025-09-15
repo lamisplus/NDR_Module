@@ -94,8 +94,8 @@ public class NDRController {
     @GetMapping("/optimization")
     public ResponseEntity<Void> generateWithOptimization(@RequestParam List<Long> facilityIds, @RequestParam boolean isInitial) {
         Stopwatch stopwatch = Stopwatch.createStarted();
-        facilityIds.forEach(facilityId -> ndrOptmizationService.generatePatientsNDRXml(facilityId, isInitial));
-        //facilityIds.forEach(facilityId -> ndrOptimization4SpeedService.generatePatientsNDRXml(facilityId, isInitial));
+        //facilityIds.forEach(facilityId -> ndrOptmizationService.generatePatientsNDRXml(facilityId, isInitial));
+        facilityIds.forEach(facilityId -> ndrOptimization4SpeedService.generateAllPatientsNDRXmls(facilityId, isInitial));
         log.info(Constants.FILE_GENERATION_TIME.replace("{}", String.valueOf(stopwatch.elapsed().toMinutes())));
         return ResponseEntity.ok().build();
     }

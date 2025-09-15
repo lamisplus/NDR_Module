@@ -2,10 +2,12 @@ package org.lamisplus.modules.ndr.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.type.TypeFactory;
-import io.jsonwebtoken.io.IOException;
 import liquibase.pro.packaged.C;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang3.RegExUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.lamisplus.modules.ndr.domain.dto.*;
 import org.lamisplus.modules.ndr.domain.entities.NdrMessageLog;
 import org.lamisplus.modules.ndr.mapper.ConditionTypeMapper;
@@ -13,7 +15,9 @@ import org.lamisplus.modules.ndr.mapper.MessageHeaderTypeMapper;
 import org.lamisplus.modules.ndr.mapper.MortalityTypeMapper;
 import org.lamisplus.modules.ndr.mapper.PatientDemographicsMapper;
 import org.lamisplus.modules.ndr.repositories.NdrMessageLogRepository;
+import org.lamisplus.modules.ndr.repositories.NdrXmlStatusRepository;
 import org.lamisplus.modules.ndr.schema.*;
+import org.lamisplus.modules.ndr.utility.ZipUtility;
 import org.springframework.stereotype.Service;
 
 import javax.xml.XMLConstants;
@@ -21,16 +25,14 @@ import javax.xml.bind.JAXBContext;
 import javax.xml.bind.Marshaller;
 import javax.xml.validation.Schema;
 import javax.xml.validation.SchemaFactory;
-import java.io.BufferedOutputStream;
-import java.io.BufferedWriter;
-import java.io.OutputStream;
-import java.io.StringWriter;
+import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.sql.Timestamp;
+import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.Month;
@@ -38,6 +40,7 @@ import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
@@ -51,6 +54,9 @@ public class NDROptimization4SpeedService {
     private final PatientDemographicsMapper patientDemographicsMapper;
     private final ConditionTypeMapper conditionTypeMapper;
     private final MortalityTypeMapper mortalityTypeMapper;
+    private final NdrXmlStatusRepository ndrXmlStatusRepository;
+
+    private final NDRService ndrService;
 
     public static final String BASE_DIR = "runtime/ndr/transfer/";
     private static final String TEMP = "temp/";
@@ -71,7 +77,7 @@ public class NDROptimization4SpeedService {
             marshaller.setSchema(NDR_SCHEMA);
 
             marshaller.setEventHandler(event -> {
-                log.warn("JAXB Validation Error: {}", event.getMessage());
+                log.error("JAXB Validation Error: {}", event.getMessage());
                 return false;
             });
             return marshaller;
@@ -101,8 +107,17 @@ public class NDROptimization4SpeedService {
         }
     }
 
-    public void generatePatientsNDRXml(long facilityId, boolean initial, List<String> patientUuidList){
-        log.info("NDR XML Speed generation started.");
+
+    private  List<String> fetchUnModifiedPatients(List<String> updatedPatients, LocalDateTime start,  LocalDateTime endDate, Long facilityId) {
+        Objects.requireNonNull(data, "Data cannot be null");
+        List<String> allEligiblePatients = data.getPatientIdsEligibleForNDR(start, endDate, facilityId);
+        Set<String> updatedPatientsSet = new HashSet<>(updatedPatients);
+        return allEligiblePatients.stream()
+                .filter(p -> !updatedPatientsSet.contains(p))
+                .collect(Collectors.toList());
+    }
+    public void generateAllPatientsNDRXmls(long facilityId, boolean initial) {
+        log.info("Generating NDR XMLs all patients.");
         LocalDateTime start = LocalDateTime.of(1984, 1, 1, 0, 0);
         String pushIdentifier = UUID.randomUUID().toString();
         List<String> patientIds = null;
@@ -112,33 +127,79 @@ public class NDROptimization4SpeedService {
         AtomicInteger errorCount = new AtomicInteger();
 
         if (initial) {
-            if (patientUuidList != null) {
-                generatePatientsNDRXml4Speed(patientUuidList, facilityId, true, pushIdentifier);
-            }else{
-                patientIds = data.getPatientIdsEligibleForNDR(start, LocalDateTime.now(), facilityId);
-                log.info("generating initial ....");
-                generatePatientsNDRXml4Speed(patientIds, facilityId, true, pushIdentifier);
+            log.info("generating initial for all patients....");
+            patientIds = data.getPatientIdsEligibleForNDR(start, LocalDateTime.now(), facilityId);
+            generatePatientsNDRXml4Speed(patientIds, facilityId, true, pushIdentifier);
+        }else {
+            log.info("generating updated for all patients....");
+            Optional<Timestamp> lastGenerateDateTimeByFacilityId =
+                    ndrXmlStatusRepository.getLastGenerateDateTimeByFacilityId(facilityId, "treatment");
+            if (lastGenerateDateTimeByFacilityId.isPresent()) {
+                LocalDateTime lastModified =
+                        lastGenerateDateTimeByFacilityId.get().toLocalDateTime();
+                log.info("Last Generated XML Date: " + lastModified);
+                patientIds = data.getPatientIdsEligibleForNDR(lastModified, LocalDateTime.now(), facilityId);
+                List<String> unModifiedPatients = fetchUnModifiedPatients(patientIds, lastModified, LocalDateTime.now(), facilityId);
+                log.info("Unmodified Patient count: " + unModifiedPatients.size());
+                generatePatientsNDRXml4Speed(unModifiedPatients, facilityId, false, pushIdentifier);
             }
-        }else { //updated
-            log.info("generating updated....");
+        }
+    }
+
+//    public void generatePatientsNDRXml_ByLastRecord(long facilityId, boolean initial, List<String> patientIds) {
+//        final String pathname = BASE_DIR + TEMP + facilityId + "/";
+//        //log.info("folder -> "+ pathname);
+//        ndrService.cleanupFacility(facilityId, pathname);
+//        AtomicInteger generatedCount = new AtomicInteger();
+//        AtomicInteger errorCount = new AtomicInteger();
+//        List<NDRErrorDTO> ndrErrors = new ArrayList<>();
+//
+//        PatientDemographicDTO[] patientDemographicDTO = new PatientDemographicDTO[1];
+//
+//        String pushIdentifier = UUID.randomUUID().toString();
+//
+//        patientIds.parallelStream()
+//                .forEach(id -> {
+//                    if (getPatientNDRXml_lastRecord(id, facilityId, initial, ndrErrors, pushIdentifier)) {
+//                        generatedCount.getAndIncrement();
+//                        patientDemographicDTO[0] = data.getPatientDemographics(id, facilityId).get();
+//                    } else {
+//                        errorCount.getAndIncrement();
+//                    }
+//                });
+//    }
+
+
+    public void generatePatientsNDRXml(long facilityId, boolean initial, List<String> patientUuidList){
+        String pushIdentifier = UUID.randomUUID().toString();
+        List<String> patientIds = null;
+        assert patientUuidList != null;
+
+        if (initial) {
+            log.info("generating initial for selected patients....");
+            generatePatientsNDRXml4Speed(patientUuidList, facilityId, true, pushIdentifier);
+        }else {
+            log.info("generating updated for selected patients....");
+            generatePatientsNDRXml4Speed(patientUuidList, facilityId, false, pushIdentifier);
         }
 
-        assert patientUuidList != null;
-//        log.info("generated  {}/{}", generatedCount.get(), patientUuidList.size());
-//        log.info("files not generated  {}/{}", errorCount.get(), patientUuidList.size());
-//        log.info("patientIds of files not generated: {}", idsNotGenerated);
     }
 
     public void generatePatientsNDRXml4Speed(List<String> patientIds, Long facilityId, boolean initial, String pushIdentifier) {
         List<NDRErrorDTO> ndrErrors = Collections.synchronizedList(new ArrayList<>());
+        PatientDemographicDTO[] patientDemographicDTO = new PatientDemographicDTO[1];
+
         if (patientIds == null || patientIds.isEmpty()) {
             log.warn("No patient IDs provided for NDR XML generation");
             return;
+        }else{
+            patientDemographicDTO[0] = data.getPatientDemographics(patientIds.get(0), facilityId).orElse(null);
         }
 
         Path outputDir = Paths.get(BASE_DIR + TEMP, facilityId.toString());
         try {
             Files.createDirectories(outputDir);
+            Files.createDirectories(outputDir.resolve("errors"));
         } catch (Exception e) {
             throw new RuntimeException("Failed to create output directory: " + e);
         }
@@ -146,32 +207,21 @@ public class NDROptimization4SpeedService {
         int availableCores = Runtime.getRuntime().availableProcessors();
         int producerPoolSize = Math.max(4, availableCores * 2);
         int writerPoolSize = Math.max(2, availableCores / 2);
-        log.info("{} cores available -> Producers: {} | writers: {}",
+        log.info("{} cores available -> Producers: {} | Writers: {}",
                 availableCores, producerPoolSize, writerPoolSize);
 
         ExecutorService producerExecutor = Executors.newFixedThreadPool(producerPoolSize);
         ExecutorService writerExecutor = Executors.newFixedThreadPool(writerPoolSize);
 
-        AtomicInteger processedCount = new AtomicInteger(0);
-
-
         BlockingQueue<XmlResult> resultsQueue = new LinkedBlockingQueue<>(2000);
+        AtomicInteger processedCount = new AtomicInteger();
+        AtomicInteger generatedCount = new AtomicInteger();
 
+        // --- Writer Task: store XMLs directly into facilityDir ---
         Runnable writerTask = () -> {
-            long currentBatchSize = 0;
-            int batchCounter = 1;
-            Path currentBatchDir = outputDir.resolve("batch_" + batchCounter);
-
-            try {
-                Files.createDirectories(currentBatchDir);
-            } catch (IOException | java.io.IOException e) {
-                throw new RuntimeException("Failed to create initial batch directory", e);
-            }
-
             try {
                 while (true) {
                     XmlResult result = resultsQueue.poll(2, TimeUnit.SECONDS);
-                    log.info("result worker.. {}", result);
                     if (result == null) {
                         if (producerExecutor.isTerminated() && resultsQueue.isEmpty()) {
                             break;
@@ -184,29 +234,17 @@ public class NDROptimization4SpeedService {
                         continue;
                     }
 
-
-                    byte[] data = result.xmlContent.getBytes(StandardCharsets.UTF_8);
-
-                    if (currentBatchSize + data.length > MAX_BATCH_SIZE){
-                        batchCounter++;
-                        currentBatchDir = outputDir.resolve("batch_" + batchCounter);
-                        Files.createDirectories(currentBatchDir);
-                    }
-
-                    Path patientXml = currentBatchDir.resolve("patient_" + result.patientId + ".xml");
-
+                    Path patientXml = outputDir.resolve("patient_" + result.patientId + ".xml");
                     try (OutputStream os = new BufferedOutputStream(
                             Files.newOutputStream(patientXml, StandardOpenOption.CREATE,
-                                    StandardOpenOption.TRUNCATE_EXISTING)
-                    )){
-                        os.write(data);
+                                    StandardOpenOption.TRUNCATE_EXISTING))) {
+                        os.write(result.xmlContent.getBytes(StandardCharsets.UTF_8));
                     }
-
-                    currentBatchSize += data.length;
+                    generatedCount.incrementAndGet();
                 }
+
             } catch (Exception e) {
-                log.error("Writer thread error: " + e.getMessage());
-                e.printStackTrace();
+                log.error("Writer thread error: {}", e.getMessage(), e);
             }
         };
 
@@ -214,76 +252,72 @@ public class NDROptimization4SpeedService {
             writerExecutor.submit(writerTask);
         }
 
+        // --- Producer: generate XMLs ---
         for (String patientId : patientIds) {
             producerExecutor.submit(() -> {
-                try{
+                try {
                     String xml = getPatientNDRXml(patientId, facilityId, initial, ndrErrors, pushIdentifier);
-                    log.info("xml {}", xml);
+
                     if (xml != null && !xml.trim().isEmpty()) {
-                        resultsQueue.add(new XmlResult(patientId, xml));
-                    }else {
+                        resultsQueue.put(new XmlResult(patientId, xml));
+                    } else {
                         log.warn("Skipping patient {} - No XML generated", patientId);
                     }
-                }catch(Exception e){
+                } catch (Exception e) {
                     log.error("Error generating XML: {}", e.getMessage());
+                    ndrErrors.add(new NDRErrorDTO(patientId, "", e.getMessage()));
                 }
                 processedCount.incrementAndGet();
             });
         }
 
+        // --- Wait for all tasks ---
         producerExecutor.shutdown();
-
         try {
             producerExecutor.awaitTermination(1, TimeUnit.HOURS);
-        }catch (InterruptedException e){
+        } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
-            throw new RuntimeException("Producer Execution pool interrupted", e);
+            throw new RuntimeException("Producer pool interrupted", e);
         }
 
         writerExecutor.shutdown();
-
         try {
             writerExecutor.awaitTermination(1, TimeUnit.HOURS);
-        }catch (InterruptedException e){
+        } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
-            throw new RuntimeException("Writer Execution pool interrupted", e);
+            throw new RuntimeException("Writer pool interrupted", e);
         }
 
+        // --- Write Error Log ---
         if (!ndrErrors.isEmpty()) {
-            Path errorFile = outputDir.resolve("ndr_errors.txt");
-            try(BufferedWriter writer = Files.newBufferedWriter(errorFile, StandardCharsets.UTF_8,
-                    StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING)){
+
+            Path errorFile = outputDir.resolve("errors").resolve("ndr_errors.txt");
+            try (BufferedWriter writer = Files.newBufferedWriter(errorFile, StandardCharsets.UTF_8,
+                    StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING)) {
                 for (NDRErrorDTO err : ndrErrors) {
                     writer.write(String.format("PatientID=%s | Hospital No=%s | Error=%s%n",
                             err.getPatientUuid(), err.getHospitalNumber(), err.getErrorMessage()));
                 }
-
-            }catch(java.io.IOException e){
-                throw new RuntimeException("Failed in writing error log ti file: {} ", e);
+            } catch (IOException e) {
+                throw new RuntimeException("Failed writing error log file: " + e.getMessage(), e);
             }
         }
 
-        log.info("NDR XML generation completed for facility {}. Total patients: {}. Errors: {}",
-                facilityId, patientIds.size(), ndrErrors.size());
-    }
-
-    private void sanitizeContainer(Container container) {
-        if (container.getMessageHeader() == null) {
-            container.setMessageHeader(new MessageHeaderType());
+        // --- Zip All XMLs for Download ---
+        if (patientDemographicDTO[0] != null) {
+            zipAndSaveTheFilesforDownload(
+                    facilityId,
+                    outputDir.toString(),
+                    generatedCount,
+                    patientDemographicDTO[0],
+                    ndrErrors,
+                    "treatment",
+                    pushIdentifier
+            );
         }
 
-        if (container.getIndividualReport() == null) {
-            container.setIndividualReport(new IndividualReportType());
-        }
-
-        IndividualReportType report = container.getIndividualReport();
-
-        for (ConditionType cond : report.getCondition()) {
-            if (cond.getEncounters() == null) {
-                cond.setEncounters(new EncountersType());
-            }
-        }
-
+        log.info("NDR XML generation completed for facility {}. Total patients: {}. Generated: {}. Errors: {}",
+                facilityId, patientIds.size(), generatedCount.get(), ndrErrors.size());
     }
 
     private String getPatientNDRXml(String patientId, Long facilityId, boolean initial, List<NDRErrorDTO> ndrErrors, String pushIdentifier) {
@@ -294,8 +328,6 @@ public class NDROptimization4SpeedService {
                 throw new IllegalStateException("Null container for patient " + patientId);
             }
 
-            sanitizeContainer(container);
-
             try(StringWriter writer = new StringWriter()){
                 Marshaller marshaller = MARSHALLER_CACHE.get();
                 synchronized (marshaller) {
@@ -305,16 +337,6 @@ public class NDROptimization4SpeedService {
             }catch (Exception e) {
                 throw new RuntimeException("Error marshalling patient " + patientId + ": " + e.getMessage());
             }
-
-//            log.info("container {}", container);
-//            Marshaller marshaller = MARSHALLER_CACHE.get();
-//            StringWriter writer = new StringWriter();
-//
-//            synchronized (marshaller) {
-//                marshaller.marshal(container, writer);
-//            }
-//
-//            return writer.toString();
 
         } catch (Exception e) {
             throw new RuntimeException("Error processing patient xml container " + patientId, e);
@@ -327,104 +349,108 @@ public class NDROptimization4SpeedService {
             List<NDRErrorDTO> ndrErrors,
             String pushIdentifier
     ) {
-        log.info("in the container mapping");
-        long id = messageId.incrementAndGet();
-
-        // --- Demographics ---
-        PatientDemographicDTO patientDemographic = getPatientDemographic(patientId, facilityId, ndrErrors);
-        if (patientDemographic == null) {
-            String msg = "No demographic found for patient " + patientId;
-            log.warn("No demographic found for patient {} at facility {}", patientId, facilityId);
-            ndrErrors.add(new NDRErrorDTO(patientId, "", msg));
-            return null;
-        }
-
-        ObjectMapper objectMapper = new ObjectMapper();
-        LocalDate start = LocalDate.of(1985, Month.JANUARY, 1);
-        LocalDate end = LocalDate.now().plusDays(1);
-
-        Optional<NdrMessageLog> messageLog =
-                data.findFirstByIdentifierAndFileType(patientDemographic.getPatientIdentifier(), "treatment");
-
-        List<EncounterDTO> patientEncounters;
-        List<RegimenDTO> patientRegimens;
-        List<LaboratoryEncounterDTO> patientLabEncounters;
-
-        // --- Fetch Encounters / Regimens / Labs ---
-        if (!initial && messageLog.isPresent()) {
-            start = messageLog.get().getLastUpdated().toLocalDate();
-
-            patientEncounters = safeList(getPatientEncounters(patientId, facilityId, objectMapper, start, end, ndrErrors));
-            if (patientEncounters.isEmpty()) {
-                patientEncounters = safeList(getPatientEncounters_lastRecord(patientId, facilityId, objectMapper, ndrErrors));
-            }
-
-            patientRegimens = safeList(getPatientRegimens(patientId, facilityId, objectMapper, start, end, ndrErrors));
-            if (patientRegimens.isEmpty()) {
-                patientRegimens = safeList(getPatientLastRegimen(patientId, facilityId, objectMapper, ndrErrors));
-            }
-
-            patientLabEncounters = safeList(getPatientLabEncounter(patientId, facilityId, objectMapper, start, end, ndrErrors));
-            if (patientLabEncounters.isEmpty()) {
-                patientLabEncounters = safeList(getPatientLastLabEncounter(patientId, facilityId, objectMapper, ndrErrors));
-            }
-        } else {
-            patientEncounters = safeList(getPatientEncounters(patientId, facilityId, objectMapper, start, end, ndrErrors));
-            patientRegimens = safeList(getPatientRegimens(patientId, facilityId, objectMapper, start, end, ndrErrors));
-            patientLabEncounters = safeList(getPatientLabEncounter(patientId, facilityId, objectMapper, start, end, ndrErrors));
-        }
-
-        // --- Mortality ---
-        MortalityType mortality = mortalityTypeMapper.getMortalityType(patientId, facilityId, start, end, ndrErrors);
-
-        // --- Map Patient Demographics ---
-        PatientDemographicsType patientDemographics =
-                patientDemographicsMapper.getPatientDemographics(patientDemographic);
-
-        IndividualReportType individualReportType = new IndividualReportType();
-        individualReportType.setPatientDemographics(patientDemographics);
-
-        // --- Conditions ---
-        ConditionType conditionType =
-                conditionTypeMapper.getConditionType(patientDemographic, patientEncounters, patientRegimens, patientLabEncounters);
-        if (conditionType != null) {
-            individualReportType.getCondition().add(conditionType);
-        }
-
-        // --- Mortality ---
-        if (mortality != null) {
-            log.info("Mortality generated with visit Id {}", mortality.getVisitID());
-            individualReportType.getMortality().add(mortality);
-        }
-
-        // --- HIV Testing Report (optional, safe check) ---
         try {
-            log.warn("No HIV Testing data found for patient {}", patientId);
-        } catch (Exception e) {
-            log.error("Error mapping HIV Testing Report for patient {}", patientId, e);
-        }
+            log.info("in the container mapping");
+            long id = messageId.incrementAndGet();
 
-        // --- PMTCT (optional, safe check) ---
-        try {
-            log.warn("No PMTCT data found for patient {}", patientId);
-        } catch (Exception e) {
-            log.error("Error mapping PMTCT section for patient {}", patientId, e);
-        }
-
-        // --- Message Header ---
-        MessageHeaderType messageHeader = messageHeaderTypeMapper.getMessageHeader(patientDemographic);
-        String messageStatusCode = "INITIAL";
-        if (!initial) {
-            Optional<NdrMessageLog> firstByIdentifier =
-                    data.findFirstByIdentifier(patientDemographic.getPatientIdentifier());
-            if (firstByIdentifier.isPresent()) {
-                messageStatusCode = "UPDATED";
+            // --- Demographics ---
+            PatientDemographicDTO patientDemographic = getPatientDemographic(patientId, facilityId, ndrErrors);
+            if (patientDemographic == null) {
+                String msg = "No demographic found for patient " + patientId;
+                //log.warn("No demographic found for patient {} at facility {}", patientId, facilityId);
+                ndrErrors.add(new NDRErrorDTO(patientId, "", msg));
+                return null;
             }
-        }
-        messageHeader.setMessageStatusCode(messageStatusCode);
-        messageHeader.setMessageUniqueID(Long.toString(id));
 
-        return buildContainer(messageHeader, individualReportType);
+            ObjectMapper objectMapper = new ObjectMapper();
+            LocalDate start = LocalDate.of(1985, Month.JANUARY, 1);
+            LocalDate end = LocalDate.now().plusDays(1);
+
+            Optional<NdrMessageLog> messageLog =
+                    data.findFirstByIdentifierAndFileType(patientDemographic.getPatientIdentifier(), "treatment");
+
+            List<EncounterDTO> patientEncounters;
+            List<RegimenDTO> patientRegimens;
+            List<LaboratoryEncounterDTO> patientLabEncounters;
+
+            // --- Fetch Encounters / Regimens / Labs ---
+            if (!initial && messageLog.isPresent()) {
+                start = messageLog.get().getLastUpdated().toLocalDate();
+
+                patientEncounters = safeList(getPatientEncounters(patientId, facilityId, objectMapper, start, end, ndrErrors));
+                if (patientEncounters.isEmpty()) {
+                    patientEncounters = safeList(getPatientEncounters_lastRecord(patientId, facilityId, objectMapper, ndrErrors));
+                }
+
+                patientRegimens = safeList(getPatientRegimens(patientId, facilityId, objectMapper, start, end, ndrErrors));
+                if (patientRegimens.isEmpty()) {
+                    patientRegimens = safeList(getPatientLastRegimen(patientId, facilityId, objectMapper, ndrErrors));
+                }
+
+                patientLabEncounters = safeList(getPatientLabEncounter(patientId, facilityId, objectMapper, start, end, ndrErrors));
+                if (patientLabEncounters.isEmpty()) {
+                    patientLabEncounters = safeList(getPatientLastLabEncounter(patientId, facilityId, objectMapper, ndrErrors));
+                }
+            } else {
+                patientEncounters = safeList(getPatientEncounters(patientId, facilityId, objectMapper, start, end, ndrErrors));
+                patientRegimens = safeList(getPatientRegimens(patientId, facilityId, objectMapper, start, end, ndrErrors));
+                patientLabEncounters = safeList(getPatientLabEncounter(patientId, facilityId, objectMapper, start, end, ndrErrors));
+            }
+
+            // --- Mortality ---
+            MortalityType mortality = mortalityTypeMapper.getMortalityType(patientId, facilityId, start, end, ndrErrors);
+
+            // --- Map Patient Demographics ---
+            PatientDemographicsType patientDemographics =
+                    patientDemographicsMapper.getPatientDemographics(patientDemographic);
+
+            IndividualReportType individualReportType = new IndividualReportType();
+            individualReportType.setPatientDemographics(patientDemographics);
+
+            // --- Conditions ---
+            ConditionType conditionType =
+                    conditionTypeMapper.getConditionType(patientDemographic, patientEncounters, patientRegimens, patientLabEncounters);
+            if (conditionType != null) {
+                individualReportType.getCondition().add(conditionType);
+            }
+
+            // --- Mortality ---
+            if (mortality != null) {
+                //log.info("Mortality generated with visit Id {}", mortality.getVisitID());
+                individualReportType.getMortality().add(mortality);
+            }
+
+            // --- HIV Testing Report (optional, safe check) ---
+//        try {
+//            log.warn("No HIV Testing data found for patient {}", patientId);
+//        } catch (Exception e) {
+//            log.error("Error mapping HIV Testing Report for patient {}", patientId, e);
+//        }
+
+            // --- PMTCT (optional, safe check) ---
+//        try {
+//            log.warn("No PMTCT data found for patient {}", patientId);
+//        } catch (Exception e) {
+//            log.error("Error mapping PMTCT section for patient {}", patientId, e);
+//        }
+
+            // --- Message Header ---
+            MessageHeaderType messageHeader = messageHeaderTypeMapper.getMessageHeader(patientDemographic);
+            String messageStatusCode = "INITIAL";
+            if (!initial) {
+                Optional<NdrMessageLog> firstByIdentifier =
+                        data.findFirstByIdentifier(patientDemographic.getPatientIdentifier());
+                if (firstByIdentifier.isPresent()) {
+                    messageStatusCode = "UPDATED";
+                }
+            }
+            messageHeader.setMessageStatusCode(messageStatusCode);
+            messageHeader.setMessageUniqueID(Long.toString(id));
+
+            return buildContainer(messageHeader, individualReportType);
+        }catch (Exception e){
+            throw new RuntimeException("Error mapping patient data to container" + patientId, e);
+        }
     }
 
     /**
@@ -606,5 +632,98 @@ public class NDROptimization4SpeedService {
         return new ArrayList<>();
     }
 
+
+    public void zipAndSaveTheFilesforDownload(
+            Long facilityId,
+            String pathname,
+            AtomicInteger count,
+            PatientDemographicDTO patient, List<NDRErrorDTO> ndrErrors, String type, String identifier) {
+        try {
+            zipFiles(patient, facilityId, pathname, ndrErrors,type,identifier);
+        } catch (Exception e) {
+            log.error("An error occurred while zipping files error {}", e.getMessage());
+            ndrErrors.add(new NDRErrorDTO(patient.getPersonUuid(), patient.getHospitalNumber(), e.getMessage()));
+        }
+    }
+
+    public void zipFiles(PatientDemographicDTO demographic,
+                         long facilityId,
+                         String sourceFolder,
+                         List<NDRErrorDTO> ndrErrors, String type, String identifier) {
+        SimpleDateFormat dateFormat = new SimpleDateFormat("ddMMyyyy");
+        String sCode = demographic.getStateCode();
+        String lCode = demographic.getLgaCode();
+
+        String fileName = StringUtils.leftPad(sCode, 2, "0") +
+                StringUtils.leftPad(lCode, 3, "0") + "_" +
+                demographic.getFacilityId() + "_" +
+                demographic.getFacilityName() + "_" +
+                type + "_" + dateFormat.format(new Date());
+
+        fileName = RegExUtils.replaceAll(fileName, "/", "-");
+        fileName = fileName.replace(" ", "").replace(",", "").replace(".", "");
+
+        String outputZipFile = BASE_DIR + "ndr/" + fileName + ".zip";
+
+        try {
+            Files.createDirectories(Paths.get(BASE_DIR, "ndr")); // ensure folder exists
+
+            List<File> files = ndrService.getFiles(sourceFolder, new ArrayList<>());
+            long thirtyMB = (FileUtils.ONE_MB * 30); // 30MB
+
+            File folder = new File(BASE_DIR + TEMP + facilityId + "/");
+
+            if (ZipUtility.getFolderSize(folder) > thirtyMB) {
+                List<List<File>> splitFiles = split(files, thirtyMB);
+                for (int i = 0; i < splitFiles.size(); i++) {
+                    String splitFileName = fileName + "_" + (i + 1) + ".zip";
+                    Path splitPath = Paths.get(BASE_DIR, "ndr", splitFileName);
+                    zip(splitFiles.get(i), splitPath.toAbsolutePath().toString());
+                }
+            } else {
+                ZipUtility.zip(files, Paths.get(outputZipFile).toAbsolutePath().toString(), thirtyMB);
+            }
+
+        } catch (Exception exception) {
+            ndrErrors.add(new NDRErrorDTO(demographic.getPersonUuid(),
+                    demographic.getHospitalNumber(), exception.getMessage()));
+            log.error("An error occurred while creating zip file {}", outputZipFile, exception);
+        }
+    }
+    public static List<List<File>> split(List<File> files, long sizeLimit) {
+        List<List<File>> splitFiles = new ArrayList<>();
+        List<File> currentSplit = new ArrayList<>();
+        long currentSize = 0;
+        for (File file : files) {
+            long fileSize = file.length();
+            if (currentSize + fileSize > sizeLimit) {
+                splitFiles.add(currentSplit);
+                currentSplit = new ArrayList<>();
+                currentSize = 0;
+            }
+            currentSplit.add(file);
+            currentSize += fileSize;
+        }
+        splitFiles.add(currentSplit);
+        return splitFiles;
+    }
+
+    public static void zip(List<File> files, String outputZipFile) throws java.io.IOException {
+        try (ZipOutputStream zipOut = new ZipOutputStream(new FileOutputStream(outputZipFile))) {
+            for (File file : files) {
+                try (FileInputStream fileIn = new FileInputStream(file)) {
+                    ZipEntry zipEntry = new ZipEntry(file.getName());
+                    zipOut.putNextEntry(zipEntry);
+                    byte[] bytes = new byte[1024];
+                    int length;
+                    while ((length = fileIn.read(bytes)) >= 0) {
+                        zipOut.write(bytes, 0, length);
+                    }
+                }
+            }
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
     //end
 }
