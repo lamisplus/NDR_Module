@@ -119,7 +119,7 @@ public class LaboratoryReportTypeMapper {
             ConditionType condition,
             List<LaboratoryEncounterDTO> labDTOS) {
         List<LaboratoryReportType> laboratoryReport = condition.getLaboratoryReport();
-        log.info("mapping lab encounters ...");
+        //log.info("mapping lab encounters ...");
         if (labDTOS != null) {
             labDTOS.forEach(labDTO -> {
                 log.info("mapping lab for patient " + patientUuid);

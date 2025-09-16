@@ -77,7 +77,7 @@ public class PatientDemographicsMapper {
             processAndSetDateOFBirth (patientDemographicsType, demographicDTO.getDateOfBirth ());
             
             if(demographicDTO.getPatientSexCode()  != null) {
-                log.info("state code {}", demographicDTO.getStateCode());
+                //log.info("state code {}", demographicDTO.getStateCode());
                 patientDemographicsType.setPatientSexCode(demographicDTO.getPatientSexCode());
             }else {
                 throw new IllegalArgumentException("Sex code cannot be null");
@@ -95,7 +95,7 @@ public class PatientDemographicsMapper {
             }
 
             if(demographicDTO.getStateCode() != null){
-               log.info("state code {}", demographicDTO.getStateCode());
+               //log.info("state code {}", demographicDTO.getStateCode());
                 patientDemographicsType.setStateOfNigeriaOriginCode(demographicDTO.getStateCode());
             }
 

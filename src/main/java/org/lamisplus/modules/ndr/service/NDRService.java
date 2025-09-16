@@ -416,19 +416,50 @@ public class NDRService {
     }
 
     @SneakyThrows
+//    public ByteArrayOutputStream downloadFile(String file) {
+//        ByteArrayOutputStream baos = new ByteArrayOutputStream ();
+//        String folder = BASE_DIR + "ndr/";
+//        Optional<String> fileToDownload = listFilesUsingDirectoryStream (folder).stream ()
+//                .filter (f -> f.equals (file))
+//                .findFirst ();
+//        fileToDownload.ifPresent (s -> {
+//            try (InputStream is = new FileInputStream (folder + s)) {
+//                IOUtils.copy (is, baos);
+//            } catch (IOException ignored) {
+//
+//            }
+//        });
+//        return baos;
+//    }
+
     public ByteArrayOutputStream downloadFile(String file) {
-        ByteArrayOutputStream baos = new ByteArrayOutputStream ();
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
         String folder = BASE_DIR + "ndr/";
-        Optional<String> fileToDownload = listFilesUsingDirectoryStream (folder).stream ()
-                .filter (f -> f.equals (file))
-                .findFirst ();
-        fileToDownload.ifPresent (s -> {
-            try (InputStream is = new FileInputStream (folder + s)) {
-                IOUtils.copy (is, baos);
-            } catch (IOException ignored) {
-            
+
+        // Ensure directory exists
+        File dir = new File(folder);
+        if (!dir.exists() || !dir.isDirectory()) {
+            log.error("Download folder does not exist: {}", folder);
+            return baos; // empty
+        }
+
+        // Find matching file (exact or with .zip suffix)
+        Optional<String> fileToDownload = listFilesUsingDirectoryStream(folder).stream()
+                .filter(f -> f.equals(file) || f.equals(file + ".zip"))
+                .findFirst();
+
+        if (fileToDownload.isPresent()) {
+            String fullPath = folder + fileToDownload.get();
+            try (InputStream is = new FileInputStream(fullPath)) {
+                IOUtils.copy(is, baos);
+                log.info("Successfully loaded file: {}", fullPath);
+            } catch (IOException e) {
+                log.error("Failed to read file {}: {}", fullPath, e.getMessage());
             }
-        });
+        } else {
+            log.warn("Requested file {} not found in {}", file, folder);
+        }
+
         return baos;
     }
 

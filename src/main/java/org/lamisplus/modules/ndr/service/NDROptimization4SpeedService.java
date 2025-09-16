@@ -1,8 +1,9 @@
 package org.lamisplus.modules.ndr.service;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.type.TypeFactory;
-import liquibase.pro.packaged.C;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
@@ -10,6 +11,7 @@ import org.apache.commons.lang3.RegExUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.lamisplus.modules.ndr.domain.dto.*;
 import org.lamisplus.modules.ndr.domain.entities.NdrMessageLog;
+import org.lamisplus.modules.ndr.domain.entities.NdrXmlStatus;
 import org.lamisplus.modules.ndr.mapper.ConditionTypeMapper;
 import org.lamisplus.modules.ndr.mapper.MessageHeaderTypeMapper;
 import org.lamisplus.modules.ndr.mapper.MortalityTypeMapper;
@@ -27,10 +29,7 @@ import javax.xml.validation.Schema;
 import javax.xml.validation.SchemaFactory;
 import java.io.*;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.StandardOpenOption;
+import java.nio.file.*;
 import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
@@ -106,25 +105,11 @@ public class NDROptimization4SpeedService {
             this.xmlContent = xmlContent;
         }
     }
-
-
-    private  List<String> fetchUnModifiedPatients(List<String> updatedPatients, LocalDateTime start,  LocalDateTime endDate, Long facilityId) {
-        Objects.requireNonNull(data, "Data cannot be null");
-        List<String> allEligiblePatients = data.getPatientIdsEligibleForNDR(start, endDate, facilityId);
-        Set<String> updatedPatientsSet = new HashSet<>(updatedPatients);
-        return allEligiblePatients.stream()
-                .filter(p -> !updatedPatientsSet.contains(p))
-                .collect(Collectors.toList());
-    }
     public void generateAllPatientsNDRXmls(long facilityId, boolean initial) {
         log.info("Generating NDR XMLs all patients.");
         LocalDateTime start = LocalDateTime.of(1984, 1, 1, 0, 0);
         String pushIdentifier = UUID.randomUUID().toString();
         List<String> patientIds = null;
-        PatientDemographicDTO[] patientDemographicDTO = new PatientDemographicDTO[1];
-        List<String> idsNotGenerated = new LinkedList<>();
-        AtomicInteger generatedCount = new AtomicInteger();
-        AtomicInteger errorCount = new AtomicInteger();
 
         if (initial) {
             log.info("generating initial for all patients....");
@@ -139,9 +124,8 @@ public class NDROptimization4SpeedService {
                         lastGenerateDateTimeByFacilityId.get().toLocalDateTime();
                 log.info("Last Generated XML Date: " + lastModified);
                 patientIds = data.getPatientIdsEligibleForNDR(lastModified, LocalDateTime.now(), facilityId);
-                List<String> unModifiedPatients = fetchUnModifiedPatients(patientIds, lastModified, LocalDateTime.now(), facilityId);
-                log.info("Unmodified Patient count: " + unModifiedPatients.size());
-                generatePatientsNDRXml4Speed(unModifiedPatients, facilityId, false, pushIdentifier);
+                log.info("{} Updated Patients from: {}", patientIds.size(), lastModified);
+                generatePatientsNDRXml4Speed(patientIds, facilityId, false, pushIdentifier);
             }
         }
     }
@@ -169,6 +153,24 @@ public class NDROptimization4SpeedService {
 //                });
 //    }
 
+    private void deleteOldZipFolders(String facilityId) {
+        Path zipDir = Paths.get(BASE_DIR, "ndr");
+        try{
+            Files.createDirectories(zipDir);
+            try(DirectoryStream<Path> stream = Files.newDirectoryStream(zipDir, "*.zip")){
+                for (Path file : stream) {
+                    if (file.getFileName().toString().contains(facilityId)) {
+                        Files.deleteIfExists(file);
+                        log.info("Deleted old xml zip file: {}", file.getFileName());
+                    }
+                }
+
+            }
+        }catch (IOException e) {
+            log.error(" Failed to clean old Zip files for facility {}: {}", facilityId, e.getMessage());
+        }
+    }
+
 
     public void generatePatientsNDRXml(long facilityId, boolean initial, List<String> patientUuidList){
         String pushIdentifier = UUID.randomUUID().toString();
@@ -186,6 +188,7 @@ public class NDROptimization4SpeedService {
     }
 
     public void generatePatientsNDRXml4Speed(List<String> patientIds, Long facilityId, boolean initial, String pushIdentifier) {
+        deleteOldZipFolders(String.valueOf(facilityId));
         List<NDRErrorDTO> ndrErrors = Collections.synchronizedList(new ArrayList<>());
         PatientDemographicDTO[] patientDemographicDTO = new PatientDemographicDTO[1];
 
@@ -350,14 +353,12 @@ public class NDROptimization4SpeedService {
             String pushIdentifier
     ) {
         try {
-            log.info("in the container mapping");
             long id = messageId.incrementAndGet();
 
             // --- Demographics ---
             PatientDemographicDTO patientDemographic = getPatientDemographic(patientId, facilityId, ndrErrors);
             if (patientDemographic == null) {
                 String msg = "No demographic found for patient " + patientId;
-                //log.warn("No demographic found for patient {} at facility {}", patientId, facilityId);
                 ndrErrors.add(new NDRErrorDTO(patientId, "", msg));
                 return null;
             }
@@ -679,9 +680,11 @@ public class NDROptimization4SpeedService {
                     String splitFileName = fileName + "_" + (i + 1) + ".zip";
                     Path splitPath = Paths.get(BASE_DIR, "ndr", splitFileName);
                     zip(splitFiles.get(i), splitPath.toAbsolutePath().toString());
+                    storeTheFileInBD(facilityId, new AtomicInteger(splitFiles.get(i).size()), demographic, ndrErrors, splitFileName,type, identifier);
                 }
             } else {
                 ZipUtility.zip(files, Paths.get(outputZipFile).toAbsolutePath().toString(), thirtyMB);
+                storeTheFileInBD(facilityId, new AtomicInteger(files.size()), demographic, ndrErrors, fileName,type, identifier);
             }
 
         } catch (Exception exception) {
@@ -724,6 +727,34 @@ public class NDROptimization4SpeedService {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    public void storeTheFileInBD(Long facilityId, AtomicInteger count, PatientDemographicDTO patient,
+                                 List<NDRErrorDTO> ndrErrors, String zipFileName, String type, String identifier) {
+        NdrXmlStatus ndrXmlStatus = new NdrXmlStatus();
+        if(ndrErrors.size() > 0){
+            JsonNode node = getNode(ndrErrors);
+            ndrXmlStatus.setError(node);
+        }
+        ndrXmlStatus.setFacilityId(facilityId);
+        ndrXmlStatus.setFiles(count.get());
+        ndrXmlStatus.setFileName(zipFileName);
+        ndrXmlStatus.setLastModified(LocalDateTime.now());
+        ndrXmlStatus.setPushIdentifier(patient.getFacilityId().concat("_").concat(identifier));
+        ndrXmlStatus.setCompletelyPushed(Boolean.FALSE);
+        ndrXmlStatus.setPercentagePushed(0L);
+        ndrXmlStatus.setType(type);
+        ndrXmlStatusRepository.save(ndrXmlStatus);
+    }
+
+    private JsonNode getNode(List<NDRErrorDTO> values) {
+        ObjectMapper mapper = new ObjectMapper();
+        try {
+            return  mapper.valueToTree(values);
+        } catch (Exception e) {
+            log.error("An error occurred while converting error list to JsonB");
+        }
+        return null;
     }
     //end
 }

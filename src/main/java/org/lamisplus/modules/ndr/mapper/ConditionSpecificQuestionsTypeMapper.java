@@ -111,7 +111,7 @@ public class ConditionSpecificQuestionsTypeMapper {
                         hiv.setTransferredInDate (getXmlDate (Date.valueOf (inHIVCareDate)));
                     }
                     String tbStatus = demographics.getTbStatus();
-                    log.info("initial tb status {}", tbStatus);
+                    //log.info("initial tb status {}", tbStatus);
                     if(tbStatus != null){
                         hiv.setInitialTBStatus(demographics.getTbStatus());
                     }
@@ -123,7 +123,7 @@ public class ConditionSpecificQuestionsTypeMapper {
             if(demographics.getCareEntryPoint() != null){
                 hiv.setCareEntryPoint(demographics.getCareEntryPoint());
             }
-            log.info("art start date {}", demographics.getArtStartDate());
+            //log.info("art start date {}", demographics.getArtStartDate());
            
             if (demographics.getArtStartDate() != null) {
                 hiv.setARTStartDate (getXmlDate (Date.valueOf ((demographics.getArtStartDate()))));

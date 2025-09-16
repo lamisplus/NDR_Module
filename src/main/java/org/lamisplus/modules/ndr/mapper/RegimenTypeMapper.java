@@ -101,7 +101,7 @@ public class RegimenTypeMapper {
 							regimenType.setNDRRegimenCode(regimen.getNdrRegimenCode());
 						} else {
 							regimenType.setNDRRegimenCode("NDR00000");
-							log.info("Regimen is null");
+							log.info("NDR Regimen Code is null");
 							//throw new IllegalArgumentException("NDR Regimen Code cannot be null");
 						}
 						
