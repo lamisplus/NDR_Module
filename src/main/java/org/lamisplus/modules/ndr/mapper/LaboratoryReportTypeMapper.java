@@ -62,7 +62,7 @@ public class LaboratoryReportTypeMapper {
 
 
                     Optional<CodedSimpleType> labCode =
-                            ndrCodeSetResolverService.getNDRCodeSet("LAB_RESULTED_TEST", description);
+                            ndrCodeSetResolverService.getCodeSet("LAB_RESULTED_TEST", description);
                     if (labCode.isPresent()) {
                         CodedSimpleType ndrCodeSet = labCode.get();
                         log.info(" lab  code {}", ndrCodeSet.getCode());

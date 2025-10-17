@@ -18,6 +18,7 @@ import org.lamisplus.modules.ndr.repositories.NdrXmlStatusRepository;
 import org.lamisplus.modules.ndr.schema.CodedSimpleType;
 import org.lamisplus.modules.ndr.schema.EncountersType;
 import org.lamisplus.modules.ndr.schema.HIVEncounterType;
+import org.lamisplus.modules.ndr.schema.RegimenCodedSimpleType;
 import org.lamisplus.modules.ndr.service.NDRCodeSetResolverService;
 import org.lamisplus.modules.ndr.utility.DateUtil;
 import org.lamisplus.modules.patient.domain.entity.Person;
@@ -237,7 +238,7 @@ public class EncountersTypeMapper {
 				.forEach(regimen -> {
 					log.info("ndrRegimenSystemDescription {}", regimen.getDescription());
 					
-					Optional<CodedSimpleType> ndrCodeSet = ndrCodeSetResolverService.getRegimen(regimen.getDescription());
+					Optional<RegimenCodedSimpleType> ndrCodeSet = ndrCodeSetResolverService.getRegimen(regimen.getDescription());
 					if (ndrCodeSet.isPresent()) {
 						System.out.println("ndr " + ndrCodeSet.get().getCodeDescTxt());
 						ndrCodeSet.ifPresent(hivEncounterType::setARVDrugRegimen);
@@ -246,7 +247,7 @@ public class EncountersTypeMapper {
 						if (regimenType != null) {
 							String others = "Others" + "_" + regimenType.getId();
 							log.info("others {}", others);
-							Optional<CodedSimpleType> ndrCodeSet2 = ndrCodeSetResolverService.getSimpleCodeSet(others);
+							Optional<RegimenCodedSimpleType> ndrCodeSet2 = ndrCodeSetResolverService.getSimpleCodeSet(others);
 							ndrCodeSet2.ifPresent(hivEncounterType::setARVDrugRegimen);
 							
 						}
@@ -265,7 +266,7 @@ public class EncountersTypeMapper {
 						String description = regimenType.getDescription();
 						log.info("cotrimoxazole {}", description);
 						Optional<CodedSimpleType> codedSimpleType =
-								ndrCodeSetResolverService.getNDRCodeSet("REGIMEN_TYPE", description);
+								ndrCodeSetResolverService.getCodeSet("REGIMEN_TYPE", description);
 						codedSimpleType.ifPresent(hivEncounterType::setCotrimoxazoleDose);
 					}
 				});

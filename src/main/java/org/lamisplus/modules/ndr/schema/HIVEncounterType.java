@@ -265,7 +265,7 @@ public class HIVEncounterType {
     @XmlElement(name = "NotedSideEffects")
     protected String notedSideEffects;
     @XmlElement(name = "ARVDrugRegimen")
-    protected CodedSimpleType arvDrugRegimen;
+    protected RegimenCodedSimpleType arvDrugRegimen;
     @XmlElement(name = "ARVDrugAdherence")
     protected String arvDrugAdherence;
     @XmlElement(name = "WhyPoorFairARVDrugAdherence")
@@ -650,10 +650,10 @@ public class HIVEncounterType {
      * 
      * @return
      *     possible object is
-     *     {@link CodedSimpleType }
+     *     {@link RegimenCodedSimpleType }
      *     
      */
-    public CodedSimpleType getARVDrugRegimen() {
+    public RegimenCodedSimpleType getARVDrugRegimen() {
         return arvDrugRegimen;
     }
 
@@ -662,10 +662,10 @@ public class HIVEncounterType {
      * 
      * @param value
      *     allowed object is
-     *     {@link CodedSimpleType }
+     *     {@link RegimenCodedSimpleType }
      *     
      */
-    public void setARVDrugRegimen(CodedSimpleType value) {
+    public void setARVDrugRegimen(RegimenCodedSimpleType value) {
         this.arvDrugRegimen = value;
     }
 

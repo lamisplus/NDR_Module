@@ -3,6 +3,7 @@ package org.lamisplus.modules.ndr.mapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.jooq.Log;
 import org.lamisplus.modules.hiv.domain.entity.ArtPharmacy;
 import org.lamisplus.modules.hiv.domain.entity.Regimen;
 import org.lamisplus.modules.hiv.repositories.ArtPharmacyRepository;
@@ -12,6 +13,7 @@ import org.lamisplus.modules.ndr.domain.dto.PatientDemographics;
 import org.lamisplus.modules.ndr.domain.dto.RegimenDTO;
 import org.lamisplus.modules.ndr.schema.CodedSimpleType;
 import org.lamisplus.modules.ndr.schema.ConditionType;
+import org.lamisplus.modules.ndr.schema.RegimenCodedSimpleType;
 import org.lamisplus.modules.ndr.schema.RegimenType;
 import org.lamisplus.modules.ndr.service.NDRCodeSetResolverService;
 import org.lamisplus.modules.ndr.utility.DateUtil;
@@ -97,13 +99,13 @@ public class RegimenTypeMapper {
 						}
 
 						//NDR Regimen Code
-						if (StringUtils.isNotBlank(regimen.getNdrRegimenCode())) {
-							regimenType.setNDRRegimenCode(regimen.getNdrRegimenCode());
-						} else {
-							regimenType.setNDRRegimenCode("NDR00000");
-							log.info("NDR Regimen Code is null");
-							//throw new IllegalArgumentException("NDR Regimen Code cannot be null");
-						}
+//						if (StringUtils.isNotBlank(regimen.getNdrRegimenCode())) {
+//							regimenType.setNDRRegimenCode(regimen.getNdrRegimenCode());
+//						} else {
+//							regimenType.setNDRRegimenCode("NDR00000");
+//							log.info("NDR Regimen Code is null");
+//
+//						}
 						
 						if (StringUtils.isNotBlank(regimen.getPrescribedRegimenTypeCode())) {
 							regimenType.setPrescribedRegimenTypeCode(regimen.getPrescribedRegimenTypeCode());
@@ -111,11 +113,13 @@ public class RegimenTypeMapper {
 
 							throw new IllegalArgumentException("Regimen type code cannot be null");
 						}
+						log.info("regimen type mapper " +regimen.getPrescribedRegimenCode() + " " + regimen.getPrescribedRegimenCodeDescTxt() + " " + regimen.getNdrRegimenCode());
 						if (StringUtils.isNotBlank(regimen.getPrescribedRegimenCode())
-								&& StringUtils.isNotBlank(regimen.getPrescribedRegimenCodeDescTxt())) {
-							CodedSimpleType simpleTypeCode = new CodedSimpleType();
+								&& StringUtils.isNotBlank(regimen.getPrescribedRegimenCodeDescTxt()) && StringUtils.isNotBlank(regimen.getNdrRegimenCode())) {
+							RegimenCodedSimpleType simpleTypeCode = new RegimenCodedSimpleType();
 							simpleTypeCode.setCode(regimen.getPrescribedRegimenCode());
 							simpleTypeCode.setCodeDescTxt(regimen.getPrescribedRegimenCodeDescTxt());
+							simpleTypeCode.setNDRCode(regimen.getNdrRegimenCode());
 							regimenType.setPrescribedRegimen(simpleTypeCode);
 						} else {
 
@@ -269,12 +273,12 @@ public class RegimenTypeMapper {
 					Optional<String> regimenLine = ndrCodeSetResolverService.getNDRCodeSetCode("REGIMEN_LINE", regimeLineCode);
 					regimenLine.ifPresent(regimenType::setPrescribedRegimenLineCode);
 				}
-				Optional<CodedSimpleType> regimenCodedSimpleType = ndrCodeSetResolverService.getRegimen(regimen.getDescription());
+				Optional<RegimenCodedSimpleType> regimenCodedSimpleType = ndrCodeSetResolverService.getRegimen(regimen.getDescription());
 				regimenCodedSimpleType.ifPresent(regimenType::setPrescribedRegimen);
 				if (prescribedRegimenType != null && prescribedRegimenType.equals("OI")) {
 					String description = regimen.getDescription();
 					log.info("Regimen Cotrimazole {}", description);
-					Optional<CodedSimpleType> regimenOI = ndrCodeSetResolverService.getNDRCodeSet("OI_REGIMEN", description);
+					Optional<RegimenCodedSimpleType> regimenOI = ndrCodeSetResolverService.getNDRCodeSet("OI_REGIMEN", description);
 					if (regimenOI.isPresent()) {
 						log.info("Regimen Cotrimazole Code {}", regimenOI.get().getCode());
 						regimenType.setPrescribedRegimen(regimenOI.get());

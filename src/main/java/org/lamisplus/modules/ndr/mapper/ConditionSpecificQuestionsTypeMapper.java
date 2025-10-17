@@ -13,6 +13,7 @@ import org.lamisplus.modules.ndr.repositories.NDRCodeSetRepository;
 import org.lamisplus.modules.ndr.schema.CodedSimpleType;
 import org.lamisplus.modules.ndr.schema.ConditionSpecificQuestionsType;
 import org.lamisplus.modules.ndr.schema.HIVQuestionsType;
+import org.lamisplus.modules.ndr.schema.RegimenCodedSimpleType;
 import org.lamisplus.modules.ndr.service.NDRCodeSetResolverService;
 import org.lamisplus.modules.triage.domain.entity.VitalSign;
 import org.springframework.stereotype.Service;
@@ -65,7 +66,7 @@ public class ConditionSpecificQuestionsTypeMapper {
                     processAndSetWHOStagingAndFunctionalStatus (hiv, artCommencement.get().getWhoStage(), artCommencement.get().getFunctionStatus());
                     String regimen = artCommencement.get().getRegimen();
                     if(regimen != null) {
-                     Optional<CodedSimpleType> simpleCodeSet = ndrCodeSetResolverService.getRegimen(regimen);
+                     Optional<RegimenCodedSimpleType> simpleCodeSet = ndrCodeSetResolverService.getRegimen(regimen);
                      log.info("ndrRegimen: " + regimen);
                      simpleCodeSet.ifPresent(hiv::setFirstARTRegimen);
                      }
@@ -128,10 +129,13 @@ public class ConditionSpecificQuestionsTypeMapper {
             if (demographics.getArtStartDate() != null) {
                 hiv.setARTStartDate (getXmlDate (Date.valueOf ((demographics.getArtStartDate()))));
             }
-            if(demographics.getFirstARTRegimenCode() != null && demographics.getFirstARTRegimenCodeDescTxt() != null) {
-                CodedSimpleType codedSimpleType = new CodedSimpleType();
+            log.info("condition specific questions " + demographics.getFirstARTRegimenCode() + " " + demographics.getFirstARTRegimenCodeDescTxt() + " " + demographics.getNdrCode());
+            if(demographics.getFirstARTRegimenCode() != null && demographics.getFirstARTRegimenCodeDescTxt() != null
+                    && demographics.getNdrCode() != null) {
+                RegimenCodedSimpleType codedSimpleType = new RegimenCodedSimpleType();
                 codedSimpleType.setCode(demographics.getFirstARTRegimenCode());
                 codedSimpleType.setCodeDescTxt(demographics.getFirstARTRegimenCodeDescTxt());
+                codedSimpleType.setNDRCode(demographics.getNdrCode());
                 hiv.setFirstARTRegimen(codedSimpleType);
             }
             if(demographics.getFunctionalStatusStartART() != null){

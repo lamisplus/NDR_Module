@@ -235,7 +235,7 @@ public class HIVQuestionsType {
     @XmlElement(name = "TransferredInFromPatId")
     protected String transferredInFromPatId;
     @XmlElement(name = "FirstARTRegimen")
-    protected CodedSimpleType firstARTRegimen;
+    protected RegimenCodedSimpleType firstARTRegimen;
     @XmlElement(name = "ARTStartDate")
     @XmlSchemaType(name = "date")
     protected XMLGregorianCalendar artStartDate;
@@ -577,10 +577,10 @@ public class HIVQuestionsType {
      * 
      * @return
      *     possible object is
-     *     {@link CodedSimpleType }
+     *     {@link RegimenCodedSimpleType }
      *     
      */
-    public CodedSimpleType getFirstARTRegimen() {
+    public RegimenCodedSimpleType getFirstARTRegimen() {
         return firstARTRegimen;
     }
 
@@ -589,10 +589,10 @@ public class HIVQuestionsType {
      * 
      * @param value
      *     allowed object is
-     *     {@link CodedSimpleType }
+     *     {@link RegimenCodedSimpleType }
      *     
      */
-    public void setFirstARTRegimen(CodedSimpleType value) {
+    public void setFirstARTRegimen(RegimenCodedSimpleType value) {
         this.firstARTRegimen = value;
     }
 

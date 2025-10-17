@@ -170,11 +170,8 @@ public class NDROptimization4SpeedService {
             log.error(" Failed to clean old Zip files for facility {}: {}", facilityId, e.getMessage());
         }
     }
-
-
     public void generatePatientsNDRXml(long facilityId, boolean initial, List<String> patientUuidList){
         String pushIdentifier = UUID.randomUUID().toString();
-        List<String> patientIds = null;
         assert patientUuidList != null;
 
         if (initial) {
@@ -186,7 +183,6 @@ public class NDROptimization4SpeedService {
         }
 
     }
-
     public void generatePatientsNDRXml4Speed(List<String> patientIds, Long facilityId, boolean initial, String pushIdentifier) {
         deleteOldZipFolders(String.valueOf(facilityId));
         List<NDRErrorDTO> ndrErrors = Collections.synchronizedList(new ArrayList<>());
@@ -505,6 +501,7 @@ public class NDROptimization4SpeedService {
             PatientDemographicDTO patientDemographicDTO;
             Optional<PatientDemographicDTO> patientDemographicDTOOptional =
                     data.getPatientDemographics(patientId, facilityId);
+            
             if (patientDemographicDTOOptional.isPresent()) {
                 log.info("patient demographic information were retrieved successfully");
                 patientDemographicDTO = patientDemographicDTOOptional.get();

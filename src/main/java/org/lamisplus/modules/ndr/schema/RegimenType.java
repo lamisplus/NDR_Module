@@ -142,7 +142,6 @@ import javax.xml.datatype.XMLGregorianCalendar;
         "visitID",
         "visitDate",
         "prescribedRegimen",
-        "ndrRegimenCode",
         "prescribedRegimenTypeCode",
         "prescribedRegimenLineCode",
         "prescribedRegimenDuration",
@@ -168,9 +167,9 @@ public class RegimenType {
     @XmlSchemaType(name = "date")
     protected XMLGregorianCalendar visitDate;
     @XmlElement(name = "PrescribedRegimen", required = true)
-    protected CodedSimpleType prescribedRegimen;
-    @XmlElement(name = "NDRRegimenCode", required = true)
-    protected String ndrRegimenCode;
+    protected RegimenCodedSimpleType prescribedRegimen;
+//    @XmlElement(name = "NDRRegimenCode", required = true)
+//    protected String ndrRegimenCode;
     @XmlElement(name = "PrescribedRegimenTypeCode", required = true)
     protected String prescribedRegimenTypeCode;
     @XmlElement(name = "PrescribedRegimenLineCode")
@@ -260,10 +259,10 @@ public class RegimenType {
      *
      * @return
      *     possible object is
-     *     {@link CodedSimpleType }
+     *     {@link RegimenCodedSimpleType }
      *
      */
-    public CodedSimpleType getPrescribedRegimen() {
+    public RegimenCodedSimpleType getPrescribedRegimen() {
         return prescribedRegimen;
     }
 
@@ -272,35 +271,11 @@ public class RegimenType {
      *
      * @param value
      *     allowed object is
-     *     {@link CodedSimpleType }
+     *     {@link RegimenCodedSimpleType }
      *
      */
-    public void setPrescribedRegimen(CodedSimpleType value) {
+    public void setPrescribedRegimen(RegimenCodedSimpleType value) {
         this.prescribedRegimen = value;
-    }
-
-    /**
-     * Gets the value of the ndrRegimenCode property.
-     *
-     * @return
-     *     possible object is
-     *     {@link String }
-     *
-     */
-    public String getNDRRegimenCode() {
-        return ndrRegimenCode;
-    }
-
-    /**
-     * Sets the value of the ndrRegimenCode property.
-     *
-     * @param value
-     *     allowed object is
-     *     {@link String }
-     *
-     */
-    public void setNDRRegimenCode(String value) {
-        this.ndrRegimenCode = value;
     }
 
     /**

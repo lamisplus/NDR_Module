@@ -116,8 +116,16 @@ export default function GenerateNdr(props) {
         headers: { Authorization: `Bearer ${token}` },
       })
       .then((response) => {
+        console.log(response.data);
+        const { currentOrganisationUnitName, currentOrganisationUnitId } =
+          response.data;
         setUser(response.data);
-        setFacilities(response.data.applicationUserOrganisationUnits);
+        setFacilities([
+          {
+            facility: currentOrganisationUnitName,
+            facilityId: currentOrganisationUnitId,
+          },
+        ]);
       })
       .catch((error) => {});
   }
@@ -145,9 +153,10 @@ export default function GenerateNdr(props) {
     setModal(true);
     setSelectedRows([]);
     let FacilityIDArray = "";
+    console.log(checked);
 
     checked.forEach(function (value) {
-      const id = value.organisationUnitId;
+      const id = value.facilityId;
       const facilityparam = "facilityIds=" + id;
       FacilityIDArray = facilityparam;
     });
@@ -347,8 +356,8 @@ export default function GenerateNdr(props) {
                 <label>
                   <List dense className={classes.root}>
                     {facilities.map((value) => {
-                      //console.log(value)
-                      const labelId = `checkbox-list-secondary-label-${value.id}`;
+                      console.log(value);
+                      const labelId = `checkbox-list-secondary-label-${value.facilityId}`;
                       return (
                         <ListItem key={value.id} button>
                           <ListItemAvatar>
@@ -356,7 +365,7 @@ export default function GenerateNdr(props) {
                           </ListItemAvatar>
                           <ListItemText
                             id={labelId}
-                            primary={`${value.organisationUnitName}`}
+                            primary={`${value.facility}`}
                           />
                           <ListItemSecondaryAction>
                             <Checkbox

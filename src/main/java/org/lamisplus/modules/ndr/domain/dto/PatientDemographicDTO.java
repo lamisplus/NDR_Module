@@ -24,6 +24,7 @@ public interface PatientDemographicDTO {
 	LocalDate getDateOfBirth();
 	String getFirstARTRegimenCodeDescTxt();
 	String getFirstARTRegimenCode();
+	String getNdrCode();
 	String getLgaCode();
 	String getStateCode();
 	String getCountryCode();

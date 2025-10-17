@@ -72,8 +72,8 @@ public class NDRController {
             @RequestParam List<String> patientIds){
         messagingTemplate.convertAndSend("/topic/ndr-status", "start");
         Stopwatch stopwatch = Stopwatch.createStarted();
-        //facilityIds.forEach (facilityId -> ndrOptmizationService.generateNDRXMLByFacilityAndListOfPatient(facilityId,initial,patientIds));
-        facilityIds.forEach (facilityId -> ndrOptimization4SpeedService.generatePatientsNDRXml(facilityId,initial,patientIds));
+        facilityIds.forEach (facilityId -> ndrOptmizationService.generateNDRXMLByFacilityAndListOfPatient(facilityId,initial,patientIds));
+        //facilityIds.forEach (facilityId -> ndrOptimization4SpeedService.generatePatientsNDRXml(facilityId,initial,patientIds));
         messagingTemplate.convertAndSend("/topic/ndr-status", "end");
         log.info(Constants.FILE_GENERATION_TIME.replace("{}", String.valueOf(stopwatch.elapsed().toMillis())));
     }
@@ -94,8 +94,8 @@ public class NDRController {
     @GetMapping("/optimization")
     public ResponseEntity<Void> generateWithOptimization(@RequestParam List<Long> facilityIds, @RequestParam boolean isInitial) {
         Stopwatch stopwatch = Stopwatch.createStarted();
-        //facilityIds.forEach(facilityId -> ndrOptmizationService.generatePatientsNDRXml(facilityId, isInitial));
-        facilityIds.forEach(facilityId -> ndrOptimization4SpeedService.generateAllPatientsNDRXmls(facilityId, isInitial));
+        facilityIds.forEach(facilityId -> ndrOptmizationService.generatePatientsNDRXml(facilityId, isInitial));
+        //facilityIds.forEach(facilityId -> ndrOptimization4SpeedService.generateAllPatientsNDRXmls(facilityId, isInitial));
         log.info(Constants.FILE_GENERATION_TIME.replace("{}", String.valueOf(stopwatch.elapsed().toMinutes())));
         return ResponseEntity.ok().build();
     }

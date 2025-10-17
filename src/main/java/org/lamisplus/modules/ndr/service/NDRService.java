@@ -520,7 +520,7 @@ public class NDRService {
     public String getLga(OrganisationUnit facility) {
         Long lgaId = facility.getParentOrganisationUnitId ();
         OrganisationUnit lgaSystem = organisationUnitService.getOrganizationUnit (lgaId);
-        Optional<CodedSimpleType> lgaNdr = ndrCodeSetResolverService.getNDRCodeSet ("LGA", lgaSystem.getName ());
+        Optional<CodedSimpleType> lgaNdr = ndrCodeSetResolverService.getCodeSet ("LGA", lgaSystem.getName ());
         log.info ("System LGA {}", lgaSystem.getName ());
         StringBuilder lga = new StringBuilder ();
         lgaNdr.ifPresent(codedSimpleType -> lga.append(codedSimpleType.getCode()));
@@ -531,7 +531,7 @@ public class NDRService {
         Long stateId = lgaOrgUnit.getParentOrganisationUnitId ();
         OrganisationUnit stateSystem = organisationUnitService.getOrganizationUnit (stateId);
         Optional<CodedSimpleType> stateNdr = ndrCodeSetResolverService
-                .getNDRCodeSet (STATES, stateSystem.getName ());
+                .getCodeSet (STATES, stateSystem.getName ());
         log.info ("System State {}", stateSystem.getName ());
         StringBuilder state = new StringBuilder ();
         stateNdr.ifPresent(codedSimpleType -> state.append(codedSimpleType.getCode()));
