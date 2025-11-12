@@ -188,13 +188,16 @@ public class ClientVerificationTypeMapper {
     }
 
     private void getFirstOutcome(String firstOutcome, ClientVerificationType clientVerificationType) {
-        if (firstOutcome.contains(VERIFICATION_ONGOING)) {
+        String outcome = firstOutcome.toLowerCase();
+
+        if (VERIFICATION_ONGOING.toLowerCase().equals(outcome)) {
             clientVerificationType.setFirstOutcome(PENDING);
-        } else if (firstOutcome.contains("valid")) {
-            clientVerificationType.setFirstOutcome(VALID);
-        } else if (firstOutcome.contains("invalid")) {
+        } else if ("invalid".equals(outcome)) {
             clientVerificationType.setFirstOutcome(INVALID);
+        } else if ("valid".equals(outcome)) {
+            clientVerificationType.setFirstOutcome(VALID);
         }
+
     }
 
     private void getSecondStatus(String firstStatus, ClientVerificationType clientVerificationType) {
