@@ -40,30 +40,30 @@ public class HtsTypeMapper {
                     validateAndSetVisitId(h.getVisitId(), hivTestingReportType);
                     validateAndSetVisitDate(h.getVisitDate(), hivTestingReportType);
                     validateAndSetSetting(h.getSetting(), hivTestingReportType);
-                    validateAndSetFirstTime(h.getFirstTimeVisit(), hivTestingReportType);
+//                    validateAndSetFirstTime(h.getFirstTimeVisit(), hivTestingReportType);
                     // add referred_from and session type here
-                    validateAndSetReferedFrom(h.getReferredFrom(), hivTestingReportType);
+//                    validateAndSetReferedFrom(h.getReferredFrom(), hivTestingReportType);
                     validateAndSetMaritalStatus(h.getMaritalStatus(), hivTestingReportType);
-                    validateAndSetNumOfChildren(h.getNoOfOwnChildrenLessThan5Years(), hivTestingReportType);
+                    validateAndSetNumOfChildren(h.getNoOfOwnChildrenLessThan15Years(), hivTestingReportType);
                     validateAndSetNumWives(h.getNoOfAllWives(), hivTestingReportType);
-                    validateAndSetIsIndex(h.getIsIndexClient(), hivTestingReportType);
+//                    validateAndSetIsIndex(h.getIsIndexClient(), hivTestingReportType);
                     validateAndSetIsIndexClientId(h.getIndexClientId(), hivTestingReportType);
                     // add resTestForResult here
                     PreTestInformationType preTestInformationType = setPreTest(objectFactory, h);
                     hivTestingReportType.setPreTestInformation(preTestInformationType);
                     PostTestCounsellingType postTestCounsellingType = setPostTest(objectFactory, h);
                     validateAndSetSyphilisResult(h.getSyphilisTestResult(), hivTestingReportType);
-                    validAndSetHbV(h.getHbvTestResult(), hivTestingReportType);
-                    validAndSetHcV(h.getHcvTestResult(), hivTestingReportType);
+//                    validAndSetHbV(h.getHbvTestResult(), hivTestingReportType);
+//                    validAndSetHcV(h.getHcvTestResult(), hivTestingReportType);
 
 
 
                     IndexNotificationServicesType indexNotificationServicesType = new IndexNotificationServicesType();
 
                     List<PartnerNotificationType> partnerNotifications = getAllPartnerNotification(h, errors);
-                    log.info("List of partner notification size {} ", partnerNotifications.size());
-                    indexNotificationServicesType.getPartner().addAll(partnerNotifications);
-                    hivTestingReportType.setIndexNotificationServices(indexNotificationServicesType);
+//                    log.info("List of partner notification size {} ", partnerNotifications.size());
+//                    indexNotificationServicesType.getPartner().addAll(partnerNotifications);
+//                    hivTestingReportType.setIndexNotificationServices(indexNotificationServicesType);
 
                     hivTestingReportType.setPostTestCounselling(postTestCounsellingType);
                     HIVTestResultType hivTestResultType = setResult(objectFactory, h);
@@ -83,7 +83,8 @@ public class HtsTypeMapper {
         ObjectMapper objectMapper = new ObjectMapper();
         try {
             TypeFactory typeFactory = objectMapper.getTypeFactory();
-            return objectMapper.readValue(h.getPartnerNotification(), typeFactory.constructCollectionType(List.class, PartnerNotificationDTO.class));
+            //return objectMapper.readValue(h.getPartnerNotification(), typeFactory.constructCollectionType(List.class, PartnerNotificationDTO.class));
+            return null;
         } catch (Exception e) {
             log.error("Error reading partner notification of patient with uuid {}  errorMsg {}",
                     h.getClientCode(), e.getMessage());
@@ -96,7 +97,7 @@ public class HtsTypeMapper {
         List<PartnerNotificationType> partnerNotifications = new ArrayList<>();
         List<PartnerNotificationDTO> partnerNotificationsDto = getPartnerNotifications(h, ndrErrors);
         for (PartnerNotificationDTO p : partnerNotificationsDto) {
-            log.info("Hts in a loop {}", h.getPartnerNotification());
+//            log.info("Hts in a loop {}", h.getPartnerNotification());
             PartnerNotificationType partner = new PartnerNotificationType();
             partner.setPartnername(p.getPartnername());
             partner.setDescriptiveAddress(p.getDescriptiveAddress());
@@ -148,14 +149,14 @@ public class HtsTypeMapper {
             if (h.getConfirmatoryTestResult().equalsIgnoreCase("negative")) {
                 testResult.setConfirmatoryTestResult("NR");
                 testResult.setFinalTestResult("Neg");
-                testResult.setTieBreakerTestResult("NR");
+//                testResult.setTieBreakerTestResult("NR");
             } else {
                 testResult.setConfirmatoryTestResult("R");
                 testResult.setFinalTestResult("Pos");
-                testResult.setTieBreakerTestResult("R");
+//                testResult.setTieBreakerTestResult("R");
             }
             validateAndSetConfirmatoryTestResultDate(h.getConfirmatoryTestResultDate(), testResult);
-            validateAndSetTieBreakerTestResultDate(h.getScreeningTestResultDate(), testResult);
+            //validateAndSetTieBreakerTestResultDate(h.getScreeningTestResultDate(), testResult);
             hivTestResultType.setTestResult(testResult);
 
             if(h.getRecencyNumber() == null) {
@@ -192,7 +193,7 @@ public class HtsTypeMapper {
             recency.setFinalRecencyTestResult(RecencyStatus.RITA_INCONCLUSIVE.getValue());
         }
         log.info("recency {} recency number {}",  recency, h.getRecencyNumber());
-        testResult.setRecencyTesting(recency);
+        //testResult.setRecencyTesting(recency);
     }
 
     private void validateDateValuesForRecencyData(HtsReportDto h, RecencyTestingType recencyTesting) {
@@ -418,15 +419,15 @@ public class HtsTypeMapper {
         } else {
             throw new IllegalArgumentException("TestedForHIVBeforeWithinThisYear can not be null");
         }
-        postTest.setPostTestDisclosurePlanDeveloped(h.getPostTestDisclosurePlanDeveloped());
-        postTest.setPostTestCounsellingDone(h.getPostTestCounsellingDone());
+//        postTest.setPostTestDisclosurePlanDeveloped(h.getPostTestDisclosurePlanDeveloped());
+//        postTest.setPostTestCounsellingDone(h.getPostTestCounsellingDone());
         postTest.setProvidedWithInformationOnFPandDualContraception(h.getProvidedWithInformationOnFPandDualContraception());
-        postTest.setHIVRequestAndResultFormSignedByTester(h.getHivRequestAndResultFormSignedByTester());
-        postTest.setHIVRequestAndResultFormFilledWithCTIForm(h.getHivRequestAndResultFormFilledWithCTIForm());
+//        postTest.setHIVRequestAndResultFormSignedByTester(h.getHivRequestAndResultFormSignedByTester());
+//        postTest.setHIVRequestAndResultFormFilledWithCTIForm(h.getHivRequestAndResultFormFilledWithCTIForm());
         postTest.setClientRecievedHIVTestResult(h.getClientRecievedHIVTestResult());
-        postTest.setRiskReductionPlanDeveloped(h.getRiskReductionPlanDeveloped());
-        postTest.setWillBringPartnerForHIVTesting(h.getWillBringPartnerForHIVTesting());
-        postTest.setWillBringOwnChildrenForHIVTesting(h.getWillBringOwnChildrenForHIVTesting());
+//        postTest.setRiskReductionPlanDeveloped(h.getRiskReductionPlanDeveloped());
+//        postTest.setWillBringPartnerForHIVTesting(h.getWillBringPartnerForHIVTesting());
+//        postTest.setWillBringOwnChildrenForHIVTesting(h.getWillBringOwnChildrenForHIVTesting());
         postTest.setClientOrPartnerUseFPMethodsOtherThanCondoms(h.getClientOrPartnerUseFPMethodsOtherThanCondoms());
         postTest.setClientOrPartnerUseCondomsAsOneFPMethods(h.getClientOrPartnerUseCondomsAsOneFPMethods());
         postTest.setCorrectCondomUseDemonstrated(h.getCorrectCondomUseDemonstrated());
@@ -444,7 +445,7 @@ public class HtsTypeMapper {
             } else {
                 firstTime = "N";
             }
-            hivTestingReportType.setFirstTimeVisit(firstTime);
+//            hivTestingReportType.setFirstTimeVisit(firstTime);
         } else {
             throw new IllegalArgumentException("FirstTimeVisit can not be null kindly correct this");
         }
@@ -507,7 +508,7 @@ public class HtsTypeMapper {
             try {
                 testResult.setScreeningTestResultDate(DateUtil.getXmlDate(Date.valueOf(date)));
                 testResult.setConfirmatoryTestResultDate(DateUtil.getXmlDate(Date.valueOf(date)));
-                testResult.setTieBreakerTestResultDate(DateUtil.getXmlDate(Date.valueOf(date)));
+//                testResult.setTieBreakerTestResultDate(DateUtil.getXmlDate(Date.valueOf(date)));
             } catch (DatatypeConfigurationException e) {
                 throw new RuntimeException(Arrays.toString(e.getStackTrace()));
             }
@@ -527,16 +528,16 @@ public class HtsTypeMapper {
         }
     }
 
-    private static void validateAndSetTieBreakerTestResultDate(LocalDate date, TestResultType testResult) {
-        if (date != null) {
-            try {
-                testResult.setTieBreakerTestResultDate(DateUtil.getXmlDate(Date.valueOf(date)));
-            } catch (DatatypeConfigurationException e) {
-                throw new RuntimeException(Arrays.toString(e.getStackTrace()));
-            }
-        }
-
-    }
+//    private static void validateAndSetTieBreakerTestResultDate(LocalDate date, TestResultType testResult) {
+//        if (date != null) {
+//            try {
+//                testResult.setTieBreakerTestResultDate(DateUtil.getXmlDate(Date.valueOf(date)));
+//            } catch (DatatypeConfigurationException e) {
+//                throw new RuntimeException(Arrays.toString(e.getStackTrace()));
+//            }
+//        }
+//
+//    }
 
     public static void validateAndSetSyphilisResult(String syphilisTest, HIVTestingReportType hivTestingReportType) {
         if (syphilisTest != null) {
@@ -556,7 +557,7 @@ public class HtsTypeMapper {
             } else {
                 hbvTest = "Neg";
             }
-            hivTestingReportType.setHBVTestResult(hbvTest);
+//            hivTestingReportType.setHBVTestResult(hbvTest);
         }
     }
 
@@ -567,13 +568,13 @@ public class HtsTypeMapper {
             } else {
                 hcvTest = "Neg";
             }
-            hivTestingReportType.setHCVTestResult(hcvTest);
+//            hivTestingReportType.setHCVTestResult(hcvTest);
         }
     }
 
     public static void validateAndSetNumOfChildren(Integer numChild, HIVTestingReportType hivTestingReportType) {
         if (numChild != null) {
-            hivTestingReportType.setNoOfOwnChildrenLessThan5Years(numChild);
+            hivTestingReportType.setNoOfOwnChildrenLessThan15Years(numChild);
         }
     }
 
@@ -590,7 +591,7 @@ public class HtsTypeMapper {
             } else {
              isIndex = "N";
             }
-            hivTestingReportType.setIsIndexClient(isIndex);
+//            hivTestingReportType.setIsIndexClient(isIndex);
         }
     }
 
@@ -633,13 +634,13 @@ public class HtsTypeMapper {
             } else if (referredFrom.contains("Others")) {
                 referredFrom = "8";
             }
-            hivTestingReportType.setReferredFrom(referredFrom);
+//            hivTestingReportType.setReferredFrom(referredFrom);
         }
     }
 
     public static void validateAndSetIsIndexClientId (String indexClientId, HIVTestingReportType hivTestingReportType){
         if(indexClientId != null && !indexClientId.isEmpty()) {
-            hivTestingReportType.setIsIndexClient(indexClientId);
+//            hivTestingReportType.setIsIndexClient(indexClientId);
         }
     }
 

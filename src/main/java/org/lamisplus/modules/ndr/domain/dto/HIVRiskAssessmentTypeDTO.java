@@ -7,4 +7,6 @@ public interface HIVRiskAssessmentTypeDTO {
 	Boolean getUnprotectedSexWithRegularPartnerInLast3Months();
 	Boolean getMoreThan1SexPartnerDuringLast3Months();
 	Boolean getStiInLast3Months();
+	Boolean getSexUnderInfluenceOfDrugsOrAlcohol();
+	Boolean getUnprotectedVaginalSex();
 }

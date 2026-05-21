@@ -56,6 +56,7 @@ public class EncountersTypeMapper {
 	}
 	
 	public EncountersType encounterType(PatientDemographics demographics) {
+		log.info("encounters 1");
 		EncountersType encountersType = new EncountersType();
 		if (demographics != null) {
 			Optional<Person> person = personRepository.findById(demographics.getId());
@@ -89,6 +90,7 @@ public class EncountersTypeMapper {
 	
 	
 	public EncountersType encounterType(List<EncounterDTO> encounterDTOList, PatientDemographicDTO demographicDTO) {
+		log.info("encounters 2");
 		    EncountersType encountersType = new EncountersType();
 		   List<HIVEncounterType> hivEncounters = encountersType.getHIVEncounter();
 			log.info(LogMessages.GENERATING_COMMON_QUESTIONS, encounterDTOList.size());
@@ -148,6 +150,7 @@ public class EncountersTypeMapper {
 		return encountersType;
 	}
 	public EncountersType encounterType(PatientDemographics demographics, LocalDateTime lastDateTime) {
+		log.info("encounters 3");
 		EncountersType encountersType = new EncountersType();
 		if (demographics != null) {
 			Optional<Person> person = personRepository.findById(demographics.getId());
@@ -193,6 +196,7 @@ public class EncountersTypeMapper {
 	
 	private void processClinicalEncounterRegimens(Person person, ARTClinicalInfo artClinical, HIVEncounterType hivEncounterType) {
 		Optional<Visit> visitOptional = visitRepository.findById(artClinical.getClinicId());
+		log.info("visit Optional {}, artClinical {}", visitOptional.isPresent(), artClinical.getClinicId());
 		if (visitOptional.isPresent()) {
 			List<ArtPharmacy> pharmacies =
 					pharmacyRepository.getArtPharmaciesByVisitAndPerson(visitOptional.get(), person);
@@ -249,7 +253,6 @@ public class EncountersTypeMapper {
 							log.info("others {}", others);
 							Optional<RegimenCodedSimpleType> ndrCodeSet2 = ndrCodeSetResolverService.getSimpleCodeSet(others);
 							ndrCodeSet2.ifPresent(hivEncounterType::setARVDrugRegimen);
-							
 						}
 					}
 					
@@ -271,8 +274,7 @@ public class EncountersTypeMapper {
 					}
 				});
 	}
-	
-	
+
 	private void processAndSetVisitDate(ARTClinicalInfo artClinical, HIVEncounterType hivEncounterType) {
 		LocalDate visitDate = artClinical.getVisitDate();
 		if (visitDate != null) {
@@ -283,8 +285,7 @@ public class EncountersTypeMapper {
 			}
 		}
 	}
-	
-	
+
 	private void processAndSetBloodPressure(HIVEncounterType hivEncounterType, ARTClinicalInfo vitalSign) {
 		//resolving null pointer on blood pressure
 		double bloodPressure = 0.0;
@@ -330,8 +331,7 @@ public class EncountersTypeMapper {
 			hivEncounterType.setChildHeight(height);
 		}
 	}
-	
-	
+
 	private void processAndSetWhoStageAndFunctionalStatus(ARTClinicalInfo artClinical, HIVEncounterType hivEncounterType) {
 		if (artClinical.getFunctionalStatusId() != null && artClinical.getFunctionalStatusId() > 0) {
 			ApplicationCodesetDTO functionalStatus = applicationCodesetService.getApplicationCodeset(artClinical.getFunctionalStatusId());

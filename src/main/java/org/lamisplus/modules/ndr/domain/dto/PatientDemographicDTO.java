@@ -2,7 +2,6 @@ package org.lamisplus.modules.ndr.domain.dto;
 
 import java.time.LocalDate;
 
-
 public interface PatientDemographicDTO {
 	Long getPersonId();
 	String getPersonUuid();
@@ -11,7 +10,6 @@ public interface PatientDemographicDTO {
 	String getHospitalNumber();
 	String getStatusAtRegistration();
 	String getCareEntryPoint();
-	
 	Integer getAge();
 	String getPatientSexCode();
 	LocalDate getPatientDateOfBirth();

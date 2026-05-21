@@ -4,10 +4,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.lamisplus.modules.ndr.domain.dto.*;
 import org.lamisplus.modules.ndr.domain.entities.NdrMessageLog;
-import org.lamisplus.modules.ndr.mapper.ConditionTypeMapper;
-import org.lamisplus.modules.ndr.mapper.HtsTypeMapper;
-import org.lamisplus.modules.ndr.mapper.MessageHeaderTypeMapper;
-import org.lamisplus.modules.ndr.mapper.PatientDemographicsMapper;
+import org.lamisplus.modules.ndr.mapper.*;
 import org.lamisplus.modules.ndr.repositories.NdrMessageLogRepository;
 import org.lamisplus.modules.ndr.repositories.NdrXmlStatusRepository;
 import org.lamisplus.modules.ndr.schema.*;
@@ -51,6 +48,8 @@ public class HtsService {
 
 	public final HtsTypeMapper htsTypeMapper;
 
+	public final HtsEncounterReportTypeMapper htsEncounterReportTypeMapper;
+
 	private final NdrOptimizationService ndrOptimizationService;
 	private static final String TEMP = "temp/";
 
@@ -76,6 +75,7 @@ public class HtsService {
         if (getPatientHtsNDRXml(clientCode, facilityId, initial,objectFactory, ndrErrors)) {
             generatedCount.getAndIncrement();
             patientDemographicDTO[0] = data.getHtsPatientDemographics(facilityId, clientCode, start).get();
+			log.info("generating initial ...." + patientDemographicDTO[0].getClientCode());
         } else {
             errorCount.getAndIncrement();
         }
@@ -109,13 +109,13 @@ public class HtsService {
 		PatientDemographicDTO patientDemographic =
 				getPatientDemographic(facilityId, clientCode, start, ndrErrors);
 
-		if (!initial && patientDemographic != null) {
-			Optional<NdrMessageLog> messageLog =
-					data.findFirstByIdentifierAndFileType(patientDemographic.getPatientIdentifier(), "hts");
-			if (messageLog.isPresent()) {
-				start = messageLog.get().getLastUpdated();
-			}
-		}
+//		if (!initial && patientDemographic != null) {
+//			Optional<NdrMessageLog> messageLog =
+//					data.findFirstByIdentifierAndFileType(patientDemographic.getPatientIdentifier(), "hts");
+//			if (messageLog.isPresent()) {
+//				start = messageLog.get().getLastUpdated();
+//			}
+//		}
 		if (patientDemographic == null) return false;
 		List<HtsReportDto> patientHtsDetails = getPatientHtsDetails(facilityId, clientCode, start);
 		//List<PartnerNotificationTypeDto> partners = getPartnerNotifications(facilityId, clientCode);
@@ -134,13 +134,16 @@ public class HtsService {
 
 
 	  PatientDemographicDTO getPatientDemographic( long facilityId, String clientCode, LocalDateTime lastModified,  List<NDRErrorDTO> ndrErrors){
-		log.info("Getting patient Demographics....");
+		log.info("Getting patient Demographics.... "+ lastModified);
 		try {
 			Optional<PatientDemographicDTO> htsPatientDemographics = data.getHtsPatientDemographics(facilityId, clientCode, lastModified);
+			log.info("check patient Demographics.... "+ htsPatientDemographics.isPresent());
 			if(htsPatientDemographics.isPresent()){
+				log.info("HTS patient available....");
 				return htsPatientDemographics.get();
 			}
 		}catch (Exception e){
+			log.error("error getting HTS demographics"+ e.getMessage());
 		  ndrErrors.add(new NDRErrorDTO(clientCode, "", Arrays.toString(e.getStackTrace())));
 		  e.printStackTrace();
 		}
@@ -148,6 +151,7 @@ public class HtsService {
 	  }
 
 	  List<HtsReportDto> getPatientHtsDetails(long facilityId, String clientCode, LocalDateTime lastModified ){
+		  log.info("Getting HTS datails for client " + clientCode);
 		return data.getHstReportByClientCodeAndLastModified(facilityId, clientCode,lastModified);
 	  }
 
@@ -286,10 +290,13 @@ public class HtsService {
 				jaxbMarshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, true);
 				jaxbMarshaller.setProperty(Marshaller.JAXB_ENCODING, JAXB_ENCODING);
 				SchemaFactory sf = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI);
-				Schema schema = sf.newSchema(getClass().getClassLoader().getResource("NDR1_6_6_1.xsd"));
+				Schema schema = sf.newSchema(getClass().getClassLoader().getResource("NDR_XSD 1.7.2.0.xsd"));
 				jaxbMarshaller.setSchema(schema);
 				if (conditionType != null) {
-					if(htsTypeMapper.getHivTestingReportType(individualReportType,objectFactory,htsReports, ndrErrors)){
+//					if(htsTypeMapper.getHivTestingReportType(individualReportType,objectFactory,htsReports, ndrErrors)){
+//						individualReportType.getCondition().add(conditionType);
+//					}
+					if(htsEncounterReportTypeMapper.getHivTestingReportType(individualReportType,objectFactory,htsReports, ndrErrors)){
 						individualReportType.getCondition().add(conditionType);
 					}
 					if(individualReportType.getHIVTestingReport().isEmpty()){

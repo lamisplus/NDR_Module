@@ -486,4 +486,15 @@ public class ObjectFactory {
         return new AntenatalRegistrationType.Syphilis();
     }
 
+    public SexPartnerRiskAssessmentType createSexPartnerRiskAssessmentType() {
+        return new SexPartnerRiskAssessmentType();
+    }
+
+    public IndexContactTestingType createIndexContactTestingType() {
+        return new IndexContactTestingType();
+    }
+
+    public IndexContactType createIndexContactType() {
+        return new IndexContactType();
+    }
 }
