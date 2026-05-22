@@ -62,14 +62,14 @@ public class HtsEncounterReportTypeMapper {
         SESSION_TYPE_MAPPING.put("SELF_TESTED", "4");
 
         //Relationship to index
-        RELATIONSHIP_TO_INDEX.put("Mother", "M");
-        RELATIONSHIP_TO_INDEX.put("Father", "F");
-        RELATIONSHIP_TO_INDEX.put("Biological Child", "C");
-        RELATIONSHIP_TO_INDEX.put("Spouse", "S");
-        RELATIONSHIP_TO_INDEX.put("Live-in Partner", "L");
-        RELATIONSHIP_TO_INDEX.put("Boyfriend/Girlfriend", "B");
-        RELATIONSHIP_TO_INDEX.put("Casual Partner", "P");
-        RELATIONSHIP_TO_INDEX.put("Social Network", "N");
+        RELATIONSHIP_TO_INDEX.put("MOTHER", "M");
+        RELATIONSHIP_TO_INDEX.put("FATHER", "F");
+        RELATIONSHIP_TO_INDEX.put("BIOLOGICAL_CHILD", "C");
+        RELATIONSHIP_TO_INDEX.put("SPOUSE", "S");
+        RELATIONSHIP_TO_INDEX.put("LIVE-IN_PARTNERS", "L");
+        RELATIONSHIP_TO_INDEX.put("BOYFRIEND_GIRLFRIEND", "B");
+        RELATIONSHIP_TO_INDEX.put("CASUAL_PARTNER", "P");
+        RELATIONSHIP_TO_INDEX.put("SOCIAL_NETWORK", "N");
 
         // Marital status mappings
         MARITAL_STATUS_MAPPING.put("Married", "M");
@@ -185,7 +185,7 @@ public class HtsEncounterReportTypeMapper {
         setIfPresent(projection.getDurationOfBreastfeeding(), reportType::setDurationOfBreastfeeding, this::mapDurationOfBreastfeeding);
         setIfPresent(projection.getSyphilisTestResult(), reportType::setSyphilisTestResult, this::mapSyphilisResult);
 
-//        reportType.setPreTestInformation(buildPreTestInformation(objectFactory, projection));
+        reportType.setPreTestInformation(buildPreTestInformation(objectFactory, projection));
 //        reportType.setPostTestCounselling(buildPostTestCounselling(objectFactory, projection));
 //        reportType.setIndexContactTesting(buildIndexContactTesting(objectFactory, projection));
 //        reportType.setHIVTestResult(buildHIVTestResult(objectFactory, projection));
@@ -198,9 +198,9 @@ public class HtsEncounterReportTypeMapper {
 
         preTest.setKnowledgeAssessment(buildKnowledgeAssessment(factory, p));
         preTest.setHIVRiskAssessment(buildHIVRiskAssessment(factory, p));
-        preTest.setClinicalTBScreening(buildClinicalTBScreening(factory, p));
-        preTest.setSyndromicSTIScreening(buildSyndromicSTIScreening(factory, p));
-        preTest.setSexPartnerRiskAssessment(buildSexPartnerRiskAssessment(factory, p));
+//        preTest.setClinicalTBScreening(buildClinicalTBScreening(factory, p));
+//        preTest.setSyndromicSTIScreening(buildSyndromicSTIScreening(factory, p));
+//        preTest.setSexPartnerRiskAssessment(buildSexPartnerRiskAssessment(factory, p));
 
         return preTest;
     }
@@ -215,7 +215,7 @@ public class HtsEncounterReportTypeMapper {
         setBooleanIfPresent(p.getClientInformedAboutPreventingHIV(), assessment::setClientInformedAboutPreventingHIV);
         setBooleanIfPresent(p.getClientInformedAboutPossibleTestResults(), assessment::setClientInformedAboutPossibleTestResults);
         setBooleanIfPresent(p.getInformedConsentForHIVTestingGiven(), assessment::setInformedConsentForHIVTestingGiven);
-        setIfPresent(p.getTimeOfLastNegativeTest(), assessment::setTimeOfLastHIVNegativeTest);
+        setIfPresent(p.getTimeOfLastNegativeTest(), assessment::setTimeOfLastHIVNegativeTest, this::mapTimeOfLastHIVNegative);
 
         return assessment;
     }
@@ -532,6 +532,19 @@ public class HtsEncounterReportTypeMapper {
             return null;
         }
     }
+    private String mapTimeOfLastHIVNegative(String duration) {
+        if (duration == null) {
+            return "";
+        }
+        String upperGroup = duration.toUpperCase().replace("RECENT_HIV_TEST_", "").trim();
+        if (upperGroup.contains("LAST_3_MONTHS") || upperGroup.contains("LAST_6_MONTHS")) {
+            return "LT3M";
+        }
+        if (upperGroup.contains("MORE_THAN_6_MONTHS")) {
+            return "GT6M";
+        }
+        return "";
+    }
     private String mapSessionType(String sessionType) {
         if (sessionType == null || sessionType.isEmpty()) {
             return "1"; // Default to Individual
@@ -548,7 +561,6 @@ public class HtsEncounterReportTypeMapper {
         log.warn("Unknown session type: {}, defaulting to Individual (1)", sessionType);
         return "1";
     }
-
     private String mapMaritalStatus(String status) {
         if (status == null) {
             return null;
@@ -561,7 +573,6 @@ public class HtsEncounterReportTypeMapper {
         }
         return status;
     }
-
     private String mapTestResult(String result) {
         if (result == null) {
             return null;
@@ -569,7 +580,6 @@ public class HtsEncounterReportTypeMapper {
         String upperType = result.toUpperCase().replace("HIV_CONFIRMATORY_TEST_RESULT_", "").trim();
         return upperType.equalsIgnoreCase("POSITIVE") ? "R" : "NR";
     }
-
     private String mapSyphilisResult(String result) {
         if (result == null) {
             return null;
@@ -577,7 +587,6 @@ public class HtsEncounterReportTypeMapper {
         String upperType = result.toUpperCase().replace("SYPHILIS_RESULT_", "").trim();
         return upperType.equalsIgnoreCase("POSITIVE") ? "R" : "NR";
     }
-
     private String mapCategoryOfClient(String category) {
         if (category == null) {
             return "S";
