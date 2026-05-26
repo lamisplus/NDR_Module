@@ -340,7 +340,7 @@ export default function Hts(props) {
                   new Promise((resolve, reject) =>
                     axios
                       .get(
-                        `${baseUrl}hts/only/persons?pageSize=${query.pageSize}&pageNo=${query.page}&searchValue=${query.search}`,
+                        `${baseUrl}hts-encounter/hts-patients?pageSize=${query.pageSize}&pageNo=${query.page}&searchValue=${query.search}`,
                         { headers: { Authorization: `Bearer ${token}` } }
                       )
                       .then((response) => response)

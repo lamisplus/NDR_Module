@@ -920,123 +920,169 @@ public interface NdrMessageLogRepository extends JpaRepository<NdrMessageLog, In
 
   // Hst Report By ClientCode And LastModified updated
   @Query(value = "SELECT \n" +
-          "    hts_en.client_code AS clientCode, \n" +
-          "    CAST(hts_en.uuid AS VARCHAR) AS visitId,\n" +
-          "    hts_en.date_of_visit AS visitDate,\n" +
-          "    hts_en.setting,\n" +
-          "    hts_en.observation->>'age' age,\n" +
-          "    hts_en.observation->>'sex' sex,\n" +
-          "    -- hts_en.observation->>'maritalStatusId' maritalStatusId,\n" +
-          "    bacmarital.display maritalStatus,\n" +
-          "    hts_en.observation->>'numberOfWives' noOfAllWives,\n" +
-          "    hts_en.observation->>'numberOfBiologicalChildren' noOfOwnChildrenLessThan15Years,\n" +
-          "    -- hts_en.observation ->> 'stateId' stateId, \n" +
-          "    boustate.name AS stateOfResidence,\n" +
-          "    -- hts_en.observation->>'district' district, \n" +
-          "    boudistrict.name AS lgaOfResidence,\n" +
-          "    hts_en.observation->>'typeOfSession' sessionType,\n" +
-          "    hts_icten.data->>'indexClientId' indexClientId, \n" +
-          "    hts_ictcon.relationship_to_index AS relationshipToIndex,\n" +
-          "    hts_en.observation->>'pregnancyStatus' clientIsPregnant,\n" +
-          "    (CASE WHEN hts_en.observation->>'pregnancyStatus' ILIKE '%BreastFeeding%' THEN true ELSE false END) BreastFeeding,\n" +
-          "    hts_en.observation->>'breastfeedingDuration' durationOfBreastfeeding,\n" +
-          "    CAST(CASE WHEN UPPER(hts_en.observation->>'previouslyTestedNegative') = 'YES_NO_YES' THEN true\n" +
-          "\t\tWHEN UPPER(hts_en.observation->>'previouslyTestedNegative') = 'YES_NO_NO' THEN false\n" +
-          "\t\tELSE NULL END AS boolean) AS previouslyTestedHIVNegative,\n" +
-          "    hts_en.observation->>'timeOfLastNegativeTest' timeOfLastNegativeTest,\n" +
-          "\tCAST(CASE WHEN UPPER(hts_en.observation->>'clientInformedTransmissionRoutes') = 'YES_NO_YES' THEN true\n" +
-          "\t\tWHEN UPPER(hts_en.observation->>'clientInformedTransmissionRoutes') = 'YES_NO_NO' THEN false\n" +
-          "\t\tELSE NULL END AS boolean) AS clientInformedAboutHIVTransmissionRoutes,\n" +
-          "\tCAST(CASE WHEN UPPER(hts_en.observation->>'clientInformedRiskFactors') = 'YES_NO_YES' THEN true\n" +
-          "\t\tWHEN UPPER(hts_en.observation->>'clientInformedRiskFactors') = 'YES_NO_NO' THEN false\n" +
-          "\t\tELSE NULL END AS boolean) AS clientInformedOfHIVTransmissionRiskFactors,\n" +
-          "\tCAST(CASE WHEN UPPER(hts_en.observation->>'clientInformedPreventionMethods') = 'YES_NO_YES' THEN true\n" +
-          "\t\tWHEN UPPER(hts_en.observation->>'clientInformedPreventionMethods') = 'YES_NO_NO' THEN false\n" +
-          "\t\tELSE NULL END AS boolean) AS clientInformedAboutPreventingHIV,\n" +
-          "\tCAST(CASE WHEN UPPER(hts_en.observation->>'clientInformedPossibleResults') = 'YES_NO_YES' THEN true\n" +
-          "\t\tWHEN UPPER(hts_en.observation->>'clientInformedPossibleResults') = 'YES_NO_NO' THEN false\n" +
-          "\t\tELSE NULL END AS boolean) AS clientInformedAboutPossibleTestResults,\n" +
-          "    CAST(CASE WHEN UPPER(hts_en.observation->>'informedConsentGiven') = 'YES_NO_YES' THEN true\n" +
-          "\t\tWHEN UPPER(hts_en.observation->>'informedConsentGiven') = 'YES_NO_NO' THEN false\n" +
-          "\t\tELSE NULL END AS boolean) AS informedConsentForHIVTestingGiven,\n" +
-          "\tCAST(CASE WHEN UPPER(hts_en.observation->>'pregnancyStatus') = 'PREGANACY_STATUS_PREGNANT' THEN true\n" +
-          "\t\tELSE NULL END AS boolean) AS clientPregnant,\n" +
-          "\tCAST(CASE WHEN UPPER(hts_en.observation->>'everHadSexualIntercourse') = 'YES_NO_YES' THEN true\n" +
-          "\t\tWHEN UPPER(hts_en.observation->>'everHadSexualIntercourse') = 'YES_NO_NO' THEN false\n" +
-          "\t\tELSE NULL END AS boolean) AS everHadSexualIntercourse,\n" +
-          "    CAST(CASE WHEN UPPER(hts_en.observation->>'moreThanOneSexPartner') = 'YES_NO_YES' THEN true\n" +
-          "\t\tWHEN UPPER(hts_en.observation->>'moreThanOneSexPartner') = 'YES_NO_NO' THEN false\n" +
-          "\t\tELSE NULL END AS boolean) AS moreThan1SexPartnerDuringLast3Months,\n" +
-          "\tCAST(CASE WHEN UPPER(hts_en.observation->>'unprotectedVaginalSex') = 'YES_NO_YES' THEN true\n" +
-          "\t\tWHEN UPPER(hts_en.observation->>'unprotectedVaginalSex') = 'YES_NO_NO' THEN false\n" +
-          "\t\tELSE NULL END AS boolean) AS unprotectedVaginalSex,\n" +
-          "\tCAST(CASE WHEN UPPER(hts_en.observation->>'unprotectedAnalSex') = 'YES_NO_YES' THEN true\n" +
-          "\t\tWHEN UPPER(hts_en.observation->>'unprotectedAnalSex') = 'YES_NO_NO' THEN false\n" +
-          "\t\tELSE NULL END AS boolean) AS unprotectedSexWithCasualPartnerinLast3Months,\n" +
-          "    CAST(CASE WHEN UPPER(hts_en.observation->>'bloodTransfusionLast3Months') = 'YES_NO_YES' THEN true\n" +
-          "\t\tWHEN UPPER(hts_en.observation->>'bloodTransfusionLast3Months') = 'YES_NO_NO' THEN false\n" +
-          "\t\tELSE NULL END AS boolean) AS bloodTransfussionInLast3Months,\n" +
-          "    CAST(CASE WHEN UPPER(hts_en.observation->>'sexUnderInfluence') = 'YES_NO_YES' THEN true\n" +
-          "\t\tWHEN UPPER(hts_en.observation->>'sexUnderInfluence') = 'YES_NO_NO' THEN false\n" +
-          "\t\tELSE NULL END AS boolean) AS sexUnderInfluenceOfDrugsOrAlcohol,\n" +
-          "    hts_en.observation->>'historyOfSTI' historyOfSTI,\n" +
-          "    hts_en.observation->>'hadSexWithHivPositivePartnerInRiskGroup' hadSexWithHivPositivePartnerInRiskGroup,\n" +
-          "    hts_en.observation->>'currentCough' currentCough,\n" +
-          "    hts_en.observation->>'weightLoss' weightLoss,\n" +
-          "    hts_en.observation->>'fever' fever,\n" +
-          "    hts_en.observation->>'nightSweats' nightSweats,\n" +
-          "    hts_en.observation->>'complaintsVaginalDischarge' complaintsVaginalDischarge,\n" +
-          "    hts_en.observation->>'complaintsLowerAbdominalPain' complaintsLowerAbdominalPain,\n" +
-          "    hts_en.observation->>'complaintsUrethralDischarge' complaintsUrethralDischarge,\n" +
-          "    hts_en.observation->>'complaintsScroralSwelling' complaintsScroralSwelling,\n" +
-          "    hts_en.observation->>'complaintsGenitalSores' complaintsGenitalSores,\n" +
-          "    hts_en.observation->>'complaintsSwollenLymphNodes' complaintsSwollenLymphNodes,\n" +
-          "    hts_en.observation->>'partnerNewlyDiagnosed' partnerNewlyDiagnosed,\n" +
-          "    hts_en.observation->>'adolescentHivPositive' adolescentHivPositive,\n" +
-          "    hts_en.observation->>'partnerNotRegularlyOnDrugs' partnerNotRegularlyOnDrugs,\n" +
-          "    hts_en.observation->>'partnerRecentlyReturnedToTreatment' partnerRecentlyReturnedToTreatment,\n" +
-          "    hts_en.observation->>'clientReceivedTestResult' clientReceivedTestResult,\n" +
-          "    hts_en.observation->>'initialHivTest' initialHivTest,\n" +
-          "    hts_en.observation->>'dateOfVisit' dateOfVisit,\n" +
-          "    hts_en.observation->>'suspectedAcuteInfection' suspectedAcuteInfection,\n" +
-          "    hts_en.observation->>'confirmatoryHivTest' confirmatoryHivTest,\n" +
-          "    hts_en.observation->>'syphilisTestResult' syphilisTestResult,\n" +
-          "    hts_en.observation->>'recencyTest' recencyTest,\n" +
-          "    hts_en.observation->>'previouslyTestedThisYear' previouslyTestedThisYear,\n" +
-          "    hts_en.observation->>'acceptedIndexTesting' acceptedIndexTesting,\n" +
-          "    hts_en.observation->>'providedFpInfo' providedFpInfo,\n" +
-          "    hts_en.observation->>'clientPartnerUseFpMethods' clientPartnerUseFpMethods,\n" +
-          "    hts_en.observation->>'clientPartnerUseCondoms' clientPartnerUseCondoms,\n" +
-          "    hts_en.observation->>'correctCondomUseDemonstrated' correctCondomUseDemonstrated,\n" +
-          "    hts_en.observation->>'hivTestKitsProvided' hivTestKitsProvided,\n" +
-          "    hts_en.observation->>'condomsProvided' condomsProvided,\n" +
-          "    hts_en.observation->>'categoryOfClients' categoryOfClients,\n" +
-          "    hts_en.observation->>'clientReferredToOtherServices' clientReferredToOtherServices,\n" +
-          "    hts_icten.client_category client_category,\n" +
-          "    hts_icten.offered_pns offered_pns,\n" +
-          "    hts_icten.accepted_pns accepted_pns,\n" +
-          "    hts_ictcon.relationship_to_index relationship_to_index,\n" +
-          "    --   hts_ictcon.contact_sex,\n" +
-          "    --   hts_ictcon.contact_age_group,\n" +
-          "    hts_ictcon.notification_method,\n" +
-          "    hts_ictcon.follow_up_location,\n" +
-          "    hts_ictcon.attempts,\n" +
-          "    hts_ictcon.known_hiv_positive,\n" +
-          "    hts_ictcon.hiv_test_result,\n" +
-          "    hts_ictcon.date_tested_hiv,\n" +
-          "    hts_ictcon.date_enrolled_art,\n" +
-          "    hts_ictcon.date_enrolled_ovc,\n" +
-          "    hts_ictcon.ovc_id\n" +
-          "    FROM public.hts_encounter hts_en\n" +
-          "    JOIN public.hts_ict_encounter hts_icten ON hts_en.id=hts_icten.hts_encounter_id\n" +
-          "    JOIN public.hts_ict_contact hts_ictcon ON hts_icten.id=hts_ictcon.ict_encounter_id\n" +
-          "    LEFT JOIN public.base_organisation_unit boustate ON boustate.id=(CASE WHEN hts_en.observation ->> 'stateId' ~ '^[0-9]+$' THEN CAST((hts_en.observation ->> 'stateId') AS int) ELSE NULL END)\n" +
-          "    LEFT JOIN public.base_organisation_unit boudistrict ON boudistrict.id=(CASE WHEN hts_en.observation ->> 'district' ~ '^[0-9]+$' THEN CAST((hts_en.observation ->> 'district') AS int) ELSE NULL END)\n" +
-          "    LEFT JOIN public.base_application_codeset bacmarital ON bacmarital.id=(CASE WHEN hts_en.observation ->> 'maritalStatusId' ~ '^[0-9]+$' THEN CAST((hts_en.observation ->> 'maritalStatusId') AS int) ELSE NULL END)\n" +
-          "    WHERE hts_en.facility_id= ?1\n" +
-          "    AND hts_en.client_code = ?2\n" +
-          "    AND hts_en.date_modified > ?3 \n" +
-          "    AND hts_en.archived = false", nativeQuery = true) List<HtsReportDto> getHstReportByClientCodeAndLastModified(Long facilityId, String clientCode, LocalDateTime lastModified);
+          "          hts_en.client_code AS clientCode, \n" +
+          "          CAST(hts_en.uuid AS VARCHAR) AS visitId,\n" +
+          "          hts_en.date_of_visit AS visitDate,\n" +
+          "          hts_en.setting,\n" +
+          "          hts_en.observation->>'age' age,\n" +
+          "          hts_en.observation->>'sex' sex,\n" +
+          "          -- hts_en.observation->>'maritalStatusId' maritalStatusId,\n" +
+          "          bacmarital.display maritalStatus,\n" +
+          "          hts_en.observation->>'numberOfWives' noOfAllWives,\n" +
+          "          hts_en.observation->>'numberOfBiologicalChildren' noOfOwnChildrenLessThan15Years,\n" +
+          "          -- hts_en.observation ->> 'stateId' stateId, \n" +
+          "          boustate.name AS stateOfResidence,\n" +
+          "          -- hts_en.observation->>'district' district, \n" +
+          "          boudistrict.name AS lgaOfResidence,\n" +
+          "          hts_en.observation->>'typeOfSession' sessionType,\n" +
+          "          hts_icten.data->>'indexClientId' indexClientId, \n" +
+          "          hts_ictcon.relationship_to_index AS relationshipToIndex,\n" +
+          "          hts_en.observation->>'pregnancyStatus' clientIsPregnant,\n" +
+          "          (CASE WHEN hts_en.observation->>'pregnancyStatus' ILIKE '%BreastFeeding%' THEN true ELSE false END) BreastFeeding,\n" +
+          "          hts_en.observation->>'breastfeedingDuration' durationOfBreastfeeding,\n" +
+          "          CAST(CASE WHEN UPPER(hts_en.observation->>'previouslyTestedNegative') = 'YES_NO_YES' THEN true\n" +
+          "          WHEN UPPER(hts_en.observation->>'previouslyTestedNegative') = 'YES_NO_NO' THEN false\n" +
+          "          ELSE NULL END AS boolean) AS previouslyTestedHIVNegative,\n" +
+          "            hts_en.observation->>'timeOfLastNegativeTest' timeOfLastNegativeTest,\n" +
+          "          CAST(CASE WHEN UPPER(hts_en.observation->>'clientInformedTransmissionRoutes') = 'YES_NO_YES' THEN true\n" +
+          "          WHEN UPPER(hts_en.observation->>'clientInformedTransmissionRoutes') = 'YES_NO_NO' THEN false\n" +
+          "          ELSE NULL END AS boolean) AS clientInformedAboutHIVTransmissionRoutes,\n" +
+          "          CAST(CASE WHEN UPPER(hts_en.observation->>'clientInformedRiskFactors') = 'YES_NO_YES' THEN true\n" +
+          "          WHEN UPPER(hts_en.observation->>'clientInformedRiskFactors') = 'YES_NO_NO' THEN false\n" +
+          "          ELSE NULL END AS boolean) AS clientInformedOfHIVTransmissionRiskFactors,\n" +
+          "          CAST(CASE WHEN UPPER(hts_en.observation->>'clientInformedPreventionMethods') = 'YES_NO_YES' THEN true\n" +
+          "          WHEN UPPER(hts_en.observation->>'clientInformedPreventionMethods') = 'YES_NO_NO' THEN false\n" +
+          "          ELSE NULL END AS boolean) AS clientInformedAboutPreventingHIV,\n" +
+          "          CAST(CASE WHEN UPPER(hts_en.observation->>'clientInformedPossibleResults') = 'YES_NO_YES' THEN true\n" +
+          "          WHEN UPPER(hts_en.observation->>'clientInformedPossibleResults') = 'YES_NO_NO' THEN false\n" +
+          "          ELSE NULL END AS boolean) AS clientInformedAboutPossibleTestResults,\n" +
+          "            CAST(CASE WHEN UPPER(hts_en.observation->>'informedConsentGiven') = 'YES_NO_YES' THEN true\n" +
+          "          WHEN UPPER(hts_en.observation->>'informedConsentGiven') = 'YES_NO_NO' THEN false\n" +
+          "          ELSE NULL END AS boolean) AS informedConsentForHIVTestingGiven,\n" +
+          "          CAST(CASE WHEN UPPER(hts_en.observation->>'pregnancyStatus') = 'PREGANACY_STATUS_PREGNANT' THEN true\n" +
+          "          ELSE NULL END AS boolean) AS clientPregnant,\n" +
+          "          CAST(CASE WHEN UPPER(hts_en.observation->>'everHadSexualIntercourse') = 'YES_NO_YES' THEN true\n" +
+          "          WHEN UPPER(hts_en.observation->>'everHadSexualIntercourse') = 'YES_NO_NO' THEN false\n" +
+          "          ELSE NULL END AS boolean) AS everHadSexualIntercourse,\n" +
+          "            CAST(CASE WHEN UPPER(hts_en.observation->>'moreThanOneSexPartner') = 'YES_NO_YES' THEN true\n" +
+          "          WHEN UPPER(hts_en.observation->>'moreThanOneSexPartner') = 'YES_NO_NO' THEN false\n" +
+          "          ELSE NULL END AS boolean) AS moreThan1SexPartnerDuringLast3Months,\n" +
+          "          CAST(CASE WHEN UPPER(hts_en.observation->>'unprotectedVaginalSex') = 'YES_NO_YES' THEN true\n" +
+          "          WHEN UPPER(hts_en.observation->>'unprotectedVaginalSex') = 'YES_NO_NO' THEN false\n" +
+          "          ELSE NULL END AS boolean) AS unprotectedVaginalSex,\n" +
+          "          CAST(CASE WHEN UPPER(hts_en.observation->>'unprotectedAnalSex') = 'YES_NO_YES' THEN true\n" +
+          "          WHEN UPPER(hts_en.observation->>'unprotectedAnalSex') = 'YES_NO_NO' THEN false\n" +
+          "          ELSE NULL END AS boolean) AS unprotectedSexWithCasualPartnerinLast3Months,\n" +
+          "          CAST(CASE WHEN UPPER(hts_en.observation->>'bloodTransfusionLast3Months') = 'YES_NO_YES' THEN true\n" +
+          "          WHEN UPPER(hts_en.observation->>'bloodTransfusionLast3Months') = 'YES_NO_NO' THEN false\n" +
+          "          ELSE NULL END AS boolean) AS bloodTransfussionInLast3Months,\n" +
+          "          CAST(CASE WHEN UPPER(hts_en.observation->>'sexUnderInfluence') = 'YES_NO_YES' THEN true\n" +
+          "          WHEN UPPER(hts_en.observation->>'sexUnderInfluence') = 'YES_NO_NO' THEN false\n" +
+          "          ELSE NULL END AS boolean) AS sexUnderInfluenceOfDrugsOrAlcohol,\n" +
+          "            hts_en.observation->>'historyOfSTI' historyOfSTI,\n" +
+          "            hts_en.observation->>'hadSexWithHivPositivePartnerInRiskGroup' hadSexWithHivPositivePartnerInRiskGroup,\n" +
+          "          CAST(CASE WHEN UPPER(hts_en.observation->>'currentCough') = 'YES_NO_YES' THEN true\n" +
+          "          WHEN UPPER(hts_en.observation->>'currentCough') = 'YES_NO_NO' THEN false\n" +
+          "          ELSE NULL END AS boolean) AS currentCough,\n" +
+          "          CAST(CASE WHEN UPPER(hts_en.observation->>'weightLoss') = 'YES_NO_YES' THEN true\n" +
+          "          WHEN UPPER(hts_en.observation->>'weightLoss') = 'YES_NO_NO' THEN false\n" +
+          "          ELSE NULL END AS boolean) AS weightLoss,\n" +
+          "          CAST(CASE WHEN UPPER(hts_en.observation->>'fever') = 'YES_NO_YES' THEN true\n" +
+          "          WHEN UPPER(hts_en.observation->>'fever') = 'YES_NO_NO' THEN false\n" +
+          "          ELSE NULL END AS boolean) AS fever,\n" +
+          "          CAST(CASE WHEN UPPER(hts_en.observation->>'nightSweats') = 'YES_NO_YES' THEN true\n" +
+          "          WHEN UPPER(hts_en.observation->>'nightSweats') = 'YES_NO_NO' THEN false\n" +
+          "          ELSE NULL END AS boolean) AS nightSweats,\n" +
+          "          CAST(CASE WHEN UPPER(hts_en.observation->>'complaintsVaginalDischarge') = 'YES_NO_YES' THEN true\n" +
+          "          WHEN UPPER(hts_en.observation->>'complaintsVaginalDischarge') = 'YES_NO_NO' THEN false\n" +
+          "          ELSE NULL END AS boolean) AS vaginalDischargeOrBurningWhenUrinating,\n" +
+          "          CAST(CASE WHEN UPPER(hts_en.observation->>'complaintsLowerAbdominalPain') = 'YES_NO_YES' THEN true\n" +
+          "          WHEN UPPER(hts_en.observation->>'complaintsLowerAbdominalPain') = 'YES_NO_NO' THEN false\n" +
+          "          ELSE NULL END AS boolean) AS lowerAbdominalPainsWithOrWithoutVaginalDischarge,\n" +
+          "          CAST(CASE WHEN UPPER(hts_en.observation->>'complaintsUrethralDischarge') = 'YES_NO_YES' THEN true\n" +
+          "          WHEN UPPER(hts_en.observation->>'complaintsUrethralDischarge') = 'YES_NO_NO' THEN false\n" +
+          "          ELSE NULL END AS boolean) AS urethralDischargeOrBurningWhenUrinating,\n" +
+          "          CAST(CASE WHEN UPPER(hts_en.observation->>'complaintsScroralSwelling') = 'YES_NO_YES' THEN true\n" +
+          "          WHEN UPPER(hts_en.observation->>'complaintsScroralSwelling') = 'YES_NO_NO' THEN false\n" +
+          "          ELSE NULL END AS boolean) AS scrotalSwellingAndPain,\n" +
+          "          CAST(CASE WHEN UPPER(hts_en.observation->>'complaintsGenitalSores') = 'YES_NO_YES' THEN true\n" +
+          "          WHEN UPPER(hts_en.observation->>'complaintsGenitalSores') = 'YES_NO_NO' THEN false\n" +
+          "          ELSE NULL END AS boolean) AS genitalSore,\n" +
+          "          CAST(CASE WHEN UPPER(hts_en.observation->>'complaintsSwollenLymphNodes') = 'YES_NO_YES' THEN true\n" +
+          "          WHEN UPPER(hts_en.observation->>'complaintsSwollenLymphNodes') = 'YES_NO_NO' THEN false\n" +
+          "          ELSE NULL END AS boolean) AS genitalSoreOrSwollenInguinalLymphNodes,\n" +
+          "          CAST(CASE WHEN UPPER(hts_en.observation->>'partnerNewlyDiagnosed') = 'YES_NO_YES' THEN true\n" +
+          "          WHEN UPPER(hts_en.observation->>'partnerNewlyDiagnosed') = 'YES_NO_NO' THEN false\n" +
+          "          ELSE NULL END AS boolean) AS partnerNewlyDiagnosedOnARTLessThan3To6Months,\n" +
+          "          CAST(CASE WHEN UPPER(hts_en.observation->>'adolescentHivPositive') = 'YES_NO_YES' THEN true\n" +
+          "          WHEN UPPER(hts_en.observation->>'adolescentHivPositive') = 'YES_NO_NO' THEN false\n" +
+          "          ELSE NULL END AS boolean) AS partnerAdolescent10To19KnownHIVInfected,\n" +
+          "          CAST(CASE WHEN UPPER(hts_en.observation->>'partnerNotRegularlyOnDrugs') = 'YES_NO_YES' THEN true\n" +
+          "          WHEN UPPER(hts_en.observation->>'partnerNotRegularlyOnDrugs') = 'YES_NO_NO' THEN false\n" +
+          "          ELSE NULL END AS boolean) AS partnerKnownPositiveNotRegularlyOnDrugs,\n" +
+          "          CAST(CASE WHEN UPPER(hts_en.observation->>'partnerRecentlyReturnedToTreatment') = 'YES_NO_YES' THEN true\n" +
+          "          WHEN UPPER(hts_en.observation->>'partnerRecentlyReturnedToTreatment') = 'YES_NO_NO' THEN false\n" +
+          "          ELSE NULL END AS boolean) AS partnerKnownPositiveRecentlyReturnedAfterLTFU,\n" +
+          "            hts_en.observation->>'initialHivTest' initialHivTest,\n" +
+          "            hts_en.observation->>'dateOfVisit' dateOfVisit,\n" +
+          "            hts_en.observation->>'suspectedAcuteInfection' suspectedAcuteInfection,\n" +
+          "            hts_en.observation->>'confirmatoryHivTest' confirmatoryHivTest,\n" +
+          "            hts_en.observation->>'syphilisTestResult' syphilisTestResult,\n" +
+          "            hts_en.observation->>'recencyTest' recencyTest,\n" +
+          "            hts_en.observation->>'previouslyTestedThisYear' previouslyTestedThisYear,\n" +
+          "\t\t  CAST(CASE WHEN UPPER(hts_en.observation->>'acceptedIndexTesting') = 'YES_NO_YES' THEN true\n" +
+          "          WHEN UPPER(hts_en.observation->>'acceptedIndexTesting') = 'YES_NO_NO' THEN false\n" +
+          "          ELSE NULL END AS boolean) AS acceptedIndexTesting,\n" +
+          "          CAST(CASE WHEN UPPER(hts_en.observation->>'providedFpInfo') = 'YES_NO_YES' THEN true\n" +
+          "          WHEN UPPER(hts_en.observation->>'providedFpInfo') = 'YES_NO_NO' THEN false\n" +
+          "          ELSE NULL END AS boolean) AS providedWithInformationOnFPandDualContraception,\n" +
+          "          CAST(CASE WHEN UPPER(hts_en.observation->>'clientPartnerUseFpMethods') = 'YES_NO_YES' THEN true\n" +
+          "          WHEN UPPER(hts_en.observation->>'clientPartnerUseFpMethods') = 'YES_NO_NO' THEN false\n" +
+          "          ELSE NULL END AS boolean) AS clientOrPartnerUseFPMethodsOtherThanCondoms,\n" +
+          "          CAST(CASE WHEN UPPER(hts_en.observation->>'clientPartnerUseCondoms') = 'YES_NO_YES' THEN true\n" +
+          "          WHEN UPPER(hts_en.observation->>'clientPartnerUseCondoms') = 'YES_NO_NO' THEN false\n" +
+          "          ELSE NULL END AS boolean) AS clientOrPartnerUseCondomsAsOneFPMethods,\n" +
+          "\t\t  CAST(CASE WHEN UPPER(hts_en.observation->>'clientReceivedTestResult') = 'YES_NO_YES' THEN true\n" +
+          "          WHEN UPPER(hts_en.observation->>'clientReceivedTestResult') = 'YES_NO_NO' THEN false\n" +
+          "          ELSE NULL END AS boolean) AS clientRecievedHIVTestResult,\n" +
+          "          CAST(CASE WHEN UPPER(hts_en.observation->>'correctCondomUseDemonstrated') = 'YES_NO_YES' THEN true\n" +
+          "          WHEN UPPER(hts_en.observation->>'correctCondomUseDemonstrated') = 'YES_NO_NO' THEN false\n" +
+          "          ELSE NULL END AS boolean) AS correctCondomUseDemonstrated,\n" +
+          "          CAST(CASE WHEN UPPER(hts_en.observation->>'hivTestKitsProvided') = 'YES_NO_YES' THEN true\n" +
+          "          WHEN UPPER(hts_en.observation->>'hivTestKitsProvided') = 'YES_NO_NO' THEN false\n" +
+          "          ELSE NULL END AS boolean) AS hivSelfTestKitsProvided,\n" +
+          "          CAST(CASE WHEN UPPER(hts_en.observation->>'condomsProvided') = 'YES_NO_YES' THEN true\n" +
+          "          WHEN UPPER(hts_en.observation->>'condomsProvided') = 'YES_NO_NO' THEN false\n" +
+          "          ELSE NULL END AS boolean) AS condomsProvidedToClient,\n" +
+          "          \thts_en.observation->>'categoryOfClients' categoryOfClient,\n" +
+          "          CAST(CASE WHEN UPPER(hts_en.observation->>'clientReferredToOtherServices') = 'YES_NO_YES' THEN true\n" +
+          "          WHEN UPPER(hts_en.observation->>'clientReferredToOtherServices') = 'YES_NO_NO' THEN false\n" +
+          "          ELSE NULL END AS boolean) AS clientReferredToOtherServices,\n" +
+          "            hts_icten.client_category client_category,\n" +
+          "            hts_icten.offered_pns offered_pns,\n" +
+          "            hts_icten.accepted_pns accepted_pns,\n" +
+          "            hts_ictcon.relationship_to_index relationship_to_index,\n" +
+          "            --   hts_ictcon.contact_sex,\n" +
+          "            --   hts_ictcon.contact_age_group,\n" +
+          "            hts_ictcon.notification_method,\n" +
+          "            hts_ictcon.follow_up_location,\n" +
+          "            hts_ictcon.attempts,\n" +
+          "            hts_ictcon.known_hiv_positive,\n" +
+          "            hts_ictcon.hiv_test_result,\n" +
+          "            hts_ictcon.date_tested_hiv,\n" +
+          "            hts_ictcon.date_enrolled_art,\n" +
+          "            hts_ictcon.date_enrolled_ovc,\n" +
+          "            hts_ictcon.ovc_id\n" +
+          "            FROM public.hts_encounter hts_en\n" +
+          "            JOIN public.hts_ict_encounter hts_icten ON hts_en.id=hts_icten.hts_encounter_id\n" +
+          "            JOIN public.hts_ict_contact hts_ictcon ON hts_icten.id=hts_ictcon.ict_encounter_id\n" +
+          "            LEFT JOIN public.base_organisation_unit boustate ON boustate.id=(CASE WHEN hts_en.observation ->> 'stateId' ~ '^[0-9]+$' THEN CAST((hts_en.observation ->> 'stateId') AS int) ELSE NULL END)\n" +
+          "            LEFT JOIN public.base_organisation_unit boudistrict ON boudistrict.id=(CASE WHEN hts_en.observation ->> 'district' ~ '^[0-9]+$' THEN CAST((hts_en.observation ->> 'district') AS int) ELSE NULL END)\n" +
+          "            LEFT JOIN public.base_application_codeset bacmarital ON bacmarital.id=(CASE WHEN hts_en.observation ->> 'maritalStatusId' ~ '^[0-9]+$' THEN CAST((hts_en.observation ->> 'maritalStatusId') AS int) ELSE NULL END)\n" +
+          "          WHERE hts_en.facility_id= ?1\n" +
+          "          AND hts_en.client_code = ?2\n" +
+          "          AND hts_en.date_modified > ?3 \n" +
+          "          AND hts_en.archived = false", nativeQuery = true) List<HtsReportDto> getHstReportByClientCodeAndLastModified(Long facilityId, String clientCode, LocalDateTime lastModified);
 
    @Query(value = "SELECT DISTINCT p.uuid FROM patient_person AS p\n" +
             "\tJOIN hiv_enrollment AS e on e.person_uuid = p.uuid\n" +

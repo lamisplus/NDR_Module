@@ -36,6 +36,7 @@ public class HtsEncounterReportTypeMapper {
     private static final Map<Boolean, String> BOOLEAN_TO_YN = new HashMap<>();
     private static final Map<Boolean, String> BOOLEAN_TO_YES_NO = new HashMap<>();
     private static final Map<String, String> RELATIONSHIP_TO_INDEX = new HashMap<>();
+    private static final Map<String, String> CLIENT_OF_CATEGORY_MAPPING = new HashMap<>();
 
 
     static {
@@ -99,6 +100,11 @@ public class HtsEncounterReportTypeMapper {
         CLIENT_CATEGORY_MAPPING.put("VIRALLY_UNSUPPRESSED", "VU");
         CLIENT_CATEGORY_MAPPING.put("RETURNED_TO_TREATMENT", "RTT");
         CLIENT_CATEGORY_MAPPING.put("OTHER", "OT");
+
+        CLIENT_OF_CATEGORY_MAPPING.put("SELF","S");
+        CLIENT_OF_CATEGORY_MAPPING.put("PARTNER","P");
+        CLIENT_OF_CATEGORY_MAPPING.put("CAREGIVER","CG");
+        CLIENT_OF_CATEGORY_MAPPING.put("SOCIAL NETWORK","SN");
 
         // Relationship to Index mappings (NDR numeric codes)
         RELATIONSHIP_TO_INDEX_MAPPING.put("MOTHER", "1");
@@ -186,7 +192,7 @@ public class HtsEncounterReportTypeMapper {
         setIfPresent(projection.getSyphilisTestResult(), reportType::setSyphilisTestResult, this::mapSyphilisResult);
 
         reportType.setPreTestInformation(buildPreTestInformation(objectFactory, projection));
-//        reportType.setPostTestCounselling(buildPostTestCounselling(objectFactory, projection));
+        reportType.setPostTestCounselling(buildPostTestCounselling(objectFactory, projection));
 //        reportType.setIndexContactTesting(buildIndexContactTesting(objectFactory, projection));
 //        reportType.setHIVTestResult(buildHIVTestResult(objectFactory, projection));
     }
@@ -198,9 +204,9 @@ public class HtsEncounterReportTypeMapper {
 
         preTest.setKnowledgeAssessment(buildKnowledgeAssessment(factory, p));
         preTest.setHIVRiskAssessment(buildHIVRiskAssessment(factory, p));
-//        preTest.setClinicalTBScreening(buildClinicalTBScreening(factory, p));
-//        preTest.setSyndromicSTIScreening(buildSyndromicSTIScreening(factory, p));
-//        preTest.setSexPartnerRiskAssessment(buildSexPartnerRiskAssessment(factory, p));
+        preTest.setClinicalTBScreening(buildClinicalTBScreening(factory, p));
+        preTest.setSyndromicSTIScreening(buildSyndromicSTIScreening(factory, p));
+        preTest.setSexPartnerRiskAssessment(buildSexPartnerRiskAssessment(factory, p));
 
         return preTest;
     }
@@ -263,7 +269,7 @@ public class HtsEncounterReportTypeMapper {
         SexPartnerRiskAssessmentType assessment = factory.createSexPartnerRiskAssessmentType();
 
         setBooleanIfPresent(p.getPartnerNewlyDiagnosedOnARTLessThan3To6Months(), assessment::setPartnerNewlyDiagnosedOnARTLessThan3To6Months);
-        setBooleanIfPresent(p.getPartnerPregnantReceivingARVForPMTCT(), assessment::setPartnerPregnantReceivingARVForPMTCT);
+//        setBooleanIfPresent(p.getPartnerPregnantReceivingARVForPMTCT(), assessment::setPartnerPregnantReceivingARVForPMTCT);
         setBooleanIfPresent(p.getPartnerAdolescent10To19KnownHIVInfected(), assessment::setPartnerAdolescent10To19KnownHIVInfected);
         setBooleanIfPresent(p.getPartnerKnownPositiveNotRegularlyOnDrugs(), assessment::setPartnerKnownPositiveNotRegularlyOnDrugs);
         setBooleanIfPresent(p.getPartnerKnownPositiveRecentlyReturnedAfterLTFU(), assessment::setPartnerKnownPositiveRecentlyReturnedAfterLTFU);
@@ -401,8 +407,8 @@ public class HtsEncounterReportTypeMapper {
         setBooleanAsYesNo(p.getCorrectCondomUseDemonstrated(), postTest::setCorrectCondomUseDemonstrated);
         setBooleanAsYesNo(p.getCondomsProvidedToClient(), postTest::setCondomsProvidedToClient);
         setBooleanAsYesNo(p.getHivSelfTestKitsProvided(), postTest::setHIVSelfTestKitsProvided);
-        setIfPresent(p.getHivSelfTestKitsCount(), postTest::setHIVSelfTestKitsCount);
-        setBooleanAsYesNo(p.getClientReferredToOtherServices(), postTest::setClientReferredToOtherServices);
+//        setIfPresent(p.getHivSelfTestKitsCount(), postTest::setHIVSelfTestKitsCount);
+        setBooleanAsYesNo(p.getClientReferredToOtherServices(), postTest::setClientReferredToOtherServices); // TODO: get correct value
 
         // Category of client
         setIfPresent(p.getCategoryOfClient(), postTest::setCategoryOfClient, this::mapCategoryOfClient);
@@ -588,20 +594,19 @@ public class HtsEncounterReportTypeMapper {
         return upperType.equalsIgnoreCase("POSITIVE") ? "R" : "NR";
     }
     private String mapCategoryOfClient(String category) {
-        if (category == null) {
+
+        if (category == null || category.isEmpty()) {
             return "S";
         }
-        String upperCategory = category.toUpperCase();
-        switch (upperCategory) {
-            case "PARTNER":
-                return "P";
-            case "CAREGIVER":
-                return "CG";
-            case "SOCIAL_NETWORK":
-                return "SN";
-            default:
-                return "S";
+        String upperType = category.toUpperCase().replace("TARGET_GROUP_", "").trim();
+
+        String mappedValue = CLIENT_OF_CATEGORY_MAPPING.get(upperType);
+        if (mappedValue != null) {
+            return mappedValue;
         }
+
+        log.warn("Unknown client of category: {}, defaulting to Individual (1)", upperType);
+        return "S";
     }
 
     private String determineFinalResult(String confirmatoryResult) {
