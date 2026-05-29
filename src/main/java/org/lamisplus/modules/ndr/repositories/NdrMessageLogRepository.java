@@ -919,15 +919,15 @@ public interface NdrMessageLogRepository extends JpaRepository<NdrMessageLog, In
 //          "          AND hc.archived = 0 ", nativeQuery = true) List<HtsReportDto> getHstReportByClientCodeAndLastModified(Long facilityId, String clientCode, LocalDateTime lastModified);
 
   // Hst Report By ClientCode And LastModified updated
-  @Query(value = "SELECT \n" +
+  @Query(value = "SELECT DISTINCT\n" +
           "          hts_en.client_code AS clientCode, \n" +
           "          CAST(hts_en.uuid AS VARCHAR) AS visitId,\n" +
           "          hts_en.date_of_visit AS visitDate,\n" +
           "          hts_en.setting,\n" +
-          "          hts_en.observation->>'age' age,\n" +
-          "          hts_en.observation->>'sex' sex,\n" +
+          "          EXTRACT( YEAR FROM AGE(pp.date_of_birth)) AS age,\n" +
+          "          pp.sex AS sex,\n" +
           "          -- hts_en.observation->>'maritalStatusId' maritalStatusId,\n" +
-          "          bacmarital.display maritalStatus,\n" +
+          "          pp.marital_status->>'display' maritalStatus,\n" +
           "          hts_en.observation->>'numberOfWives' noOfAllWives,\n" +
           "          hts_en.observation->>'numberOfBiologicalChildren' noOfOwnChildrenLessThan15Years,\n" +
           "          -- hts_en.observation ->> 'stateId' stateId, \n" +
@@ -936,7 +936,6 @@ public interface NdrMessageLogRepository extends JpaRepository<NdrMessageLog, In
           "          boudistrict.name AS lgaOfResidence,\n" +
           "          hts_en.observation->>'typeOfSession' sessionType,\n" +
           "          hts_icten.data->>'indexClientId' indexClientId, \n" +
-          "          hts_ictcon.relationship_to_index AS relationshipToIndex,\n" +
           "          hts_en.observation->>'pregnancyStatus' clientIsPregnant,\n" +
           "          (CASE WHEN hts_en.observation->>'pregnancyStatus' ILIKE '%BreastFeeding%' THEN true ELSE false END) BreastFeeding,\n" +
           "          hts_en.observation->>'breastfeedingDuration' durationOfBreastfeeding,\n" +
@@ -956,7 +955,7 @@ public interface NdrMessageLogRepository extends JpaRepository<NdrMessageLog, In
           "          CAST(CASE WHEN UPPER(hts_en.observation->>'clientInformedPossibleResults') = 'YES_NO_YES' THEN true\n" +
           "          WHEN UPPER(hts_en.observation->>'clientInformedPossibleResults') = 'YES_NO_NO' THEN false\n" +
           "          ELSE NULL END AS boolean) AS clientInformedAboutPossibleTestResults,\n" +
-          "            CAST(CASE WHEN UPPER(hts_en.observation->>'informedConsentGiven') = 'YES_NO_YES' THEN true\n" +
+          "          CAST(CASE WHEN UPPER(hts_en.observation->>'informedConsentGiven') = 'YES_NO_YES' THEN true\n" +
           "          WHEN UPPER(hts_en.observation->>'informedConsentGiven') = 'YES_NO_NO' THEN false\n" +
           "          ELSE NULL END AS boolean) AS informedConsentForHIVTestingGiven,\n" +
           "          CAST(CASE WHEN UPPER(hts_en.observation->>'pregnancyStatus') = 'PREGANACY_STATUS_PREGNANT' THEN true\n" +
@@ -964,7 +963,7 @@ public interface NdrMessageLogRepository extends JpaRepository<NdrMessageLog, In
           "          CAST(CASE WHEN UPPER(hts_en.observation->>'everHadSexualIntercourse') = 'YES_NO_YES' THEN true\n" +
           "          WHEN UPPER(hts_en.observation->>'everHadSexualIntercourse') = 'YES_NO_NO' THEN false\n" +
           "          ELSE NULL END AS boolean) AS everHadSexualIntercourse,\n" +
-          "            CAST(CASE WHEN UPPER(hts_en.observation->>'moreThanOneSexPartner') = 'YES_NO_YES' THEN true\n" +
+          "          CAST(CASE WHEN UPPER(hts_en.observation->>'moreThanOneSexPartner') = 'YES_NO_YES' THEN true\n" +
           "          WHEN UPPER(hts_en.observation->>'moreThanOneSexPartner') = 'YES_NO_NO' THEN false\n" +
           "          ELSE NULL END AS boolean) AS moreThan1SexPartnerDuringLast3Months,\n" +
           "          CAST(CASE WHEN UPPER(hts_en.observation->>'unprotectedVaginalSex') = 'YES_NO_YES' THEN true\n" +
@@ -1030,7 +1029,7 @@ public interface NdrMessageLogRepository extends JpaRepository<NdrMessageLog, In
           "            hts_en.observation->>'syphilisTestResult' syphilisTestResult,\n" +
           "            hts_en.observation->>'recencyTest' recencyTest,\n" +
           "            hts_en.observation->>'previouslyTestedThisYear' previouslyTestedThisYear,\n" +
-          "\t\t  CAST(CASE WHEN UPPER(hts_en.observation->>'acceptedIndexTesting') = 'YES_NO_YES' THEN true\n" +
+          "          CAST(CASE WHEN UPPER(hts_en.observation->>'acceptedIndexTesting') = 'YES_NO_YES' THEN true\n" +
           "          WHEN UPPER(hts_en.observation->>'acceptedIndexTesting') = 'YES_NO_NO' THEN false\n" +
           "          ELSE NULL END AS boolean) AS acceptedIndexTesting,\n" +
           "          CAST(CASE WHEN UPPER(hts_en.observation->>'providedFpInfo') = 'YES_NO_YES' THEN true\n" +
@@ -1042,7 +1041,7 @@ public interface NdrMessageLogRepository extends JpaRepository<NdrMessageLog, In
           "          CAST(CASE WHEN UPPER(hts_en.observation->>'clientPartnerUseCondoms') = 'YES_NO_YES' THEN true\n" +
           "          WHEN UPPER(hts_en.observation->>'clientPartnerUseCondoms') = 'YES_NO_NO' THEN false\n" +
           "          ELSE NULL END AS boolean) AS clientOrPartnerUseCondomsAsOneFPMethods,\n" +
-          "\t\t  CAST(CASE WHEN UPPER(hts_en.observation->>'clientReceivedTestResult') = 'YES_NO_YES' THEN true\n" +
+          "          CAST(CASE WHEN UPPER(hts_en.observation->>'clientReceivedTestResult') = 'YES_NO_YES' THEN true\n" +
           "          WHEN UPPER(hts_en.observation->>'clientReceivedTestResult') = 'YES_NO_NO' THEN false\n" +
           "          ELSE NULL END AS boolean) AS clientRecievedHIVTestResult,\n" +
           "          CAST(CASE WHEN UPPER(hts_en.observation->>'correctCondomUseDemonstrated') = 'YES_NO_YES' THEN true\n" +
@@ -1054,28 +1053,31 @@ public interface NdrMessageLogRepository extends JpaRepository<NdrMessageLog, In
           "          CAST(CASE WHEN UPPER(hts_en.observation->>'condomsProvided') = 'YES_NO_YES' THEN true\n" +
           "          WHEN UPPER(hts_en.observation->>'condomsProvided') = 'YES_NO_NO' THEN false\n" +
           "          ELSE NULL END AS boolean) AS condomsProvidedToClient,\n" +
-          "          \thts_en.observation->>'categoryOfClients' categoryOfClient,\n" +
+          "          hts_en.observation->>'categoryOfClients' categoryOfClient,\n" +
           "          CAST(CASE WHEN UPPER(hts_en.observation->>'clientReferredToOtherServices') = 'YES_NO_YES' THEN true\n" +
           "          WHEN UPPER(hts_en.observation->>'clientReferredToOtherServices') = 'YES_NO_NO' THEN false\n" +
           "          ELSE NULL END AS boolean) AS clientReferredToOtherServices,\n" +
-          "            hts_icten.client_category client_category,\n" +
-          "            hts_icten.offered_pns offered_pns,\n" +
-          "            hts_icten.accepted_pns accepted_pns,\n" +
-          "            hts_ictcon.relationship_to_index relationship_to_index,\n" +
-          "            --   hts_ictcon.contact_sex,\n" +
-          "            --   hts_ictcon.contact_age_group,\n" +
-          "            hts_ictcon.notification_method,\n" +
-          "            hts_ictcon.follow_up_location,\n" +
-          "            hts_ictcon.attempts,\n" +
-          "            hts_ictcon.known_hiv_positive,\n" +
-          "            hts_ictcon.hiv_test_result,\n" +
-          "            hts_ictcon.date_tested_hiv,\n" +
-          "            hts_ictcon.date_enrolled_art,\n" +
-          "            hts_ictcon.date_enrolled_ovc,\n" +
-          "            hts_ictcon.ovc_id\n" +
+          "            hts_icten.client_category clientCategory,\n" +
+          "            hts_icten.offered_pns offeredPns,\n" +
+          "            hts_icten.accepted_pns acceptedPns,\n" +
+          "            hts_ictcon.relationship_to_index relationshipToIndex,\n" +
+          "\t\t\thts_ictcon.contact_code serialNo,\n" +
+          "\t\t\thts_ictcon.art_clinic artClinic,\n" +
+          "            hts_ictcon.sex contactSex,\n" +
+          "            hts_ictcon.age ageGroup,\n" +
+          "            hts_ictcon.notification_method notificationMethod,\n" +
+          "            hts_ictcon.follow_up_location followUpAppointmentLocation,\n" +
+          "            hts_ictcon.attempts contactAttempts,\n" +
+          "            hts_ictcon.known_hiv_positive knownHIVPositive,\n" +
+          "            hts_ictcon.hiv_test_result hivTestResult,\n" +
+          "            hts_ictcon.date_tested_hiv dateTested,\n" +
+          "            hts_ictcon.date_enrolled_art dateEnrolledOnART,\n" +
+          "            hts_ictcon.date_enrolled_ovc dateEnrolledInOVC,\n" +
+          "            hts_ictcon.ovc_id ovcid\n" +
           "            FROM public.hts_encounter hts_en\n" +
           "            JOIN public.hts_ict_encounter hts_icten ON hts_en.id=hts_icten.hts_encounter_id\n" +
           "            JOIN public.hts_ict_contact hts_ictcon ON hts_icten.id=hts_ictcon.ict_encounter_id\n" +
+          "            LEFT JOIN public.patient_person pp ON hts_en.patient_uuid = pp.uuid\n" +
           "            LEFT JOIN public.base_organisation_unit boustate ON boustate.id=(CASE WHEN hts_en.observation ->> 'stateId' ~ '^[0-9]+$' THEN CAST((hts_en.observation ->> 'stateId') AS int) ELSE NULL END)\n" +
           "            LEFT JOIN public.base_organisation_unit boudistrict ON boudistrict.id=(CASE WHEN hts_en.observation ->> 'district' ~ '^[0-9]+$' THEN CAST((hts_en.observation ->> 'district') AS int) ELSE NULL END)\n" +
           "            LEFT JOIN public.base_application_codeset bacmarital ON bacmarital.id=(CASE WHEN hts_en.observation ->> 'maritalStatusId' ~ '^[0-9]+$' THEN CAST((hts_en.observation ->> 'maritalStatusId') AS int) ELSE NULL END)\n" +

@@ -31,6 +31,7 @@ public class HtsEncounterReportTypeMapper {
     private static final Map<String, String> REFERRED_FROM_MAPPING = new HashMap<>();
     private static final Map<String, String> CLIENT_CATEGORY_MAPPING = new HashMap<>();
     private static final Map<String, String> RELATIONSHIP_TO_INDEX_MAPPING = new HashMap<>();
+    private static final Map<String, String> RELATIONSHIP_TO_INDEX_CONTACT_MAPPING = new HashMap<>();
     private static final Map<String, String> NOTIFICATION_METHOD_MAPPING = new HashMap<>();
     private static final Map<String, String> FOLLOW_UP_LOCATION_MAPPING = new HashMap<>();
     private static final Map<Boolean, String> BOOLEAN_TO_YN = new HashMap<>();
@@ -61,16 +62,6 @@ public class HtsEncounterReportTypeMapper {
         SESSION_TYPE_MAPPING.put("INDEX", "3");
         SESSION_TYPE_MAPPING.put("PREVIOUSLY_SELF_TESTED", "4");
         SESSION_TYPE_MAPPING.put("SELF_TESTED", "4");
-
-        //Relationship to index
-        RELATIONSHIP_TO_INDEX.put("MOTHER", "M");
-        RELATIONSHIP_TO_INDEX.put("FATHER", "F");
-        RELATIONSHIP_TO_INDEX.put("BIOLOGICAL_CHILD", "C");
-        RELATIONSHIP_TO_INDEX.put("SPOUSE", "S");
-        RELATIONSHIP_TO_INDEX.put("LIVE-IN_PARTNERS", "L");
-        RELATIONSHIP_TO_INDEX.put("BOYFRIEND_GIRLFRIEND", "B");
-        RELATIONSHIP_TO_INDEX.put("CASUAL_PARTNER", "P");
-        RELATIONSHIP_TO_INDEX.put("SOCIAL_NETWORK", "N");
 
         // Marital status mappings
         MARITAL_STATUS_MAPPING.put("Married", "M");
@@ -107,28 +98,37 @@ public class HtsEncounterReportTypeMapper {
         CLIENT_OF_CATEGORY_MAPPING.put("SOCIAL NETWORK","SN");
 
         // Relationship to Index mappings (NDR numeric codes)
-        RELATIONSHIP_TO_INDEX_MAPPING.put("MOTHER", "1");
-        RELATIONSHIP_TO_INDEX_MAPPING.put("FATHER", "2");
-        RELATIONSHIP_TO_INDEX_MAPPING.put("BIOLOGICAL_CHILD", "3");
-        RELATIONSHIP_TO_INDEX_MAPPING.put("SPOUSE", "4");
-        RELATIONSHIP_TO_INDEX_MAPPING.put("LIVE_IN_PARTNER", "5");
-        RELATIONSHIP_TO_INDEX_MAPPING.put("BOYFRIEND_GIRLFRIEND", "6");
-        RELATIONSHIP_TO_INDEX_MAPPING.put("CASUAL_PARTNER", "7");
-        RELATIONSHIP_TO_INDEX_MAPPING.put("SOCIAL_NETWORK", "8");
+        RELATIONSHIP_TO_INDEX_MAPPING.put("MOTHER", "M");
+        RELATIONSHIP_TO_INDEX_MAPPING.put("FATHER", "F");
+        RELATIONSHIP_TO_INDEX_MAPPING.put("BIOLOGICAL_CHILD", "C");
+        RELATIONSHIP_TO_INDEX_MAPPING.put("SPOUSE", "S");
+        RELATIONSHIP_TO_INDEX_MAPPING.put("LIVE_IN_PARTNER", "L");
+        RELATIONSHIP_TO_INDEX_MAPPING.put("BOYFRIEND_GIRLFRIEND", "B");
+        RELATIONSHIP_TO_INDEX_MAPPING.put("CASUAL_PARTNER", "P");
+        RELATIONSHIP_TO_INDEX_MAPPING.put("SOCIAL_NETWORK", "N");
+
+        RELATIONSHIP_TO_INDEX_CONTACT_MAPPING.put("MOTHER", "1");
+        RELATIONSHIP_TO_INDEX_CONTACT_MAPPING.put("FATHER", "2");
+        RELATIONSHIP_TO_INDEX_CONTACT_MAPPING.put("BIOLOGICAL_CHILD", "3");
+        RELATIONSHIP_TO_INDEX_CONTACT_MAPPING.put("SPOUSE", "4");
+        RELATIONSHIP_TO_INDEX_CONTACT_MAPPING.put("LIVE_IN_PARTNER", "5");
+        RELATIONSHIP_TO_INDEX_CONTACT_MAPPING.put("BOYFRIEND_GIRLFRIEND", "6");
+        RELATIONSHIP_TO_INDEX_CONTACT_MAPPING.put("CASUAL_PARTNER", "7");
+        RELATIONSHIP_TO_INDEX_CONTACT_MAPPING.put("SOCIAL_NETWORK", "8");
 
         // Notification Method mappings
-        NOTIFICATION_METHOD_MAPPING.put("PASSIVE_CLIENT_REFERRAL", "A");
-        NOTIFICATION_METHOD_MAPPING.put("PROVIDER_ASSISTED", "B");
-        NOTIFICATION_METHOD_MAPPING.put("CONTRACT", "C");
-        NOTIFICATION_METHOD_MAPPING.put("DUAL_REFERRAL", "D");
-        NOTIFICATION_METHOD_MAPPING.put("NO_NOTIFICATION_NEEDED", "E");
-        NOTIFICATION_METHOD_MAPPING.put("NOT_RECOMMENDED", "F");
+        NOTIFICATION_METHOD_MAPPING.put("PROVIDER_ASSISTED", "A");
+        NOTIFICATION_METHOD_MAPPING.put("PASSIVE_NOTIFICATIONSELF", "B");
+        NOTIFICATION_METHOD_MAPPING.put("CONTRACTED", "C");
+        NOTIFICATION_METHOD_MAPPING.put("HOUSEHOLD_REFERRALCLUSTERING", "D");
+        NOTIFICATION_METHOD_MAPPING.put("NO_NOTIFICATION_NEEDED_KNOWN_HIV_POSITIVE", "E");
+        NOTIFICATION_METHOD_MAPPING.put("NOTIFICATION_NOT_RECOMMENDED_FOR_SAFETY_OF_INDEX_CLIENT", "F");
 
         // Follow-up Location mappings
         FOLLOW_UP_LOCATION_MAPPING.put("FACILITY", "FAC");
         FOLLOW_UP_LOCATION_MAPPING.put("WORKPLACE", "WRK");
         FOLLOW_UP_LOCATION_MAPPING.put("HOME", "HOM");
-        FOLLOW_UP_LOCATION_MAPPING.put("OTHER", "OTH");
+        FOLLOW_UP_LOCATION_MAPPING.put("OTHERS", "OTH");
     }
 
     public boolean getHivTestingReportType(
@@ -193,7 +193,7 @@ public class HtsEncounterReportTypeMapper {
 
         reportType.setPreTestInformation(buildPreTestInformation(objectFactory, projection));
         reportType.setPostTestCounselling(buildPostTestCounselling(objectFactory, projection));
-//        reportType.setIndexContactTesting(buildIndexContactTesting(objectFactory, projection));
+        reportType.setIndexContactTesting(buildIndexContactTesting(objectFactory, projection));
 //        reportType.setHIVTestResult(buildHIVTestResult(objectFactory, projection));
     }
 
@@ -328,17 +328,18 @@ public class HtsEncounterReportTypeMapper {
 
         IndexContactTestingType indexContact = factory.createIndexContactTestingType();
 
-        setIfPresent(p.getArtClinic(), indexContact::setARTClinic, this::mapYesNoToCode);
-        if (indexContact.getARTClinic() == null) {
-            indexContact.setARTClinic("N");
-        }
+//        setIfPresent(p.getArtClinic(), indexContact::setARTClinic, this::mapYesNoToCode);
+//        if (indexContact.getARTClinic() == null) {
+//            indexContact.setARTClinic("N");
+//        }
+        setIfPresent(p.getArtClinic() != null ? "Y" : "N", indexContact::setARTClinic);
         setIfPresent(p.getIndexClientIDType(), indexContact::setIndexClientIDType, this::mapIndexClientIdType);
         setIfPresent(p.getIndexClientID(), indexContact::setIndexClientID);
-        setIfPresent(p.getIndexClientLGA(), indexContact::setIndexClientLGA);
-        setIfPresent(p.getIndexClientState(), indexContact::setIndexClientState);
-        setIfPresent(p.getClientCategory(), indexContact::setClientCategory, this::mapClientCategory);
-        setIfPresent(p.getOfferedIndexTestingServices(), indexContact::setOfferedIndexTestingServices, this::mapYesNoToCode);
-        setIfPresent(p.getAcceptedIndexTestingServices(), indexContact::setAcceptedIndexTestingServices, this::mapYesNoToCode);
+        //setIfPresent(p.getIndexClientLGA(), indexContact::setIndexClientLGA);
+        //setIfPresent(p.getIndexClientState(), indexContact::setIndexClientState);
+        setIfPresent(p.getClientCategory(), indexContact::setClientCategory, this::mapClientCategory); //required
+        setIfPresent(p.getOfferedPns(), indexContact::setOfferedIndexTestingServices, this::mapYesNoToCode); //required
+        setIfPresent(p.getAcceptedPns(), indexContact::setAcceptedIndexTestingServices, this::mapYesNoToCode); //required
 
         List<IndexContactType> contacts = buildIndexContacts(factory, p);
         if (!contacts.isEmpty()) {
@@ -361,13 +362,13 @@ public class HtsEncounterReportTypeMapper {
 
         IndexContactType contact = factory.createIndexContactType();
 
-        contact.setSerialNo(p.getSerialNo());
+        contact.setSerialNo(p.getSerialNo()); //required
 
-        setIfPresent(p.getRelationshipToIndex(), contact::setRelationshipToIndex, this::mapRelationshipToIndex);
+        setIfPresent(p.getRelationshipToIndex(), contact::setRelationshipToIndex, this::mapRelationshipToIndexContact); //required
 
-        setIfPresent(p.getSex(), contact::setSex, this::mapSex);
+        setIfPresent(p.getContactSex(), contact::setSex, this::mapSex); //required
 
-        setIfPresent(p.getAgeGroup(), contact::setAgeGroup, this::mapAgeGroup);
+        setIfPresent(p.getAgeGroup(), contact::setAgeGroup, this::mapAgeGroup); //required
 
         setIfPresent(p.getNotificationMethod(), contact::setNotificationMethod, this::mapNotificationMethod);
 
@@ -430,7 +431,23 @@ public class HtsEncounterReportTypeMapper {
             return mappedValue;
         }
 
-        log.warn("Unknown session type: {}, defaulting to Individual (1)", relation);
+        log.warn("Unknown session type: {} {}, defaulting to Individual (1) (2)", relation, mappedValue);
+        return "P";
+    }
+
+    private String mapRelationshipToIndexContact(String relation) {
+        if (relation == null || relation.isEmpty()) {
+            return "P"; // Default to Individual
+        }
+
+        String upperType = relation.toUpperCase().replace("RELATIONSHIP_CONTACT_", "").trim();
+
+        String mappedValue = RELATIONSHIP_TO_INDEX_CONTACT_MAPPING.get(upperType);
+        if (mappedValue != null) {
+            return mappedValue;
+        }
+
+        log.warn("Unknown session type: {} {}, defaulting to Individual (1) (2)", relation, mappedValue);
         return "P";
     }
     private Integer parseInteger(String value) {
@@ -445,7 +462,7 @@ public class HtsEncounterReportTypeMapper {
     }
     private String mapTestResultCode(String result) {
         if (result == null) {
-            return null;
+            return "Neg";
         }
         String upperResult = result.toUpperCase();
         if (upperResult.equals("POSITIVE") || upperResult.equals("POS") || upperResult.equals("R")) {
@@ -454,41 +471,32 @@ public class HtsEncounterReportTypeMapper {
         if (upperResult.equals("NEGATIVE") || upperResult.equals("NEG") || upperResult.equals("NR")) {
             return "Neg";
         }
-        return null;
+        return "Neg";
     }
     private String mapNotificationMethod(String method) {
         if (method == null) {
-            return null;
+            return "A";
         }
-        String upperMethod = method.toUpperCase();
-        for (Map.Entry<String, String> entry : NOTIFICATION_METHOD_MAPPING.entrySet()) {
-            if (upperMethod.contains(entry.getKey())) {
-                return entry.getValue();
-            }
-        }
+        String upperType = method.toUpperCase().replace("NOTIFICATION_CONTACT_", "").trim();
 
-        if (upperMethod.contains("PASSIVE") || upperMethod.contains("CLIENT REFERRAL")) return "A";
-        if (upperMethod.contains("PROVIDER")) return "B";
-        if (upperMethod.contains("CONTRACT")) return "C";
-        if (upperMethod.contains("DUAL")) return "D";
-        if (upperMethod.contains("NO NOTIFICATION") || upperMethod.contains("KNOWN POSITIVE")) return "E";
-        if (upperMethod.contains("NOT RECOMMENDED") || upperMethod.contains("SAFETY")) return "F";
-        return null;
+        String mappedValue = NOTIFICATION_METHOD_MAPPING.get(upperType);
+        if (mappedValue != null) {
+            return mappedValue;
+        }
+        return "A";
     }
     private String mapFollowUpLocation(String location) {
         if (location == null) {
             return null;
         }
-        String upperLoc = location.toUpperCase();
-        for (Map.Entry<String, String> entry : FOLLOW_UP_LOCATION_MAPPING.entrySet()) {
-            if (upperLoc.contains(entry.getKey())) {
-                return entry.getValue();
-            }
+
+        String upperType = location.toUpperCase().replace("FOLLOW UP_APPOINTMENT_LOCATION_", "").trim();
+
+        String mappedValue = FOLLOW_UP_LOCATION_MAPPING.get(upperType);
+        if (mappedValue != null) {
+            return mappedValue;
         }
 
-        if (upperLoc.contains("FACILITY") || upperLoc.contains("CLINIC")) return "FAC";
-        if (upperLoc.contains("WORK") || upperLoc.contains("OFFICE")) return "WRK";
-        if (upperLoc.contains("HOME") || upperLoc.contains("RESIDENCE")) return "HOM";
         return "OTH";
     }
     private String mapSex(String sex) {
@@ -496,32 +504,32 @@ public class HtsEncounterReportTypeMapper {
             return null;
         }
         String upperSex = sex.toUpperCase();
-        if (upperSex.contains("SEX_MALE")) return "M";
-        if (upperSex.startsWith("SEX_FEMALE")) return "F";
+        if (upperSex.contains("SEX_MALE") || upperSex.contains("MALE")) return "M";
+        if (upperSex.startsWith("SEX_FEMALE") || upperSex.contains("FEMALE")) return "F";
         return null;
     }
     private String mapAgeGroup(String ageGroup) {
         if (ageGroup == null) {
-            return null;
-        }
-        String upperGroup = ageGroup.toUpperCase();
-        if (upperGroup.contains("LT15") || upperGroup.contains("LESS THAN 15") || upperGroup.contains("<15")) {
             return "LT15";
         }
-        if (upperGroup.contains("GTE15") || upperGroup.contains("15 AND ABOVE") || upperGroup.contains("≥15") || upperGroup.contains(">=")) {
-            return "GTE15";
-        }
+//        String upperGroup = ageGroup.toUpperCase();
+//        if (upperGroup.contains("LT15") || upperGroup.contains("LESS THAN 15") || upperGroup.contains("<15")) {
+//            return "LT15";
+//        }
+//        if (upperGroup.contains("GTE15") || upperGroup.contains("15 AND ABOVE") || upperGroup.contains("≥15") || upperGroup.contains(">=")) {
+//            return "GTE15";
+//        }
 
         try {
             int age = Integer.parseInt(ageGroup);
             return age < 15 ? "LT15" : "GTE15";
         } catch (NumberFormatException e) {
-            return null;
+            return "LT15";
         }
     }
     private String mapDurationOfBreastfeeding(String duration) {
         if (duration == null) {
-            return "";
+            return "LT15";
         }
         String upperGroup = duration.toUpperCase();
         if (upperGroup.contains("LT15") || upperGroup.contains("LESS THAN 15") || upperGroup.contains("<15")) {
@@ -539,8 +547,8 @@ public class HtsEncounterReportTypeMapper {
         }
     }
     private String mapTimeOfLastHIVNegative(String duration) {
-        if (duration == null) {
-            return "";
+        if (duration == null|| duration.isEmpty()) {
+            return "LT3M";
         }
         String upperGroup = duration.toUpperCase().replace("RECENT_HIV_TEST_", "").trim();
         if (upperGroup.contains("LAST_3_MONTHS") || upperGroup.contains("LAST_6_MONTHS")) {
@@ -549,7 +557,7 @@ public class HtsEncounterReportTypeMapper {
         if (upperGroup.contains("MORE_THAN_6_MONTHS")) {
             return "GT6M";
         }
-        return "";
+        return "LT3M";
     }
     private String mapSessionType(String sessionType) {
         if (sessionType == null || sessionType.isEmpty()) {
@@ -569,7 +577,7 @@ public class HtsEncounterReportTypeMapper {
     }
     private String mapMaritalStatus(String status) {
         if (status == null) {
-            return null;
+            return "S";
         }
 
         for (Map.Entry<String, String> entry : MARITAL_STATUS_MAPPING.entrySet()) {
@@ -695,7 +703,7 @@ public class HtsEncounterReportTypeMapper {
     }
     private String mapYesNoToCode(String value) {
         if (value == null) {
-            return null;
+            return "No";
         }
         String upperValue = value.toUpperCase().replace("YES_NO_", "").trim();
         if (upperValue.equals("YES") || upperValue.equals("Y") || upperValue.equals("TRUE")) {
@@ -704,30 +712,31 @@ public class HtsEncounterReportTypeMapper {
         if (upperValue.equals("NO") || upperValue.equals("N") || upperValue.equals("FALSE")) {
             return "No";
         }
-        return null;
+        return "No";
     }
 
     private String mapClientCategory(String category) {
         if (category == null) {
             return "OT";
         }
-        String upperCategory = category.toUpperCase();
-        for (Map.Entry<String, String> entry : CLIENT_CATEGORY_MAPPING.entrySet()) {
-            if (upperCategory.contains(entry.getKey())) {
-                return entry.getValue();
-            }
+        String upperType = category.toUpperCase().replace("INDEX_CLIENT_CATEGORY_", "").trim();
+
+        String mappedValue = CLIENT_CATEGORY_MAPPING.get(upperType);
+        if (mappedValue != null) {
+            return mappedValue;
         }
+
         return "OT";
     }
 
     private String mapIndexClientIdType(String type) {
         if (type == null) {
-            return null;
+            return "HTS";
         }
         String upperType = type.toUpperCase();
         if (upperType.contains("HTS")) return "HTS";
         if (upperType.contains("ART")) return "ART";
-        return null;
+        return "HTS";
     }
 
 }
