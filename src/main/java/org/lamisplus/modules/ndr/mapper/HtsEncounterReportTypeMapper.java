@@ -190,11 +190,10 @@ public class HtsEncounterReportTypeMapper {
         setIfPresent(!Objects.equals(projection.getBreastfeeding(), "false") ? "Yes" : "No", reportType::setBreastfeeding);
         setIfPresent(projection.getDurationOfBreastfeeding(), reportType::setDurationOfBreastfeeding, this::mapDurationOfBreastfeeding);
         setIfPresent(projection.getSyphilisTestResult(), reportType::setSyphilisTestResult, this::mapSyphilisResult);
-
         reportType.setPreTestInformation(buildPreTestInformation(objectFactory, projection));
         reportType.setPostTestCounselling(buildPostTestCounselling(objectFactory, projection));
         reportType.setIndexContactTesting(buildIndexContactTesting(objectFactory, projection));
-//        reportType.setHIVTestResult(buildHIVTestResult(objectFactory, projection));
+        reportType.setHIVTestResult(buildHIVTestResult(objectFactory, projection));
     }
 
     // ==================== Pre-Test Information ====================
@@ -284,21 +283,22 @@ public class HtsEncounterReportTypeMapper {
         TestResultType testResult = factory.createTestResultType();
 
         // Screening test
-        String screeningResult = mapTestResult(p.getScreeningTestResult());
-        if (screeningResult != null) {
-            testResult.setScreeningTestResult(screeningResult);
-        }
+//        String screeningResult = mapTestResult(p.getScreeningTestResult());
+//        if (screeningResult != null) {
+//            testResult.setScreeningTestResult(screeningResult);
+//        }
 
         // Confirmatory test
         String confirmatoryResult = mapTestResult(p.getConfirmatoryTestResult());
+        String finalTestResult = mapTestResult(p.getFinalTestResult());
         if (confirmatoryResult != null) {
-            testResult.setConfirmatoryTestResult(confirmatoryResult);
-            testResult.setFinalTestResult(determineFinalResult(confirmatoryResult));
+            testResult.setConfirmatoryTestResult(determineConfirmatoryResult(confirmatoryResult));
+            testResult.setFinalTestResult(determineFinalResult(finalTestResult));
         }
 
         // Dates
-        setDateIfPresent(p.getScreeningTestResultDate(), testResult::setScreeningTestResultDate);
-        setDateIfPresent(p.getConfirmatoryTestResultDate(), testResult::setConfirmatoryTestResultDate);
+//        setDateIfPresent(p.getScreeningTestResultDate(), testResult::setScreeningTestResultDate);
+//        setDateIfPresent(p.getConfirmatoryTestResultDate(), testResult::setConfirmatoryTestResultDate);
 
         // Suspected acute infection
         if (p.getSuspectedAcuteHIVInfection() != null) {
@@ -617,11 +617,20 @@ public class HtsEncounterReportTypeMapper {
         return "S";
     }
 
-    private String determineFinalResult(String confirmatoryResult) {
-        if (confirmatoryResult == null) {
-            return null;
+    private String determineFinalResult(String finalResult) {
+        if (finalResult == null) {
+            return "Neg";
         }
-        return "R".equals(confirmatoryResult) ? "Pos" : "Neg";
+        String upperType = finalResult.toUpperCase().trim();
+        return upperType.equals("POSITIVE") ? "Pos" : "Neg";
+    }
+
+    private String determineConfirmatoryResult(String confirmatoryResult) {
+        if (confirmatoryResult == null) {
+            return "NR";
+        }
+        String upperType = confirmatoryResult.toUpperCase().replace("HIV_CONFIRMATORY_TEST_RESULT_", "").trim();
+        return upperType.equals("POSITIVE") ? "R" : "NR";
     }
 
     private String determinePriorTestStatus(String previouslyTested) {

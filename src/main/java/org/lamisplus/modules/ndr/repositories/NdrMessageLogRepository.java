@@ -1024,9 +1024,10 @@ public interface NdrMessageLogRepository extends JpaRepository<NdrMessageLog, In
           "          ELSE NULL END AS boolean) AS partnerKnownPositiveRecentlyReturnedAfterLTFU,\n" +
           "            hts_en.observation->>'initialHivTest' initialHivTest,\n" +
           "            hts_en.observation->>'dateOfVisit' dateOfVisit,\n" +
-          "            hts_en.observation->>'suspectedAcuteInfection' suspectedAcuteInfection,\n" +
-          "            hts_en.observation->>'confirmatoryHivTest' confirmatoryHivTest,\n" +
+          "            hts_en.observation->>'suspectedAcuteInfection' suspectedAcuteHIVInfection,\n" +
+          "            hts_en.observation->>'confirmatoryHivTest' confirmatoryTestResult,\n" +
           "            hts_en.observation->>'syphilisTestResult' syphilisTestResult,\n" +
+          "\t\t\thts_en.observation->>'finalHivTestResult' finalTestResult,\n" +
           "            hts_en.observation->>'recencyTest' recencyTest,\n" +
           "            hts_en.observation->>'previouslyTestedThisYear' previouslyTestedThisYear,\n" +
           "          CAST(CASE WHEN UPPER(hts_en.observation->>'acceptedIndexTesting') = 'YES_NO_YES' THEN true\n" +
@@ -1061,8 +1062,8 @@ public interface NdrMessageLogRepository extends JpaRepository<NdrMessageLog, In
           "            hts_icten.offered_pns offeredPns,\n" +
           "            hts_icten.accepted_pns acceptedPns,\n" +
           "            hts_ictcon.relationship_to_index relationshipToIndex,\n" +
-          "\t\t\thts_ictcon.contact_code serialNo,\n" +
-          "\t\t\thts_ictcon.art_clinic artClinic,\n" +
+          "            hts_ictcon.contact_code serialNo,\n" +
+          "            hts_ictcon.art_clinic artClinic,\n" +
           "            hts_ictcon.sex contactSex,\n" +
           "            hts_ictcon.age ageGroup,\n" +
           "            hts_ictcon.notification_method notificationMethod,\n" +
