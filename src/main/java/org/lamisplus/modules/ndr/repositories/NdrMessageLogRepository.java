@@ -655,7 +655,7 @@ public interface NdrMessageLogRepository extends JpaRepository<NdrMessageLog, In
 
     // updated hts client bio data
 
-    @Query(value = "SELECT DISTINCT ON (hc.uuid) \n" +
+    @Query(value = "SELECT DISTINCT ON (hc.client_code) \n" +
             "    CAST(hc.uuid AS VARCHAR) as uuid, \n" +
             "    hc.client_code AS clientCode,\n" +
             "    (CASE WHEN hc.patient_uuid IS NULL THEN INITCAP(CAST(hc.observation->>'sex' AS VARCHAR)) ELSE INITCAP(pp.sex) END) AS sex, \n" +
@@ -1076,8 +1076,8 @@ public interface NdrMessageLogRepository extends JpaRepository<NdrMessageLog, In
           "            hts_ictcon.date_enrolled_ovc dateEnrolledInOVC,\n" +
           "            hts_ictcon.ovc_id ovcid\n" +
           "            FROM public.hts_encounter hts_en\n" +
-          "            JOIN public.hts_ict_encounter hts_icten ON hts_en.id=hts_icten.hts_encounter_id\n" +
-          "            JOIN public.hts_ict_contact hts_ictcon ON hts_icten.id=hts_ictcon.ict_encounter_id\n" +
+          "            LEFT JOIN public.hts_ict_encounter hts_icten ON hts_en.id=hts_icten.hts_encounter_id\n" +
+          "            LEFT JOIN public.hts_ict_contact hts_ictcon ON hts_icten.id=hts_ictcon.ict_encounter_id\n" +
           "            LEFT JOIN public.patient_person pp ON hts_en.patient_uuid = pp.uuid\n" +
           "            LEFT JOIN public.base_organisation_unit boustate ON boustate.id=(CASE WHEN hts_en.observation ->> 'stateId' ~ '^[0-9]+$' THEN CAST((hts_en.observation ->> 'stateId') AS int) ELSE NULL END)\n" +
           "            LEFT JOIN public.base_organisation_unit boudistrict ON boudistrict.id=(CASE WHEN hts_en.observation ->> 'district' ~ '^[0-9]+$' THEN CAST((hts_en.observation ->> 'district') AS int) ELSE NULL END)\n" +
