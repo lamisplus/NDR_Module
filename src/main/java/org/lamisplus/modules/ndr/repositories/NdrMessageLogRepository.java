@@ -589,7 +589,7 @@ public interface NdrMessageLogRepository extends JpaRepository<NdrMessageLog, In
           ") cc\n" +
           "GROUP BY person_uuid", nativeQuery = true)
   ClientVerificationDTO getClientVerification(String identifier, Long facilityId, LocalDate start, LocalDate end);
-  @Query(value = "SELECT client_code from hts_client where facility_id=?1 AND date_modified > ?2 AND archived = 0 ", nativeQuery = true)
+  @Query(value = "SELECT client_code from hts_encounter where facility_id=?1 AND date_modified > ?2 AND archived = false ", nativeQuery = true)
   List<String>getHtsClientCode(Long facilityId, LocalDateTime lastModified);
 
 //  @Query(value = "SELECT DISTINCT ON (hc.uuid) hc.uuid as uuid, hc.client_code AS clientCode,\n" +

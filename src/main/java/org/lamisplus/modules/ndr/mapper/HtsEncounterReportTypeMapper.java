@@ -566,14 +566,6 @@ public class HtsEncounterReportTypeMapper {
         if (ageGroup == null) {
             return "LT15";
         }
-//        String upperGroup = ageGroup.toUpperCase();
-//        if (upperGroup.contains("LT15") || upperGroup.contains("LESS THAN 15") || upperGroup.contains("<15")) {
-//            return "LT15";
-//        }
-//        if (upperGroup.contains("GTE15") || upperGroup.contains("15 AND ABOVE") || upperGroup.contains("≥15") || upperGroup.contains(">=")) {
-//            return "GTE15";
-//        }
-
         try {
             int age = Integer.parseInt(ageGroup);
             return age < 15 ? "LT15" : "GTE15";
@@ -620,7 +612,6 @@ public class HtsEncounterReportTypeMapper {
 
         String upperType = sessionType.toUpperCase().replace("COUNSELING_TYPE_", "").trim();
 
-        // Direct mapping using HashMap (O(1) complexity)
         String mappedValue = SESSION_TYPE_MAPPING.get(upperType);
         if (mappedValue != null) {
             return mappedValue;
@@ -724,18 +715,6 @@ public class HtsEncounterReportTypeMapper {
     private void setBooleanIfPresent(Boolean value, Consumer<Boolean> setter) {
         if (value != null) {
             setter.accept(value);
-        }
-    }
-
-    private void setIfPresent(String value, Consumer<String> setter, Predicate<String> condition) {
-        if (value != null && condition.test(value)) {
-            setter.accept(value);
-        }
-    }
-
-    private void setBooleanAsYN(Boolean value, Consumer<YNCodeType> setter) {
-        if (value != null) {
-            setter.accept(value ? YNCodeType.YES : YNCodeType.NO);
         }
     }
 

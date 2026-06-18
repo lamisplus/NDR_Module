@@ -18,6 +18,7 @@ import javax.xml.validation.Schema;
 import javax.xml.validation.SchemaFactory;
 import java.io.File;
 import java.sql.Timestamp;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.Month;
 import java.util.ArrayList;
@@ -31,11 +32,11 @@ import java.util.concurrent.atomic.AtomicLong;
 @Service
 @RequiredArgsConstructor
 public class HtsService {
-	
+
 	private final NdrMessageLogRepository data;
-	
+
 	private final NDRService ndrService;
-	
+
 	private final MessageHeaderTypeMapper messageHeaderTypeMapper;
 	private final PatientDemographicsMapper patientDemographicsMapper;
 	private final ConditionTypeMapper conditionTypeMapper;
@@ -109,13 +110,13 @@ public class HtsService {
 		PatientDemographicDTO patientDemographic =
 				getPatientDemographic(facilityId, clientCode, start, ndrErrors);
 
-//		if (!initial && patientDemographic != null) {
-//			Optional<NdrMessageLog> messageLog =
-//					data.findFirstByIdentifierAndFileType(patientDemographic.getPatientIdentifier(), "hts");
-//			if (messageLog.isPresent()) {
-//				start = messageLog.get().getLastUpdated();
-//			}
-//		}
+		if (!initial && patientDemographic != null) {
+			Optional<NdrMessageLog> messageLog =
+					data.findFirstByIdentifierAndFileType(patientDemographic.getPatientIdentifier(), "hts");
+			if (messageLog.isPresent()) {
+				start = messageLog.get().getLastUpdated();
+			}
+		}
 		if (patientDemographic == null) return false;
 		List<HtsReportDto> patientHtsDetails = getPatientHtsDetails(facilityId, clientCode, start);
 		//List<PartnerNotificationTypeDto> partners = getPartnerNotifications(facilityId, clientCode);
@@ -133,7 +134,7 @@ public class HtsService {
 	}
 
 
-	  PatientDemographicDTO getPatientDemographic( long facilityId, String clientCode, LocalDateTime lastModified,  List<NDRErrorDTO> ndrErrors){
+	PatientDemographicDTO getPatientDemographic( long facilityId, String clientCode, LocalDateTime lastModified,  List<NDRErrorDTO> ndrErrors){
 		log.info("Getting patient Demographics.... "+ lastModified);
 		try {
 			Optional<PatientDemographicDTO> htsPatientDemographics = data.getHtsPatientDemographics(facilityId, clientCode, lastModified);
@@ -144,16 +145,16 @@ public class HtsService {
 			}
 		}catch (Exception e){
 			log.error("error getting HTS demographics"+ e.getMessage());
-		  ndrErrors.add(new NDRErrorDTO(clientCode, "", Arrays.toString(e.getStackTrace())));
-		  e.printStackTrace();
+			ndrErrors.add(new NDRErrorDTO(clientCode, "", Arrays.toString(e.getStackTrace())));
+			e.printStackTrace();
 		}
 		return null;
-	  }
+	}
 
-	  List<HtsReportDto> getPatientHtsDetails(long facilityId, String clientCode, LocalDateTime lastModified ){
-		  log.info("Getting HTS datails for client " + clientCode);
+	List<HtsReportDto> getPatientHtsDetails(long facilityId, String clientCode, LocalDateTime lastModified ){
+		log.info("Getting HTS datails for client " + clientCode);
 		return data.getHstReportByClientCodeAndLastModified(facilityId, clientCode,lastModified);
-	  }
+	}
 
 	public void generateSelectedPatientsHtsNDRXml(long facilityId, boolean initial, List<String> patientIds) {
 		ObjectFactory objectFactory = new ObjectFactory();
@@ -162,22 +163,47 @@ public class HtsService {
 		ndrService.cleanupFacility(facilityId, pathname);
 		AtomicInteger generatedCount = new AtomicInteger();
 		AtomicInteger errorCount = new AtomicInteger();
-		LocalDateTime start = LocalDateTime.of(1984, 1, 1, 0, 0);
+		LocalDateTime start;
 
 		List<NDRErrorDTO> ndrErrors = new ArrayList<>();
 		PatientDemographicDTO[] patientDemographicDTO = new PatientDemographicDTO[1];
 
-		log.info("patient size -> "+ patientIds.size());
-		log.info("patient ids -> "+ patientIds);
-		patientIds.parallelStream()
-				.forEach(id -> {
-					if (getPatientHtsNDRXml(id, facilityId, initial,objectFactory, ndrErrors)) {
-						generatedCount.getAndIncrement();
-						patientDemographicDTO[0] = data.getHtsPatientDemographics(facilityId, id , start).get();
-					} else {
-						errorCount.getAndIncrement();
-					}
-				});
+		if (initial) {
+			start = LocalDateTime.of(1984, 1, 1, 0, 0);
+			//patientIds = data.getHtsClientCode(facilityId, start);
+			log.info("generating initial 4 selected....");
+			log.info("patient size -> "+ patientIds.size());
+			log.info("patient ids -> "+ patientIds);
+			patientIds.parallelStream()
+					.forEach(id -> {
+						if (getPatientHtsNDRXml(id, facilityId, initial,objectFactory, ndrErrors)) {
+							generatedCount.getAndIncrement();
+							patientDemographicDTO[0] = data.getHtsPatientDemographics(facilityId, id , start).get();
+						} else {
+							errorCount.getAndIncrement();
+						}
+					});
+		}else {
+			log.info("generating updated 4 selected....");
+			Optional<Timestamp> lastGenerateDateTimeByFacilityId =
+					ndrXmlStatusRepository.getLastGenerateDateTimeByFacilityId(facilityId,"hts");
+			if (lastGenerateDateTimeByFacilityId.isPresent()) {
+				start = lastGenerateDateTimeByFacilityId.get().toLocalDateTime();
+				log.info("Last Generated Date: " + start);
+				patientIds = data.getHtsClientCode(facilityId,start);
+
+				patientIds.parallelStream()
+						.forEach(id -> {
+							if (getPatientHtsNDRXml(id, facilityId, false,objectFactory, ndrErrors)) {
+								generatedCount.getAndIncrement();
+								patientDemographicDTO[0] = data.getHtsPatientDemographics(facilityId, id , start).get();
+							} else {
+								errorCount.getAndIncrement();
+							}
+						});
+			}
+		}
+
 		log.info("generated  {}/{}", generatedCount.get(), patientIds.size());
 		log.info("files not generated  {}/{}", errorCount.get(), patientIds.size());
 		File folder = new File(BASE_DIR + TEMP + facilityId + "/");
@@ -197,6 +223,7 @@ public class HtsService {
 		}
 		log.error("error list size {}", ndrErrors.size());
 	}
+
 	public void generatePatientsHtsNDRXml(long facilityId, boolean initial) {
 		ObjectFactory objectFactory = new ObjectFactory();
 		final String pathname = BASE_DIR + TEMP + facilityId + "/";
@@ -221,7 +248,6 @@ public class HtsService {
 				patientIds = data.getHtsClientCode(facilityId,start);
 			}
 		}
-
 
 		log.info("patient size -> "+ patientIds.size());
 		LocalDateTime finalStart = start;
@@ -257,7 +283,7 @@ public class HtsService {
 	private String generatePatientHtsNDRXml(
 			long facilityId,ObjectFactory objectFactory, PatientDemographicDTO patientDemographic,
 			List<HtsReportDto> htsReports, boolean initial, List<NDRErrorDTO> ndrErrors) {
-		log.info("generating ndr xml of patient with uuid {}", patientDemographic.getPatientIdentifier());
+		log.info("generating ndr xml of patient with uuid {} {}", patientDemographic.getPatientIdentifier(), initial);
 		try {
 			log.info("fetching patient demographics....");
 			long id = messageId.incrementAndGet();
@@ -273,6 +299,7 @@ public class HtsService {
 				individualReportType.setPatientDemographics(patientDemographics);
 				MessageHeaderType messageHeader = messageHeaderTypeMapper.getMessageHeader(patientDemographic);
 				String messageStatusCode = "INITIAL";
+
 				if (!initial) {
 					Optional<NdrMessageLog> firstByIdentifier =
 							data.findFirstByIdentifier(patientDemographic.getPatientIdentifier());
