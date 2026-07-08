@@ -359,7 +359,7 @@ public class NdrOptimizationService {
 
 		}else {
 
-			log.info("updated part 4");
+			log.info("updated part 4  --- A");
 			// those that don't have
 			List<EncounterDTO> patientEncounters =
 					getPatientEncounters(patientId, facilityId, objectMapper, start, end, ndrErrors);
@@ -447,7 +447,7 @@ public class NdrOptimizationService {
 			LocalDate start = LocalDate.of(1985, Month.JANUARY, 1);
 			LocalDate end = LocalDate.now().plusDays(1);
 
-			log.info("updated part 4");
+			log.info("updated part 4 --- B");
 			// those that don't have
 			List<EncounterDTO> patientEncounters =
 					getPatientEncounters(patientId, facilityId, objectMapper, start, end, ndrErrors);
@@ -524,6 +524,7 @@ public class NdrOptimizationService {
 										MortalityType mortality,
 										boolean initial, List<NDRErrorDTO> ndrErrors, String pushIdentifier) {
 		try {
+			log.info("updated part 4  --- A1");
 			//log.info("generating ndr xml of patient with uuid {}", patientDemographic.getPatientIdentifier());
 			log.info("fetching patient demographics....");
 			long id = messageId.incrementAndGet();
@@ -571,7 +572,7 @@ public class NdrOptimizationService {
 				jaxbMarshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, true);
 				jaxbMarshaller.setProperty(Marshaller.JAXB_ENCODING, JAXB_ENCODING);
 				SchemaFactory sf = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI);
-				Schema schema = sf.newSchema(getClass().getClassLoader().getResource("NDR1_6_6_2.xsd"));
+				Schema schema = sf.newSchema(getClass().getClassLoader().getResource("NDR_XSD 1.7.2.0.xsd"));
 				jaxbMarshaller.setSchema(schema);
 
 
@@ -680,7 +681,6 @@ public class NdrOptimizationService {
 		}
 		return new ArrayList<>();
 	}
-
 	private List<LaboratoryEncounterDTO> getPatientLastLabEncounter(String patientId, long facilityId, ObjectMapper objectMapper, List<NDRErrorDTO> ndrErrors){
 		try{
 			PatientLabEncounterDTO laboratoryEncounter;
@@ -703,8 +703,13 @@ public class NdrOptimizationService {
 			ObjectMapper objectMapper, List<NDRErrorDTO> ndrErrors) {
 		try {
 			TypeFactory typeFactory = objectMapper.getTypeFactory();
-			return objectMapper.readValue(laboratoryEncounter.getLabs(),
+			List<LaboratoryEncounterDTO> labEncounters = objectMapper.readValue(laboratoryEncounter.getLabs(),
 					typeFactory.constructCollectionType(List.class, LaboratoryEncounterDTO.class));
+
+			labEncounters.forEach(this::mapLaboratoryTestType);
+
+			return labEncounters;
+
 		} catch (Exception e) {
 			log.error("Error reading lab encounters of patient with uuid {} errorMsg {}",
 					laboratoryEncounter.getPatientUuid(), e.getMessage());
@@ -712,6 +717,25 @@ public class NdrOptimizationService {
 					"", e.getMessage()));
 		}
 		return new ArrayList<>();
+	}
+
+	private static final Map<String, String> LAB_TYPE_MAPPING = new HashMap<>();
+
+	static {
+		LAB_TYPE_MAPPING.put("80", "HIV");
+		LAB_TYPE_MAPPING.put("56", "EID");
+		LAB_TYPE_MAPPING.put("11", "CD4");
+		LAB_TYPE_MAPPING.put("21", "HBV");
+		LAB_TYPE_MAPPING.put("2", "CV");
+		LAB_TYPE_MAPPING.put("4", "CV");
+	}
+
+	private void mapLaboratoryTestType(LaboratoryEncounterDTO dto) {
+
+		dto.setLaboratoryTestTypeCode(
+				LAB_TYPE_MAPPING.getOrDefault(
+						dto.getLaboratoryTestTypeCode(),
+						"OtherTest"));
 	}
 
 	private PatientDemographicDTO getPatientDemographic(String patientId, long facilityId, List<NDRErrorDTO> ndrErrors) {

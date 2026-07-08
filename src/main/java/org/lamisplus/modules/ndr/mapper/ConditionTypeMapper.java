@@ -121,7 +121,7 @@ public class ConditionTypeMapper {
           List<EncounterDTO> patientEncounters,
            List<RegimenDTO> patientRegimens,
            List<LaboratoryEncounterDTO> patientLabEncounters) {
-      
+        log.info("updated part 4  --- A2");
         ConditionType condition = new ConditionType();
         //List of applications code set
         setProgramCodeAndArea(condition);

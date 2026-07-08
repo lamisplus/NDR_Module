@@ -315,7 +315,7 @@ public class EncountersTypeMapper {
 		}
 	}
 	
-	private void processAndSetWeightAndHeight(HIVEncounterType hivEncounterType, ARTClinicalInfo vitalSign) {
+	private void  processAndSetWeightAndHeight(HIVEncounterType hivEncounterType, ARTClinicalInfo vitalSign) {
 		int bodyWeight = vitalSign.getBodyWeight() == null ? 0 : vitalSign.getBodyWeight().intValue();
 		int height = vitalSign.getHeight() == null ? 0 : vitalSign.getHeight().intValue();
 		if (bodyWeight > 0) {

@@ -1,5 +1,6 @@
 package org.lamisplus.modules.ndr.domain.dto;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 
 public interface PatientDemographicDTO {
@@ -37,4 +38,12 @@ public interface PatientDemographicDTO {
 	String getHtsUuid();
 	String getTbStatus();
 	String getCauseOfDeath();
+	Integer getWeightAtARTStart();
+	Integer getHeightAtARTStart();
+	BigDecimal getBmimuacAtARTStart();
+	String getCd4AtStartOfART();
+	String getTptMedication();
+	String getTptDose();
+	LocalDate getTbTreatmentStartDate();
+	LocalDate getTptCompletionDate();
 }    

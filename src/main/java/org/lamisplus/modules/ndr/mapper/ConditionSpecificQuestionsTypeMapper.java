@@ -10,12 +10,9 @@ import org.lamisplus.modules.ndr.domain.dto.PatientDemographicDTO;
 import org.lamisplus.modules.ndr.domain.dto.PatientDemographics;
 import org.lamisplus.modules.ndr.domain.dto.ArtCommencementDTO;
 import org.lamisplus.modules.ndr.repositories.NDRCodeSetRepository;
-import org.lamisplus.modules.ndr.schema.CodedSimpleType;
-import org.lamisplus.modules.ndr.schema.ConditionSpecificQuestionsType;
-import org.lamisplus.modules.ndr.schema.HIVQuestionsType;
-import org.lamisplus.modules.ndr.schema.RegimenCodedSimpleType;
+import org.lamisplus.modules.ndr.schema.*;
 import org.lamisplus.modules.ndr.service.NDRCodeSetResolverService;
-import org.lamisplus.modules.triage.domain.entity.VitalSign;
+import java.util.*;
 import org.springframework.stereotype.Service;
 
 import javax.xml.datatype.DatatypeConfigurationException;
@@ -29,6 +26,8 @@ import static org.lamisplus.modules.ndr.utility.DateUtil.getXmlDate;
 @RequiredArgsConstructor
 @Slf4j
 public class ConditionSpecificQuestionsTypeMapper {
+    private static final Map<String, String> WHO_STAGE_MAPPING = new HashMap<>();
+    private static final Map<String, String> FUNCTIONAL_STATUS_MAPPING = new HashMap<>();
 
     private final NDRCodeSetResolverService ndrCodeSetResolverService;
     
@@ -44,6 +43,18 @@ public class ConditionSpecificQuestionsTypeMapper {
         public static final String GENERATING_ERROR_MSG = "An error Generating condition specific questions for patient with uuid {}";
     }
 
+    static {
+        WHO_STAGE_MAPPING.put("CLINICAL_STAGE_STAGE_I", "I");
+        WHO_STAGE_MAPPING.put("CLINICAL_STAGE_STAGE_II", "II");
+        WHO_STAGE_MAPPING.put("CLINICAL_STAGE_STAGE_III", "III");
+        WHO_STAGE_MAPPING.put("CLINICAL_STAGE_STAGE_IV", "IV");
+
+        FUNCTIONAL_STATUS_MAPPING.put("W", "W");
+        FUNCTIONAL_STATUS_MAPPING.put("A", "A");
+        FUNCTIONAL_STATUS_MAPPING.put("B", "B");
+
+    }
+
 
     public ConditionSpecificQuestionsType getConditionSpecificQuestionsType(PatientDemographics demographics) {
         log.info(LogMessages.GENERATING_COMMON_QUESTIONS, demographics.getPersonUuid());
@@ -56,10 +67,10 @@ public class ConditionSpecificQuestionsTypeMapper {
                                 String enrollmentStatus = demographics.getStatusAtRegistration();
                                 processAndHandleARTStatus (hiv, demographics.getId (), enrollmentStatus);
             }
-            
+
                Optional<ArtCommencementDTO> artCommencement =
                        ndrCodeSetRepository.getArtCommencementByPatientUuid(demographics.getPersonUuid());
-            
+
                 log.info("ART Commencement: {}", artCommencement);
                 if (artCommencement.isPresent()) {
                     processAndSetArtStartDate (hiv, artCommencement.get().getArtStartDate());
@@ -82,13 +93,15 @@ public class ConditionSpecificQuestionsTypeMapper {
         return null;
 
     }
-    
     public ConditionSpecificQuestionsType getConditionSpecificQuestionsType(PatientDemographicDTO demographics) {
+        log.info("updated part 4  --- A3");
         //@XmlElement(name = "EnrolledInHIVCareDate", required = true)
         log.info(LogMessages.GENERATING_COMMON_QUESTIONS, demographics.getPersonUuid());
         try {
             ConditionSpecificQuestionsType hivQuestions = new ConditionSpecificQuestionsType ();
             HIVQuestionsType hiv = new HIVQuestionsType ();
+
+            hiv.setBiometricCaptured(YNCodeType.valueOf("YES"));
 
             LocalDate inHIVCareDate = (demographics.getEnrolledInHIVCareDate() != null ? demographics.getEnrolledInHIVCareDate() : demographics.getArtStartDate());
             if(inHIVCareDate != null){
@@ -109,6 +122,7 @@ public class ConditionSpecificQuestionsTypeMapper {
                         hiv.setFirstConfirmedHIVTestDate (getXmlDate (Date.valueOf (inHIVCareDate)));
                     }
                     if (statusAtRegistration.equalsIgnoreCase ("ART Transfer In")) {
+                        hiv.setPatientTransferredIn(true);
                         hiv.setTransferredInDate (getXmlDate (Date.valueOf (inHIVCareDate)));
                     }
                     String tbStatus = demographics.getTbStatus();
@@ -139,10 +153,44 @@ public class ConditionSpecificQuestionsTypeMapper {
                 hiv.setFirstARTRegimen(codedSimpleType);
             }
             if(demographics.getFunctionalStatusStartART() != null){
-                hiv.setFunctionalStatusStartART(demographics.getFunctionalStatusStartART());
+                String mappedValue = FUNCTIONAL_STATUS_MAPPING.get(demographics.getWHOClinicalStageART());
+                hiv.setFunctionalStatusStartART(mappedValue);
             }
+
             if(demographics.getWHOClinicalStageART() != null){
-                hiv.setWHOClinicalStageARTStart(demographics.getWHOClinicalStageART());
+                String mappedValue = WHO_STAGE_MAPPING.get(demographics.getWHOClinicalStageART());
+                hiv.setWHOClinicalStageARTStart(mappedValue);
+            }
+
+            if(demographics.getWeightAtARTStart() != null){
+                hiv.setWeightAtARTStart(demographics.getWeightAtARTStart());
+            }
+
+            if(demographics.getHeightAtARTStart() != null){
+                hiv.setHeightAtARTStart(demographics.getHeightAtARTStart());
+            }
+
+            if(demographics.getBmimuacAtARTStart() != null){
+                hiv.setBMIMUACAtARTStart(demographics.getBmimuacAtARTStart());
+            }
+
+            if(demographics.getCd4AtStartOfART() != null){
+                hiv.setCD4AtStartOfART(demographics.getCd4AtStartOfART());
+            }
+
+            if(demographics.getTptMedication() != null){
+                hiv.setTPTMedication(demographics.getTptMedication());
+            }
+            if(demographics.getTptDose() != null){
+                hiv.setTPTDose(demographics.getTptDose());
+            }
+
+            if(demographics.getTptCompletionDate() != null){
+                hiv.setTPTCompletionDate(getXmlDate (Date.valueOf ((demographics.getTptCompletionDate()))));
+            }
+
+            if(demographics.getTbTreatmentStartDate() != null){
+                hiv.setTBTreatmentStartDate(getXmlDate (Date.valueOf ((demographics.getTbTreatmentStartDate()))));
             }
             // need more clarity on CD4
             hivQuestions.setHIVQuestions (hiv);
