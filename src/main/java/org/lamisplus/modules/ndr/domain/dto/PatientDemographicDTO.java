@@ -29,7 +29,7 @@ public interface PatientDemographicDTO {
 	String getCountryCode();
 	String getPatientOccupationCode();
 	String getPatientMaritalStatusCode();
-	String getStateOfNigeriaOriginCode();
+	Boolean getBiometricCaptured();
 	String getPatientEducationLevelCode();
 	String getFunctionalStatusStartART();
 	String getWHOClinicalStageART();

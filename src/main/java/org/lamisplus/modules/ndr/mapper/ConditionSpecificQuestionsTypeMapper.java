@@ -100,8 +100,12 @@ public class ConditionSpecificQuestionsTypeMapper {
         try {
             ConditionSpecificQuestionsType hivQuestions = new ConditionSpecificQuestionsType ();
             HIVQuestionsType hiv = new HIVQuestionsType ();
-
-            hiv.setBiometricCaptured(YNCodeType.valueOf("YES"));
+            if (demographics.getBiometricCaptured()) {
+                hiv.setBiometricCaptured(YNCodeType.valueOf("YES"));
+            } else {
+                hiv.setBiometricCaptured(YNCodeType.valueOf("NO"));
+            }
+//            hiv.setBiometricCaptured(YNCodeType.valueOf("YES"));
 
             LocalDate inHIVCareDate = (demographics.getEnrolledInHIVCareDate() != null ? demographics.getEnrolledInHIVCareDate() : demographics.getArtStartDate());
             if(inHIVCareDate != null){
@@ -143,7 +147,7 @@ public class ConditionSpecificQuestionsTypeMapper {
             if (demographics.getArtStartDate() != null) {
                 hiv.setARTStartDate (getXmlDate (Date.valueOf ((demographics.getArtStartDate()))));
             }
-            log.info("condition specific questions " + demographics.getFirstARTRegimenCode() + " " + demographics.getFirstARTRegimenCodeDescTxt() + " " + demographics.getNdrCode());
+            //log.info("condition specific questions " + demographics.getFirstARTRegimenCode() + " " + demographics.getFirstARTRegimenCodeDescTxt() + " " + demographics.getNdrCode());
             if(demographics.getFirstARTRegimenCode() != null && demographics.getFirstARTRegimenCodeDescTxt() != null
                     && demographics.getNdrCode() != null) {
                 RegimenCodedSimpleType codedSimpleType = new RegimenCodedSimpleType();
@@ -163,6 +167,9 @@ public class ConditionSpecificQuestionsTypeMapper {
             }
 
             if(demographics.getWeightAtARTStart() != null){
+                if (demographics.getWeightAtARTStart() > 200) {
+                    hiv.setWeightAtARTStart(200);
+                }
                 hiv.setWeightAtARTStart(demographics.getWeightAtARTStart());
             }
 

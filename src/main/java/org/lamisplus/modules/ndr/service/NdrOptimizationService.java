@@ -310,7 +310,7 @@ public class NdrOptimizationService {
 		LocalDate end = LocalDate.now().plusDays(1);
 		log.info("start {}, end {}", start, end);
 
-		log.info("initial patient demographic.... {}{}",initial, patientDemographic);
+		//log.info("initial patient demographic.... {}{}",initial, patientDemographic);
 		Optional<NdrMessageLog> messageLog =
 				data.findFirstByIdentifierAndFileType(patientDemographic.getPatientIdentifier(), "treatment");
 

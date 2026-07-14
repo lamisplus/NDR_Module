@@ -122,7 +122,7 @@ public class LaboratoryReportTypeMapper {
         //log.info("mapping lab encounters ...");
         if (labDTOS != null) {
             labDTOS.forEach(labDTO -> {
-                log.info("mapping lab for patient " + patientUuid);
+                //log.info("mapping lab for patient " + patientUuid);
                 try {
                     LaboratoryReportType laboratory = new LaboratoryReportType();
 

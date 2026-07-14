@@ -125,6 +125,10 @@ public class EncountersTypeMapper {
 									if(encounterDTO.getWeight() != null) {
 										//demographicDTO.getAge();
 										// we can check for weight not be greater than 200 for children
+										if(encounterDTO.getWeight() > 200)
+										{
+											hivEncounterType.setWeight(200);
+										}
 										hivEncounterType.setWeight(encounterDTO.getWeight());
 									}
 								   if(encounterDTO.getChildHeight()!= null) {
