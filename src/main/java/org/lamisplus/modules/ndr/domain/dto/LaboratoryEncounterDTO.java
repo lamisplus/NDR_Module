@@ -22,6 +22,10 @@ public class LaboratoryEncounterDTO implements Serializable {
 		private String laboratoryResultAnswerNumeric;
 		private String laboratoryResultedTestCodeDescTxt;
 //		new added
+		private String artStatusCode;
+		private String baselineRepeatCode;
+		private String reportedBy;
+		private String checkedBy;
 	    private String laboratoryOrderedTest;
 	    private String laboratoryResult;
 		private String otherLaboratoryInformation;
@@ -32,7 +36,7 @@ public class LaboratoryEncounterDTO implements Serializable {
 	    private String labRegistrationNumber;
 	    private String pcrpocLabName;
 	    private String pcrpocLabSampleNumber;
-	    private String viralLoadIndicationCode;
+	    private Integer viralLoadIndicationCode;
 	    private String viralLoadResult;
 	    private String viralLoadResultDate;
 	    private String eidIndicationCode;

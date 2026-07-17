@@ -122,14 +122,17 @@ public class EncountersTypeMapper {
 											throw new IllegalArgumentException(e);
 										}
 									}
-									if(encounterDTO.getWeight() != null) {
-										//demographicDTO.getAge();
-										// we can check for weight not be greater than 200 for children
-										if(encounterDTO.getWeight() > 200)
-										{
+
+									if (encounterDTO.getWeight() != null) {
+										Integer weight = encounterDTO.getWeight();
+//										log.info("weight, {}", weight);
+										if (weight > 200) {
 											hivEncounterType.setWeight(200);
+										} else if (weight < 0) {
+											hivEncounterType.setWeight(0);
+										} else {
+											hivEncounterType.setWeight(weight);
 										}
-										hivEncounterType.setWeight(encounterDTO.getWeight());
 									}
 								   if(encounterDTO.getChildHeight()!= null) {
 									hivEncounterType.setChildHeight(encounterDTO.getChildHeight());
@@ -320,6 +323,7 @@ public class EncountersTypeMapper {
 	}
 	
 	private void  processAndSetWeightAndHeight(HIVEncounterType hivEncounterType, ARTClinicalInfo vitalSign) {
+		log.info("weight -- 2");
 		int bodyWeight = vitalSign.getBodyWeight() == null ? 0 : vitalSign.getBodyWeight().intValue();
 		int height = vitalSign.getHeight() == null ? 0 : vitalSign.getHeight().intValue();
 		if (bodyWeight > 0) {

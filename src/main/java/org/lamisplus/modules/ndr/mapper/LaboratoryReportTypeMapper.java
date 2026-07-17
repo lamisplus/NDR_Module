@@ -17,10 +17,13 @@ import org.lamisplus.modules.ndr.utility.NumericUtils;
 import org.springframework.stereotype.Component;
 
 import javax.xml.datatype.DatatypeConfigurationException;
+import java.math.BigDecimal;
 import java.sql.Date;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 
@@ -28,8 +31,20 @@ import java.util.Optional;
 @Component
 @RequiredArgsConstructor
 public class LaboratoryReportTypeMapper {
+    private static final Map<Integer, String> VIRAL_LOAD_INDICATION_CODE_MAPPING = new HashMap<>();
 
-
+    static {
+        VIRAL_LOAD_INDICATION_CODE_MAPPING.put(300, "Baseline");
+        VIRAL_LOAD_INDICATION_CODE_MAPPING.put(301, "Routine");
+        VIRAL_LOAD_INDICATION_CODE_MAPPING.put(302, "Confirmation");
+        VIRAL_LOAD_INDICATION_CODE_MAPPING.put(303, "Routine");
+        VIRAL_LOAD_INDICATION_CODE_MAPPING.put(304, "ClinicalFailure");
+        VIRAL_LOAD_INDICATION_CODE_MAPPING.put(305, "ImmunologicFailure");
+        VIRAL_LOAD_INDICATION_CODE_MAPPING.put(306, "Gestation3236Weeks");
+        VIRAL_LOAD_INDICATION_CODE_MAPPING.put(719, "RecentInfection");
+        VIRAL_LOAD_INDICATION_CODE_MAPPING.put(1394, "Baseline");
+        VIRAL_LOAD_INDICATION_CODE_MAPPING.put(2216, "EarlyHIVDetection");
+    }
     private final NdrXmlStatusRepository ndrXmlStatusRepository;
 
     private final NDRCodeSetResolverService ndrCodeSetResolverService;
@@ -122,7 +137,7 @@ public class LaboratoryReportTypeMapper {
         //log.info("mapping lab encounters ...");
         if (labDTOS != null) {
             labDTOS.forEach(labDTO -> {
-                //log.info("mapping lab for patient " + patientUuid);
+                log.info("mapping lab for patient " + patientUuid);
                 try {
                     LaboratoryReportType laboratory = new LaboratoryReportType();
 
@@ -157,6 +172,24 @@ public class LaboratoryReportTypeMapper {
                     }
                     laboratory.setLaboratoryTestIdentifier(labDTO.getLaboratoryTestIdentifier());
 
+                    //baselineRepeatCode TODO: provide the logic
+                    if (labDTO.getViralLoadIndicationCode() != null && (labDTO.getViralLoadIndicationCode() == 300
+                    || labDTO.getViralLoadIndicationCode() == 1394)) {
+                        laboratory.setBaselineRepeatCode("B");
+                    }else {
+                        laboratory.setBaselineRepeatCode("R");
+                    }
+                    //artStatusCode TODO: provide the logic
+                    if (labDTO.getArtStatusCode() != null) {
+                        laboratory.setBaselineRepeatCode("POSITIVE");
+                    }
+                    if (labDTO.getReportedBy() != null) {
+                        laboratory.setReportedBy(labDTO.getReportedBy());
+                    }
+                    if (labDTO.getCheckedBy() != null) {
+                        laboratory.setCheckedBy(labDTO.getCheckedBy());
+                    }
+
                     String result =
                             labDTO.getLaboratoryResultAnswerNumeric();
 
@@ -173,6 +206,15 @@ public class LaboratoryReportTypeMapper {
                         } else {
                             throw new IllegalArgumentException("Order date cannot null");
                         }
+                        // laboratoryOrderedTest
+                        CodedSimpleType codedOrderType = new CodedSimpleType();
+                        if (labDTO.getLaboratoryTestTypeCode() != null
+                                && labDTO.getLaboratoryResultedTestCodeDescTxt() != null) {
+                            codedOrderType.setCode(labDTO.getLaboratoryTestTypeCode());
+                            codedOrderType.setCodeDescTxt(labDTO.getLaboratoryResultedTestCodeDescTxt());
+                            labResult.setLaboratoryOrderedTest(codedOrderType);
+                        }
+
                         String resultedTestDate = labDTO.getResultedTestDate();
                         if (StringUtils.isNotBlank(resultedTestDate)) {
                             LocalDate localDate = LocalDate.parse(resultedTestDate);
@@ -182,6 +224,7 @@ public class LaboratoryReportTypeMapper {
                                 throw new IllegalArgumentException(e);
                             }
                         }
+
                         CodedSimpleType codedSimpleType = new CodedSimpleType();
                         if (labDTO.getLaboratoryResultedTestCode() != null
                                 && labDTO.getLaboratoryResultedTestCodeDescTxt() != null) {
@@ -236,6 +279,43 @@ public class LaboratoryReportTypeMapper {
                         }
                         labResult.setLaboratoryResult(answer);
                         labResult.setLaboratoryTestTypeCode(labDTO.getLaboratoryTestTypeCode());
+
+                        if (labDTO.getPcrpocLabSampleNumber() != null) {
+                            labResult.setSampleLoggedRemotely(YNCodeType.valueOf("YES"));
+                        }else{
+                            labResult.setSampleLoggedRemotely(YNCodeType.valueOf("NO"));
+                        }
+
+                        //sampleReceivedAtLabDate
+                        //pcrpocLabName
+                        if(labDTO.getPcrpocLabName() != null) {
+                            labResult.setPCRPOCLabName(labDTO.getPcrpocLabName());
+                        }
+                        //pcrpocLabSampleNumber
+                        if(labDTO.getPcrpocLabSampleNumber() != null) {
+                            labResult.setPCRPOCLabSampleNumber(labDTO.getPcrpocLabSampleNumber());
+                        }
+                        //viralLoadIndicationCode
+                        if(labDTO.getViralLoadIndicationCode() != null){
+                            String mappedValue = VIRAL_LOAD_INDICATION_CODE_MAPPING.get(labDTO.getViralLoadIndicationCode());
+                            labResult.setViralLoadIndicationCode(mappedValue);
+                        }
+                        //viralLoadResult
+                        if (labDTO.getLaboratoryResultedTestCodeDescTxt() != null) {
+                            labResult.setViralLoadResult(BigDecimal.valueOf(Long.parseLong(labDTO.getLaboratoryResultAnswerNumeric())));
+                        }
+                        //viralLoadResultDate
+                        String viralLoadResultDate = labDTO.getResultedTestDate();
+                        if (StringUtils.isNotBlank(viralLoadResultDate)) {
+                            LocalDate localDate = LocalDate.parse(viralLoadResultDate);
+                            try {
+                                labResult.setViralLoadResultDate(DateUtil.getXmlDate(Date.valueOf(localDate)));
+                            } catch (DatatypeConfigurationException e) {
+                                throw new IllegalArgumentException(e);
+                            }
+                        }
+
+
                         laboratory.getLaboratoryOrderAndResult().add(labResult);
                         laboratoryReport.add(laboratory);
                     }
