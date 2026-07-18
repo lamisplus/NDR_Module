@@ -270,120 +270,146 @@ public interface NdrMessageLogRepository extends JpaRepository<NdrMessageLog, In
    List<String>  getPatientIdsEligibleForNDR(LocalDateTime start, LocalDateTime endDate,  long facilityId);
    
   @Query(value = "SELECT\n" +
-          "        lo.patient_uuid,\n" +
-          "        CAST(\n" +
-          "            json_agg(\n" +
-          "                DISTINCT jsonb_build_object(\n" +
-          "                    'visitId', lo.visitid,\n" +
-          "                    'visitDate', lo.visitdate,\n" +
-          "                    'collectionDate', ls.collectiondate,\n" +
-          "                    'laboratoryTestIdentifier', lt.laboratorytestidentifier,\n" +
-          "                    'laboratoryTestTypeCode', lt.laboratorytesttypecode,\n" +
-          "                    'orderedTestDate', lo.orderedtestdate,\n" +
-          "                    'laboratoryResultedTestCode', lt.laboratoryresultedtestcode,\n" +
-          "                    'laboratoryResultedTestCodeDescTxt', lt.laboratoryresultedtestcodedesctxt,\n" +
-          "\t\t\t\t\t'viralLoadIndicationCode', lt.viralLoadIndicationCode,\n" +
-          "                    'laboratoryResultAnswerNumeric', lr.laboratoryresultanswernumeric,\n" +
-          "                    'resultedTestDate', lr.resultedtestdate,\n" +
-          "\t\t\t\t\t'reportedBy', lr.reportedBy,\n" +
-          "\t\t\t\t\t'checkedBy', lr.checkedBy,\n" +
-          "\t\t\t\t\t'pcrpocLabSampleNumber', lr.pcrpocLabSampleNumber,\n" +
-          "\t\t\t\t\t'pcrpocLabName', lr.pcrpocLabName\n" +
-          "                )\n" +
-          "            ) AS VARCHAR\n" +
-          "        ) AS labs\n" +
-          "    FROM (\n" +
-          "        SELECT\n" +
-          "            uuid AS VisitID,\n" +
-          "            id,\n" +
-          "            CAST(lo.order_date AS DATE) AS OrderedTestDate,\n" +
-          "            CAST(lo.order_date AS DATE) AS VisitDate,\n" +
-          "            lo.patient_uuid\n" +
-          "        FROM\n" +
-          "            laboratory_order lo\n" +
-          "        WHERE\n" +
-          "            lo.order_date IS NOT NULL\n" +
-          "            AND lo.archived = 0\n" +
-          "            AND lo.facility_id = ?2\n" +
-          "            AND lo.order_date >= ?3\n" +
-          "            AND lo.order_date <= ?4\n" +
-          "            AND lo.patient_uuid = ?1\n" +
-          "    ) lo\n" +
-          "    INNER JOIN (\n" +
-          "    \n" +
+          "    lo.patient_uuid,\n" +
+          "    CAST(\n" +
+          "        json_agg(\n" +
+          "            DISTINCT jsonb_build_object(\n" +
+          "                'visitId', lo.visitid,\n" +
+          "                'visitDate', lo.visitdate,\n" +
+          "                'collectionDate', ls.collectiondate,\n" +
+          "                'laboratoryTestIdentifier', lt.laboratorytestidentifier,\n" +
+          "                'laboratoryTestTypeCode', lt.laboratorytesttypecode,\n" +
+          "                'orderedTestDate', lo.orderedtestdate,\n" +
+          "                'laboratoryResultedTestCode', lt.laboratoryresultedtestcode,\n" +
+          "                'laboratoryResultedTestCodeDescTxt', lt.laboratoryresultedtestcodedesctxt,\n" +
+          "                'viralLoadIndicationCode', lt.viralLoadIndicationCode,\n" +
+          "                'laboratoryResultAnswerNumeric', lr.laboratoryresultanswernumeric,\n" +
+          "                'resultedTestDate', lr.resultedtestdate,\n" +
+          "                'reportedBy', lr.reportedBy,\n" +
+          "                'checkedBy', lr.checkedBy,\n" +
+          "                'pcrpocLabSampleNumber', lr.pcrpocLabSampleNumber,\n" +
+          "                'pcrpocLabName', lr.pcrpocLabName,\n" +
+          "\t\t\t\t'artStartDate', hec.artStartDate,\n" +
+          "\t\t\t\t'cd4CellCount', hrt.cd4CellCount,\n" +
+          "\t\t\t\t'cd4Percentage', hrt.cd4Percentage,\n" +
+          "\t\t\t\t'drugRegimenLineCode', hrt.drugRegimenLineCode\n" +
+          "            )\n" +
+          "        ) AS VARCHAR\n" +
+          "    ) AS labs\n" +
+          "FROM (\n" +
           "    SELECT\n" +
-          "        lt.id,\n" +
-          "        lt.lab_order_id,\n" +
-          "        lt.lab_test_id,\n" +
-          "        lt.lab_test_group_id,\n" +
-          "        lt.patient_uuid,\n" +
-          "        llt.modified_lab_test_name,  -- Using a modified name for comparison\n" +
-          "        lt.lab_order_id AS LaboratoryTestIdentifier,\n" +
-          "\t\tlt.viral_load_indication AS viralLoadIndicationCode,\n" +
-          "        testncs.code AS LaboratoryTestTypeCode,\n" +
-          "        testncs.code AS LaboratoryResultedTestCode,\n" +
-          "        testncs.code_description AS LaboratoryResultedTestCodeDescTxt\n" +
+          "        uuid AS VisitID,\n" +
+          "        id,\n" +
+          "        CAST(lo.order_date AS DATE) AS OrderedTestDate,\n" +
+          "        CAST(lo.order_date AS DATE) AS VisitDate,\n" +
+          "        lo.patient_uuid\n" +
           "    FROM\n" +
-          "        laboratory_test lt\n" +
-          "    INNER JOIN (\n" +
-          "        SELECT\n" +
-          "            id,\n" +
-          "            labtestgroup_id,\n" +
-          "            CASE\n" +
-          "                WHEN lab_test_name ilike 'Gene Xpert' THEN 'Other Test (TB-LAM, LF-LAM, etc)'\n" +
-          "            WHEN lab_test_name = 'TB-LAM' THEN 'Other Test (TB-LAM, LF-LAM, etc)'\n" +
-          "            WHEN lab_test_name = 'LF-LAM' THEN 'Other Test (TB-LAM, LF-LAM, etc)'\n" +
-          "            WHEN lab_test_name = 'Visitect CD4' THEN 'CD4 LFA RESULT'\n" +
-          "                ELSE lab_test_name\n" +
-          "            END AS modified_lab_test_name\n" +
-          "        FROM\n" +
-          "            laboratory_labtest\n" +
-          "    ) llt ON llt.id = lt.lab_test_id\n" +
-          "    LEFT JOIN\n" +
-          "        ndr_code_set testncs ON TRIM(LOWER(llt.modified_lab_test_name)) = TRIM(LOWER(testncs.code_description))\n" +
+          "        laboratory_order lo\n" +
           "    WHERE\n" +
-          "        lt.archived = 0\n" +
-          "        AND testncs.code_set_nm = 'LAB_RESULTED_TEST'\n" +
-          "        AND lt.facility_id = ?2\n" +
-          "    ) lt ON lt.lab_order_id = lo.id AND lt.patient_uuid = lo.patient_uuid\n" +
-          "    INNER JOIN (\n" +
-          "        SELECT\n" +
-          "            DISTINCT CAST(ls.date_sample_collected AS DATE) AS CollectionDate,\n" +
-          "            ls.patient_uuid,\n" +
-          "            test_id\n" +
-          "        FROM\n" +
-          "            laboratory_sample ls\n" +
-          "        WHERE\n" +
-          "            ls.archived = 0\n" +
-          "            AND ls.facility_id = ?2\n" +
-          "            AND ls.date_sample_collected IS NOT NULL\n" +
-          "            AND ls.date_sample_collected >= ?3\n" +
-          "            AND ls.date_sample_collected <= ?4\n" +
-          "            AND ls.patient_uuid = ?1\n" +
-          "    ) ls ON ls.test_id = lt.id AND ls.patient_uuid = lo.patient_uuid\n" +
-          "    INNER JOIN (\n" +
-          "        SELECT\n" +
-          "            DISTINCT CAST(lr.date_result_reported AS DATE) AS resultedTestDate,\n" +
-          "            lr.patient_uuid,\n" +
-          "            lr.result_reported AS LaboratoryResultAnswerNumeric,\n" +
-          "            lr.test_id,\n" +
-          "\t\t\tlr.result_reported_by AS reportedBy,\n" +
-          "\t\t\tlr.checked_by AS checkedBy,\n" +
-          "\t\t\tlr.pcr_lab_sample_number AS pcrpocLabSampleNumber,\n" +
-          "\t\t\tlr.pcr_lab_name AS pcrpocLabName \n" +
-          "        FROM\n" +
-          "            laboratory_result lr\n" +
-          "        WHERE\n" +
-          "            lr.archived = 0\n" +
-          "            AND lr.facility_id = ?2\n" +
-          "            AND lr.date_result_reported IS NOT NULL\n" +
-          "            AND lr.result_reported IS NOT NULL\n" +
-          "            AND lr.date_result_reported >= ?3\n" +
-          "            AND lr.date_result_reported <= ?4\n" +
-          "            AND lr.patient_uuid = ?1\n" +
-          "    ) lr ON lr.test_id = lt.id AND lr.patient_uuid = lt.patient_uuid\n" +
-          "    GROUP BY lo.patient_uuid\n" +
-          "\t", nativeQuery = true)
+          "        lo.order_date IS NOT NULL\n" +
+          "        AND lo.archived = 0\n" +
+          "        AND lo.facility_id = ?2\n" +
+          "        AND lo.order_date >= ?3\n" +
+          "        AND lo.order_date <= ?4\n" +
+          "        AND lo.patient_uuid = ?1\n" +
+          ") lo\n" +
+          "INNER JOIN (\n" +
+          "\n" +
+          "SELECT\n" +
+          "    lt.id,\n" +
+          "    lt.lab_order_id,\n" +
+          "    lt.lab_test_id,\n" +
+          "    lt.lab_test_group_id,\n" +
+          "    lt.patient_uuid,\n" +
+          "    llt.modified_lab_test_name,  -- Using a modified name for comparison\n" +
+          "    lt.lab_order_id AS LaboratoryTestIdentifier,\n" +
+          "    lt.viral_load_indication AS viralLoadIndicationCode,\n" +
+          "    testncs.code AS LaboratoryTestTypeCode,\n" +
+          "    testncs.code AS LaboratoryResultedTestCode,\n" +
+          "    testncs.code_description AS LaboratoryResultedTestCodeDescTxt\n" +
+          "FROM\n" +
+          "    laboratory_test lt\n" +
+          "INNER JOIN (\n" +
+          "    SELECT\n" +
+          "        id,\n" +
+          "        labtestgroup_id,\n" +
+          "        CASE\n" +
+          "            WHEN lab_test_name ilike 'Gene Xpert' THEN 'Other Test (TB-LAM, LF-LAM, etc)'\n" +
+          "        WHEN lab_test_name = 'TB-LAM' THEN 'Other Test (TB-LAM, LF-LAM, etc)'\n" +
+          "        WHEN lab_test_name = 'LF-LAM' THEN 'Other Test (TB-LAM, LF-LAM, etc)'\n" +
+          "        WHEN lab_test_name = 'Visitect CD4' THEN 'CD4 LFA RESULT'\n" +
+          "            ELSE lab_test_name\n" +
+          "        END AS modified_lab_test_name\n" +
+          "    FROM\n" +
+          "        laboratory_labtest\n" +
+          ") llt ON llt.id = lt.lab_test_id\n" +
+          "LEFT JOIN\n" +
+          "    ndr_code_set testncs ON TRIM(LOWER(llt.modified_lab_test_name)) = TRIM(LOWER(testncs.code_description))\n" +
+          "WHERE\n" +
+          "    lt.archived = 0\n" +
+          "    AND testncs.code_set_nm = 'LAB_RESULTED_TEST'\n" +
+          "    AND lt.facility_id = ?2\n" +
+          ") lt ON lt.lab_order_id = lo.id AND lt.patient_uuid = lo.patient_uuid\n" +
+          "INNER JOIN (\n" +
+          "    SELECT\n" +
+          "        DISTINCT CAST(ls.date_sample_collected AS DATE) AS CollectionDate,\n" +
+          "        ls.patient_uuid,\n" +
+          "        test_id\n" +
+          "    FROM\n" +
+          "        laboratory_sample ls\n" +
+          "    WHERE\n" +
+          "        ls.archived = 0\n" +
+          "        AND ls.facility_id = ?2\n" +
+          "        AND ls.date_sample_collected IS NOT NULL\n" +
+          "        AND ls.date_sample_collected >= ?3\n" +
+          "        AND ls.date_sample_collected <= ?4\n" +
+          "        AND ls.patient_uuid = ?1\n" +
+          ") ls ON ls.test_id = lt.id AND ls.patient_uuid = lo.patient_uuid\n" +
+          "INNER JOIN (\n" +
+          "    SELECT\n" +
+          "        DISTINCT CAST(lr.date_result_reported AS DATE) AS resultedTestDate,\n" +
+          "        lr.patient_uuid,\n" +
+          "        lr.result_reported AS LaboratoryResultAnswerNumeric,\n" +
+          "        lr.test_id,\n" +
+          "        lr.result_reported_by AS reportedBy,\n" +
+          "        lr.checked_by AS checkedBy,\n" +
+          "        lr.pcr_lab_sample_number AS pcrpocLabSampleNumber,\n" +
+          "        lr.pcr_lab_name AS pcrpocLabName \n" +
+          "    FROM\n" +
+          "        laboratory_result lr\n" +
+          "    WHERE\n" +
+          "        lr.archived = 0\n" +
+          "        AND lr.facility_id = ?2\n" +
+          "        AND lr.date_result_reported IS NOT NULL\n" +
+          "        AND lr.result_reported IS NOT NULL\n" +
+          "        AND lr.date_result_reported >= ?3\n" +
+          "        AND lr.date_result_reported <= ?4\n" +
+          "        AND lr.patient_uuid = ?1\n" +
+          ") lr ON lr.test_id = lt.id AND lr.patient_uuid = lt.patient_uuid\n" +
+          "INNER JOIN (\n" +
+          "\tSELECT \n" +
+          "\thec.person_uuid,\n" +
+          "\thec.date_art_started AS artStartDate\n" +
+          "\tFROM hiv_enrollment_commencement hec\n" +
+          "\tWHERE \n" +
+          "\thec.archived = 0 AND\n" +
+          "\thec.person_uuid = ?1\n" +
+          ") hec ON hec.person_uuid = lt.patient_uuid\n" +
+          "INNER JOIN (\n" +
+          "\tSELECT \n" +
+          "\thrt.person_uuid,\n" +
+          "\thrt.created_date,\n" +
+          "\thrt.cd_4 AS cd4CellCount, \n" +
+          "\thrt.cd_4_percentage AS cd4Percentage,\n" +
+          "\thrt.regimen_type_id AS drugRegimenLineCode\n" +
+          "\tFROM hiv_art_clinical hrt\n" +
+          "\tWHERE \n" +
+          "\thrt.archived = 0 AND\n" +
+          "\thrt.person_uuid = ?1\n" +
+          "\tORDER BY created_date DESC \n" +
+          "\tLIMIT 1\n" +
+          ") hrt ON hrt.person_uuid = lt.patient_uuid\n" +
+          "GROUP BY lo.patient_uuid", nativeQuery = true)
   Optional<PatientLabEncounterDTO> getPatientLabEncounter(String identifier, Long facilityId, LocalDate start, LocalDate end);
 
 

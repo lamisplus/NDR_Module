@@ -32,6 +32,7 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class LaboratoryReportTypeMapper {
     private static final Map<Integer, String> VIRAL_LOAD_INDICATION_CODE_MAPPING = new HashMap<>();
+    private static final Map<Integer, String> DRUG_REGIMEN_CODE_TYPE = new HashMap<>();
 
     static {
         VIRAL_LOAD_INDICATION_CODE_MAPPING.put(300, "Baseline");
@@ -44,6 +45,13 @@ public class LaboratoryReportTypeMapper {
         VIRAL_LOAD_INDICATION_CODE_MAPPING.put(719, "RecentInfection");
         VIRAL_LOAD_INDICATION_CODE_MAPPING.put(1394, "Baseline");
         VIRAL_LOAD_INDICATION_CODE_MAPPING.put(2216, "EarlyHIVDetection");
+
+        DRUG_REGIMEN_CODE_TYPE.put(1, "FirstLine");
+        DRUG_REGIMEN_CODE_TYPE.put(2, "SecondLine");
+        DRUG_REGIMEN_CODE_TYPE.put(3, "FirstLine");
+        DRUG_REGIMEN_CODE_TYPE.put(4, "SecondLine");
+        DRUG_REGIMEN_CODE_TYPE.put(14, "ThirdLine");
+        DRUG_REGIMEN_CODE_TYPE.put(16, "ThirdLine");
     }
     private final NdrXmlStatusRepository ndrXmlStatusRepository;
 
@@ -204,7 +212,12 @@ public class LaboratoryReportTypeMapper {
                                 throw new IllegalArgumentException(e);
                             }
                         } else {
-                            throw new IllegalArgumentException("Order date cannot null");
+                            LocalDate localDate = LocalDate.parse(labDTO.getCollectionDate());
+                            try {
+                                labResult.setOrderedTestDate(DateUtil.getXmlDate(Date.valueOf(localDate)));
+                            } catch (DatatypeConfigurationException e) {
+                                throw new IllegalArgumentException(e);
+                            }
                         }
                         // laboratoryOrderedTest
                         CodedSimpleType codedOrderType = new CodedSimpleType();
@@ -314,7 +327,35 @@ public class LaboratoryReportTypeMapper {
                                 throw new IllegalArgumentException(e);
                             }
                         }
+                        // cd4CellCount
+                        if(labDTO.getCd4CellCount() != null) {
+                            labResult.setCD4CellCount(BigDecimal.valueOf(Long.parseLong(labDTO.getCd4CellCount())));
+                        }
 
+                        if(labDTO.getCd4Percentage() != null) {
+                            labResult.setCD4Percentage(BigDecimal.valueOf(Long.parseLong(labDTO.getCd4Percentage())));
+                        }
+
+                        if (labDTO.getCd4CellCount() != null && Integer.parseInt(labDTO.getCd4CellCount()) < 200) {
+                            labResult.setCD4LFAResultCode("LessThan200");
+                        }else{
+                            labResult.setCD4LFAResultCode("GTEqual200");
+                        }
+                        // artStartDate
+                        String artStartDate = labDTO.getArtStartDate();
+                        if (StringUtils.isNotBlank(artStartDate)) {
+                            LocalDate localDate = LocalDate.parse(artStartDate);
+                            try {
+                                labResult.setARTStartDate(DateUtil.getXmlDate(Date.valueOf(localDate)));
+                            } catch (DatatypeConfigurationException e) {
+                                throw new IllegalArgumentException(e);
+                            }
+                        }
+
+                        if(labDTO.getDrugRegimenLineCode() != null){
+                            String mappedValue = DRUG_REGIMEN_CODE_TYPE.get(Integer.parseInt(labDTO.getDrugRegimenLineCode()));
+                            labResult.setDrugRegimenLineCode(mappedValue);
+                        }
 
                         laboratory.getLaboratoryOrderAndResult().add(labResult);
                         laboratoryReport.add(laboratory);
