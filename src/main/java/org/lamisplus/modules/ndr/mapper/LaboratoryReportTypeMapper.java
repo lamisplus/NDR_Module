@@ -314,8 +314,12 @@ public class LaboratoryReportTypeMapper {
                             labResult.setViralLoadIndicationCode(mappedValue);
                         }
                         //viralLoadResult
-                        if (labDTO.getLaboratoryResultedTestCodeDescTxt() != null) {
-                            labResult.setViralLoadResult(BigDecimal.valueOf(Long.parseLong(labDTO.getLaboratoryResultAnswerNumeric())));
+                        if (labDTO.getLaboratoryResultAnswerNumeric() != null
+                                && !labDTO.getLaboratoryResultAnswerNumeric().trim().isEmpty()) {
+
+                            labResult.setViralLoadResult(
+                                    new BigDecimal(labDTO.getLaboratoryResultAnswerNumeric().trim())
+                            );
                         }
                         //viralLoadResultDate
                         String viralLoadResultDate = labDTO.getResultedTestDate();
@@ -328,18 +332,27 @@ public class LaboratoryReportTypeMapper {
                             }
                         }
                         // cd4CellCount
-                        if(labDTO.getCd4CellCount() != null) {
-                            labResult.setCD4CellCount(BigDecimal.valueOf(Long.parseLong(labDTO.getCd4CellCount())));
+                        if(labDTO.getCd4CellCount() != null && !labDTO.getCd4CellCount().trim().isEmpty()) {
+                            labResult.setCD4CellCount(
+                                    new BigDecimal(labDTO.getCd4CellCount().trim())
+                            );
+                            //labResult.setCD4CellCount(BigDecimal.valueOf(Long.parseLong(labDTO.getCd4CellCount())));
                         }
 
-                        if(labDTO.getCd4Percentage() != null) {
-                            labResult.setCD4Percentage(BigDecimal.valueOf(Long.parseLong(labDTO.getCd4Percentage())));
+                        if(labDTO.getCd4Percentage() != null && !labDTO.getCd4Percentage().trim().isEmpty()) {
+                            labResult.setCD4Percentage(
+                                    new BigDecimal(labDTO.getCd4Percentage().trim())
+                            );
+                            //labResult.setCD4Percentage(BigDecimal.valueOf(Long.parseLong(labDTO.getCd4Percentage())));
                         }
 
                         if (labDTO.getCd4CellCount() != null && Integer.parseInt(labDTO.getCd4CellCount()) < 200) {
                             labResult.setCD4LFAResultCode("LessThan200");
-                        }else{
-                            labResult.setCD4LFAResultCode("GTEqual200");
+                        }else {
+                            assert labDTO.getCd4CellCount() != null;
+                            if (Integer.parseInt(labDTO.getCd4CellCount()) >= 200){
+                                labResult.setCD4LFAResultCode("GTEqual200");
+                            }
                         }
                         // artStartDate
                         String artStartDate = labDTO.getArtStartDate();
