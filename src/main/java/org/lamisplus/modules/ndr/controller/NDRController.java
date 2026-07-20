@@ -43,13 +43,6 @@ public class NDRController {
         log.info(Constants.FILE_GENERATION_TIME.replace("{}", String.valueOf(stopwatch.elapsed().toMillis())));
     }
 
-    //testing single file
-    @GetMapping("/generate_one/{personId}")
-    public void generateOnePatientXml(@PathVariable("personId") String personId, @RequestParam("facility") Long facility) {
-        Stopwatch stopwatch = Stopwatch.createStarted();
-        ndrOptmizationService.generatePatientOneNDRXml(facility, true, personId);
-        log.info(Constants.FILE_GENERATION_TIME.replace("{}", String.valueOf(stopwatch.elapsed().toMillis())));
-    }
     @GetMapping("/generate")
     public boolean generateFacilityPatientXmls(@RequestParam List<Long> facilityIds, @RequestParam boolean isInitial ){
         messagingTemplate.convertAndSend("/topic/ndr-status", "start");

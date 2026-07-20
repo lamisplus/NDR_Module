@@ -28,6 +28,10 @@ import static org.lamisplus.modules.ndr.utility.DateUtil.getXmlDate;
 public class ConditionSpecificQuestionsTypeMapper {
     private static final Map<String, String> WHO_STAGE_MAPPING = new HashMap<>();
     private static final Map<String, String> FUNCTIONAL_STATUS_MAPPING = new HashMap<>();
+    private static final Map<String, String> CARE_ENTRY_POINT_MAPPING = new HashMap<>();
+    private static final Map<String, String> KP_TYPOLOGY_MAPPING = new HashMap<>();
+    private static final Map<String, String> PRIOR_ART_MAPPING = new HashMap<>();
+    private static final Map<String, String> FIRST_HIV_TEST_MODE_MAPPING = new HashMap<>();
 
     private final NDRCodeSetResolverService ndrCodeSetResolverService;
     
@@ -53,6 +57,33 @@ public class ConditionSpecificQuestionsTypeMapper {
         FUNCTIONAL_STATUS_MAPPING.put("A", "A");
         FUNCTIONAL_STATUS_MAPPING.put("B", "B");
 
+        CARE_ENTRY_POINT_MAPPING.put("POINT_ENTRY_OPD", "OPD");
+        CARE_ENTRY_POINT_MAPPING.put("POINT_ENTRY_IN-PATIENT", "Inpatients");
+        CARE_ENTRY_POINT_MAPPING.put("POINT_ENTRY_HTS", "HTS");
+        CARE_ENTRY_POINT_MAPPING.put("POINT_ENTRY_TB_DOTS", "TBDOTS");
+        CARE_ENTRY_POINT_MAPPING.put("POINT_ENTRY_ANC_PMTCT", "ANC_PMTCT");
+        CARE_ENTRY_POINT_MAPPING.put("POINT_ENTRY_TRANSFER-IN", "TransferIn");
+        CARE_ENTRY_POINT_MAPPING.put("POINT_ENTRY_COMMUNITY", "Community");
+        CARE_ENTRY_POINT_MAPPING.put("POINT_ENTRY_STI_CLINIC", "STI");
+        CARE_ENTRY_POINT_MAPPING.put("POINT_ENTRY_HCT", "HCT");
+        CARE_ENTRY_POINT_MAPPING.put("POINT_ENTRY_OTHERS", "Others");
+        CARE_ENTRY_POINT_MAPPING.put("POINT_ENTRY_OUTREACH", "SexWorkersOutreach");
+        CARE_ENTRY_POINT_MAPPING.put("POINT_ENTRY_CBO", "CBO");
+
+        KP_TYPOLOGY_MAPPING.put("KP_TYPE_FSW", "FSW");
+        KP_TYPOLOGY_MAPPING.put("KP_TYPE_MSM", "MSM");
+        KP_TYPOLOGY_MAPPING.put("KP_TYPE_PWID", "PWID");
+        KP_TYPOLOGY_MAPPING.put("KP_TYPE_Trans", "TG");
+        KP_TYPOLOGY_MAPPING.put("KP_TYPE_PERSONS_IN_CUSTODIAL_CENTERS", "Prisoners");
+        KP_TYPOLOGY_MAPPING.put("KP_TYPE_OTHERS", "OtherKP");
+
+        PRIOR_ART_MAPPING.put("PRIOR_ART_EARLIER_ARV_BUT_NOT_A_TRANSFER_IN", "EarlierARV");
+        PRIOR_ART_MAPPING.put("PRIOR_ART_TRANSFER_IN_WITHOUT_RECORDS", "TransferIn");
+        PRIOR_ART_MAPPING.put("PRIOR_ART_PREP", "PREP");
+        PRIOR_ART_MAPPING.put("PRIOR_ART_PEP", "PEP");
+
+        FIRST_HIV_TEST_MODE_MAPPING.put("MODE_HIV_TEST_HIV-AB", "HIVAb");
+        FIRST_HIV_TEST_MODE_MAPPING.put("MODE_HIV_TEST_PCR", "HIVPCR");
     }
 
 
@@ -105,7 +136,26 @@ public class ConditionSpecificQuestionsTypeMapper {
             } else {
                 hiv.setBiometricCaptured(YNCodeType.valueOf("NO"));
             }
-//            hiv.setBiometricCaptured(YNCodeType.valueOf("YES"));
+
+            if(demographics.getCareEntryPoint() != null){
+                String mappedValue = CARE_ENTRY_POINT_MAPPING.get(demographics.getCareEntryPoint().trim());
+                hiv.setCareEntryPoint(mappedValue);
+            }
+
+            if(demographics.getFirstHIVTestMode() != null){
+                String mappedValue = FIRST_HIV_TEST_MODE_MAPPING.get(demographics.getFirstHIVTestMode().trim());
+                hiv.setFirstHIVTestMode(mappedValue);
+            }
+
+            if(demographics.getPriorArt() != null){
+                String mappedValue = PRIOR_ART_MAPPING.get(demographics.getPriorArt().trim());
+                hiv.setPriorArt(mappedValue);
+            }
+
+            if(demographics.getKpTypology() != null){
+                String mappedValue = KP_TYPOLOGY_MAPPING.get(demographics.getKpTypology().trim());
+                hiv.setKPTypology(mappedValue);
+            }
 
             LocalDate inHIVCareDate = (demographics.getEnrolledInHIVCareDate() != null ? demographics.getEnrolledInHIVCareDate() : demographics.getArtStartDate());
             if(inHIVCareDate != null){
@@ -127,7 +177,12 @@ public class ConditionSpecificQuestionsTypeMapper {
                     }
                     if (statusAtRegistration.equalsIgnoreCase ("ART Transfer In")) {
                         hiv.setPatientTransferredIn(true);
-                        hiv.setTransferredInDate (getXmlDate (Date.valueOf (inHIVCareDate)));
+                        if (demographics.getTransferredInDate() != null) {
+                            hiv.setTransferredInDate (getXmlDate (Date.valueOf (demographics.getTransferredInDate())));
+                        }else {
+                            hiv.setTransferredInDate(getXmlDate(Date.valueOf(inHIVCareDate)));
+                        }
+                        //TransferredInFrom
                     }
                     String tbStatus = demographics.getTbStatus();
                     //log.info("initial tb status {}", tbStatus);
@@ -139,9 +194,7 @@ public class ConditionSpecificQuestionsTypeMapper {
             }else {
                 throw new IllegalArgumentException(" Enrolled In HIVCareDate cannot be null");
             }
-            if(demographics.getCareEntryPoint() != null){
-                hiv.setCareEntryPoint(demographics.getCareEntryPoint());
-            }
+
             //log.info("art start date {}", demographics.getArtStartDate());
            
             if (demographics.getArtStartDate() != null) {
@@ -157,7 +210,7 @@ public class ConditionSpecificQuestionsTypeMapper {
                 hiv.setFirstARTRegimen(codedSimpleType);
             }
             if(demographics.getFunctionalStatusStartART() != null){
-                String mappedValue = FUNCTIONAL_STATUS_MAPPING.get(demographics.getWHOClinicalStageART());
+                String mappedValue = FUNCTIONAL_STATUS_MAPPING.get(demographics.getFunctionalStatusStartART());
                 hiv.setFunctionalStatusStartART(mappedValue);
             }
 
@@ -176,7 +229,7 @@ public class ConditionSpecificQuestionsTypeMapper {
             if(demographics.getHeightAtARTStart() != null){
                 hiv.setHeightAtARTStart(demographics.getHeightAtARTStart());
             }
-
+            //log.info("height {}", demographics.getHeightAtARTStart());
             if(demographics.getBmimuacAtARTStart() != null){
                 hiv.setBMIMUACAtARTStart(demographics.getBmimuacAtARTStart());
             }
@@ -185,6 +238,21 @@ public class ConditionSpecificQuestionsTypeMapper {
                 hiv.setCD4AtStartOfART(demographics.getCd4AtStartOfART());
             }
 
+            String cd4CellCount = demographics.getCd4AtStartOfART();
+            if (cd4CellCount != null && !cd4CellCount.trim().isEmpty()) {
+                try {
+                    int cd4 = Integer.parseInt(cd4CellCount.trim());
+
+                    if (cd4 < 200) {
+                        hiv.setCD4LFA("LessThan200");
+                    } else {
+                        hiv.setCD4LFA("GTEqual200");
+                    }
+                } catch (NumberFormatException e) {
+                    log.warn("Invalid CD4 Cell Count: {}", cd4CellCount);
+                }
+            }
+            //log.info("cd4 date {}", demographics.getCd4AtStartOfART());
             if(demographics.getTptMedication() != null){
                 hiv.setTPTMedication(demographics.getTptMedication());
             }
@@ -199,7 +267,7 @@ public class ConditionSpecificQuestionsTypeMapper {
             if(demographics.getTbTreatmentStartDate() != null){
                 hiv.setTBTreatmentStartDate(getXmlDate (Date.valueOf ((demographics.getTbTreatmentStartDate()))));
             }
-            // need more clarity on CD4
+            //log.info("TB start date {}", demographics.getTbTreatmentStartDate());
             hivQuestions.setHIVQuestions (hiv);
             return hivQuestions;
         } catch (Exception e) {

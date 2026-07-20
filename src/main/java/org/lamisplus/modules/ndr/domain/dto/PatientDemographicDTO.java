@@ -11,6 +11,9 @@ public interface PatientDemographicDTO {
 	String getHospitalNumber();
 	String getStatusAtRegistration();
 	String getCareEntryPoint();
+	String getFirstHIVTestMode();
+	String getPriorArt();
+	String getKpTypology();
 	Integer getAge();
 	String getPatientSexCode();
 	LocalDate getPatientDateOfBirth();
@@ -46,4 +49,6 @@ public interface PatientDemographicDTO {
 	String getTptDose();
 	LocalDate getTbTreatmentStartDate();
 	LocalDate getTptCompletionDate();
+	LocalDate getTransferredInDate();
+	String getTransferredInFrom();
 }    

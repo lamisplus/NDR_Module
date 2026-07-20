@@ -346,14 +346,21 @@ public class LaboratoryReportTypeMapper {
                             //labResult.setCD4Percentage(BigDecimal.valueOf(Long.parseLong(labDTO.getCd4Percentage())));
                         }
 
-                        if (labDTO.getCd4CellCount() != null && Integer.parseInt(labDTO.getCd4CellCount()) < 200) {
-                            labResult.setCD4LFAResultCode("LessThan200");
-                        }else {
-                            assert labDTO.getCd4CellCount() != null;
-                            if (Integer.parseInt(labDTO.getCd4CellCount()) >= 200){
-                                labResult.setCD4LFAResultCode("GTEqual200");
+                        String cd4CellCount = labDTO.getCd4CellCount();
+                        if (cd4CellCount != null && !cd4CellCount.trim().isEmpty()) {
+                            try {
+                                int cd4 = Integer.parseInt(cd4CellCount.trim());
+
+                                if (cd4 < 200) {
+                                    labResult.setCD4LFAResultCode("LessThan200");
+                                } else {
+                                    labResult.setCD4LFAResultCode("GTEqual200");
+                                }
+                            } catch (NumberFormatException e) {
+                                log.warn("Invalid CD4 Cell Count: {}", cd4CellCount);
                             }
                         }
+
                         // artStartDate
                         String artStartDate = labDTO.getArtStartDate();
                         if (StringUtils.isNotBlank(artStartDate)) {

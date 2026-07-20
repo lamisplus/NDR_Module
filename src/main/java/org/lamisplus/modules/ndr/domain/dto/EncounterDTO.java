@@ -13,7 +13,7 @@ import java.math.BigDecimal;
 @AllArgsConstructor
 @NoArgsConstructor
 public class EncounterDTO implements Serializable {
-	Integer weight;
+	Integer  weight;
 	String  visitID;
 	String tbStatus;
 	String visitDate;

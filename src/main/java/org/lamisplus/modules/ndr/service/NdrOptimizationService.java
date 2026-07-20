@@ -71,41 +71,6 @@ public class NdrOptimizationService {
 	public final AtomicLong messageId = new AtomicLong(0);
 
 	private static final String TEMP = "temp/";
-
-	public void generatePatientOneNDRXml(long facilityId, boolean initial, String patientId) {
-		final String pathname = BASE_DIR + TEMP + facilityId + "/";
-		//log.info("folder -> "+ pathname);
-		ndrService.cleanupFacility(facilityId, pathname);
-		AtomicInteger generatedCount = new AtomicInteger();
-
-		List<NDRErrorDTO> ndrErrors = new ArrayList<>();
-
-		PatientDemographicDTO[] patientDemographicDTO = new PatientDemographicDTO[1];
-
-		String pushIdentifier = UUID.randomUUID().toString();
-
-		getPatientNDRXml(patientId, facilityId, initial, ndrErrors, pushIdentifier);
-		generatedCount.getAndIncrement();
-		patientDemographicDTO[0] = data.getPatientDemographics(patientId, facilityId).get();
-
-		File folder = new File(BASE_DIR + TEMP + facilityId + "/");
-		log.info("fileSize {} bytes ", ZipUtility.getFolderSize(folder));
-		if (ZipUtility.getFolderSize(folder) >= 15_000_000) {
-			log.info(BASE_DIR + TEMP + facilityId + "/" + " will be split into two");
-		}
-		if (generatedCount.get() > 0 && ZipUtility.getFolderSize(folder) > 0) {
-			zipAndSaveTheFilesforDownload(
-					facilityId,
-					pathname,
-					generatedCount,
-					patientDemographicDTO[0],
-					ndrErrors,
-					"treatment", pushIdentifier
-			);
-		}
-		log.error("error list size {}", ndrErrors.size());
-	}
-
 	public void generatePatientsNDRXml(long facilityId, boolean initial){
 
 		List<String> patientIds;
@@ -257,6 +222,7 @@ public class NdrOptimizationService {
 	public void generateNDRXMLByFacilityAndListOfPatient(Long facilityId, boolean initial, List<String> patientUuidList) {
 		final String pathname = BASE_DIR + TEMP + facilityId + "/";
 		//log.info("folder -> "+ pathname);
+		log.info("patients IDs {} status: {}", patientUuidList, initial);
 		List<String> idsNotGenerated = new LinkedList<>();
 		ndrService.cleanupFacility(facilityId, pathname);
 		AtomicInteger generatedCount = new AtomicInteger();
