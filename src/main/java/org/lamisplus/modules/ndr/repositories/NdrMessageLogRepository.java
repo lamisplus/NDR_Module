@@ -172,7 +172,8 @@ public interface NdrMessageLogRepository extends JpaRepository<NdrMessageLog, In
             "              from \n" +
             "                (\n" +
             "                  SELECT \n" +
-            "                    DISTINCT pharmacy.person_uuid, \n" +
+            "                    DISTINCT ON (prescribedRegimenCode)" +
+            "                    pharmacy.person_uuid, \n" +
             "                    pharmacy.uuid, \n" +
             "                    pharmacy.visit_date AS visitDate, \n" +
             "                    pharmacy_object ->> 'name' as name, \n" +

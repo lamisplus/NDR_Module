@@ -39,6 +39,8 @@ public class ConditionSpecificQuestionsTypeMapper {
 
     private final StatusManagementService statusManagementService;
 
+    private final PregnancyStatus pregnancyStatus;
+
     public static class LogMessages {
         public static final String GENERATING_COMMON_QUESTIONS = "Generating condition specific questions for patient with uuid {}";
     }
@@ -266,6 +268,12 @@ public class ConditionSpecificQuestionsTypeMapper {
 
             if(demographics.getTbTreatmentStartDate() != null){
                 hiv.setTBTreatmentStartDate(getXmlDate (Date.valueOf ((demographics.getTbTreatmentStartDate()))));
+            }
+
+            Map<String, Object> status =
+                    pregnancyStatus.getPregnancyBFStatusStatus(demographics.getPersonUuid());
+            if (demographics.getPatientSexCode() != null && demographics.getPatientSexCode().contains("F")) {
+                hiv.setPregnancyBFStatusAtStart((String) status.get("status"));
             }
             //log.info("TB start date {}", demographics.getTbTreatmentStartDate());
             hivQuestions.setHIVQuestions (hiv);

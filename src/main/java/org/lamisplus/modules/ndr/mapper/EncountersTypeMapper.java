@@ -77,7 +77,7 @@ public class EncountersTypeMapper {
 						person.ifPresent(value -> processClinicalEncounterRegimens(value, artClinical, hivEncounterType));
 						processAndSetTBStatus(demographics.getPersonUuid(), hivEncounterType);
 						Map<String, Object> status =
-								pregnancyStatus.getPregnancyStatus(demographics.getPersonUuid());
+								pregnancyStatus.getEDDandPMTCTLinkStatus(demographics.getPersonUuid());
 						if (demographics.getSex() != null && demographics.getSex().contains("F")) {
 							hivEncounterType.setEDDandPMTCTLink((String) status.get("status"));
 						}
@@ -144,7 +144,7 @@ public class EncountersTypeMapper {
 								     hivEncounterType.setTBStatus(encounterDTO.getTbStatus());
 									}
 									Map<String, Object> status =
-											pregnancyStatus.getPregnancyStatus(demographicDTO.getPersonUuid());
+											pregnancyStatus.getEDDandPMTCTLinkStatus(demographicDTO.getPersonUuid());
 									if (demographicDTO.getPatientSexCode() != null && demographicDTO.getPatientSexCode().contains("F")) {
 										hivEncounterType.setEDDandPMTCTLink((String) status.get("status"));
 									}
@@ -177,7 +177,7 @@ public class EncountersTypeMapper {
 						person.ifPresent(value -> processClinicalEncounterRegimens(value, artClinical, hivEncounterType));
 						processAndSetTBStatus(demographics.getPersonUuid(), hivEncounterType);
 						Map<String, Object> status =
-								pregnancyStatus.getPregnancyStatus(demographics.getPersonUuid());
+								pregnancyStatus.getEDDandPMTCTLinkStatus(demographics.getPersonUuid());
 						if (demographics.getSex() != null && demographics.getSex().contains("F")) {
 							hivEncounterType.setEDDandPMTCTLink((String) status.get("status"));
 						}
