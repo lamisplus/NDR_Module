@@ -21,10 +21,7 @@ import java.math.BigDecimal;
 import java.sql.Date;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 
 
 @Slf4j
@@ -181,16 +178,19 @@ public class LaboratoryReportTypeMapper {
                     laboratory.setLaboratoryTestIdentifier(labDTO.getLaboratoryTestIdentifier());
 
                     //baselineRepeatCode TODO: provide the logic
-                    if (labDTO.getViralLoadIndicationCode() != null && (labDTO.getViralLoadIndicationCode() == 300
-                    || labDTO.getViralLoadIndicationCode() == 1394)) {
-                        laboratory.setBaselineRepeatCode("B");
-                    }else {
-                        laboratory.setBaselineRepeatCode("R");
+                    if (Objects.equals(labDTO.getLaboratoryResultedTestCodeDescTxt(), VIRALLOAD)) {
+                        if (labDTO.getViralLoadIndicationCode() != null && (labDTO.getViralLoadIndicationCode() == 300
+                                || labDTO.getViralLoadIndicationCode() == 1394)) {
+                            laboratory.setBaselineRepeatCode("B");
+                        }else {
+                            laboratory.setBaselineRepeatCode("R");
+                        }
                     }
+
                     //artStatusCode TODO: provide the logic
-                    if (labDTO.getArtStatusCode() != null) {
-                        laboratory.setBaselineRepeatCode("POSITIVE");
-                    }
+//                    if (labDTO.getArtStatusCode() != null) {
+//                        laboratory.setBaselineRepeatCode("POSITIVE");
+//                    }
                     if (labDTO.getReportedBy() != null) {
                         laboratory.setReportedBy(labDTO.getReportedBy());
                     }
@@ -315,7 +315,8 @@ public class LaboratoryReportTypeMapper {
                         }
                         //viralLoadResult
                         if (labDTO.getLaboratoryResultAnswerNumeric() != null
-                                && !labDTO.getLaboratoryResultAnswerNumeric().trim().isEmpty()) {
+                                && !labDTO.getLaboratoryResultAnswerNumeric().trim().isEmpty()
+                                && Objects.equals(labDTO.getLaboratoryResultedTestCodeDescTxt(), VIRALLOAD)) {
 
                             labResult.setViralLoadResult(
                                     new BigDecimal(labDTO.getLaboratoryResultAnswerNumeric().trim())
@@ -323,7 +324,7 @@ public class LaboratoryReportTypeMapper {
                         }
                         //viralLoadResultDate
                         String viralLoadResultDate = labDTO.getResultedTestDate();
-                        if (StringUtils.isNotBlank(viralLoadResultDate)) {
+                        if (StringUtils.isNotBlank(viralLoadResultDate) && Objects.equals(labDTO.getLaboratoryResultedTestCodeDescTxt(), VIRALLOAD)) {
                             LocalDate localDate = LocalDate.parse(viralLoadResultDate);
                             try {
                                 labResult.setViralLoadResultDate(DateUtil.getXmlDate(Date.valueOf(localDate)));
