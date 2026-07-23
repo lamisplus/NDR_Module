@@ -50,5 +50,6 @@ public interface PatientDemographicDTO {
 	LocalDate getTbTreatmentStartDate();
 	LocalDate getTptCompletionDate();
 	LocalDate getTransferredInDate();
+	String getTbStatusNew();
 	String getTransferredInFrom();
 }    

@@ -32,6 +32,8 @@ public class ConditionSpecificQuestionsTypeMapper {
     private static final Map<String, String> KP_TYPOLOGY_MAPPING = new HashMap<>();
     private static final Map<String, String> PRIOR_ART_MAPPING = new HashMap<>();
     private static final Map<String, String> FIRST_HIV_TEST_MODE_MAPPING = new HashMap<>();
+    private static final Map<String, String> INITIAL_TB_STATUS_MAPPING = new HashMap<>();
+    private static final Map<Integer, String> TPT_MEDICATION_MAPPING = new HashMap<>();
 
     private final NDRCodeSetResolverService ndrCodeSetResolverService;
     
@@ -86,6 +88,20 @@ public class ConditionSpecificQuestionsTypeMapper {
 
         FIRST_HIV_TEST_MODE_MAPPING.put("MODE_HIV_TEST_HIV-AB", "HIVAb");
         FIRST_HIV_TEST_MODE_MAPPING.put("MODE_HIV_TEST_PCR", "HIVPCR");
+
+        INITIAL_TB_STATUS_MAPPING.put("TB_STATUS_NO_SIGN_OR_SYMPTOMS_OF_TB", "1");
+        INITIAL_TB_STATUS_MAPPING.put("TB_STATUS_TB_SUSPECTED_AND_REFERRED_FOR_EVALUATION", "2");
+        INITIAL_TB_STATUS_MAPPING.put("TB_STATUS_CURRENTLY_ON_INH_PROPHYLAXIS", "3");
+        INITIAL_TB_STATUS_MAPPING.put("TB_STATUS_CURRENTLY_ON_TB_TREATMENT", "4");
+        INITIAL_TB_STATUS_MAPPING.put("TB_STATUS_TB_POSITIVE_NOT_ON_TB_DRUGS", "5");
+
+        TPT_MEDICATION_MAPPING.put(115, "SixH");
+        TPT_MEDICATION_MAPPING.put(130, "SixH");
+        TPT_MEDICATION_MAPPING.put(1096, "ThreeHP");
+        TPT_MEDICATION_MAPPING.put(1095, "Other");
+//        TPT_MEDICATION_MAPPING.put("Isoniazid + Rifapentine", "ThreeHP");
+//        TPT_MEDICATION_MAPPING.put("Isoniazid + Rifampicin", "ThreeHR");
+
     }
 
 
@@ -190,6 +206,9 @@ public class ConditionSpecificQuestionsTypeMapper {
                     //log.info("initial tb status {}", tbStatus);
                     if(tbStatus != null){
                         hiv.setInitialTBStatus(demographics.getTbStatus());
+                    }else if (demographics.getTbStatusNew() != null) {
+                        String mappedValue = INITIAL_TB_STATUS_MAPPING.get(demographics.getTbStatusNew());
+                        hiv.setInitialTBStatus(mappedValue);
                     }
                     processAndHandleARTStatus (hiv, demographics.getPersonId(), statusAtRegistration);
                 }
@@ -255,8 +274,15 @@ public class ConditionSpecificQuestionsTypeMapper {
                 }
             }
             //log.info("cd4 date {}", demographics.getCd4AtStartOfART());
-            if(demographics.getTptMedication() != null){
-                hiv.setTPTMedication(demographics.getTptMedication());
+            String tptMedication = demographics.getTptMedication();
+            if(tptMedication != null){
+                try{
+                    Integer key = Integer.parseInt(demographics.getTptMedication());
+                    String mappedValue = TPT_MEDICATION_MAPPING.get(key);
+                    hiv.setTPTMedication(mappedValue);
+                }catch(NumberFormatException e){
+                    log.warn("Invalid TPT medication value: {}", tptMedication);
+                }
             }
             if(demographics.getTptDose() != null){
                 hiv.setTPTDose(demographics.getTptDose());

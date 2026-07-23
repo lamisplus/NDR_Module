@@ -97,59 +97,58 @@ public class EncountersTypeMapper {
 			try {
 				encounterDTOList.parallelStream()
 						.forEach( encounterDTO -> {
-									HIVEncounterType hivEncounterType = new HIVEncounterType();
-									if (StringUtils.isNotBlank(encounterDTO.getVisitID())) {
-										hivEncounterType.setVisitID(encounterDTO.getVisitID());
-									} else {
-										throw new IllegalArgumentException("visit id cannot be null");
+								HIVEncounterType hivEncounterType = new HIVEncounterType();
+								if (StringUtils.isNotBlank(encounterDTO.getVisitID())) {
+									hivEncounterType.setVisitID(encounterDTO.getVisitID());
+								} else {
+									throw new IllegalArgumentException("visit id cannot be null");
+								}
+								String visitDate = encounterDTO.getVisitDate();
+								if (StringUtils.isNotBlank(visitDate)) {
+									LocalDate localDate = LocalDate.parse(visitDate);
+									try {
+										hivEncounterType.setVisitDate(DateUtil.getXmlDate(Date.valueOf(localDate)));
+									} catch (DatatypeConfigurationException e) {
+										throw new IllegalArgumentException(e);
 									}
-									String visitDate = encounterDTO.getVisitDate();
-									if (StringUtils.isNotBlank(visitDate)) {
-										LocalDate localDate = LocalDate.parse(visitDate);
-										try {
-											hivEncounterType.setVisitDate(DateUtil.getXmlDate(Date.valueOf(localDate)));
-										} catch (DatatypeConfigurationException e) {
-											throw new IllegalArgumentException(e);
-										}
-									} else {
-										throw new IllegalArgumentException("Visit Date cannot be null");
+								} else {
+									throw new IllegalArgumentException("Visit Date cannot be null");
+								}
+								if(StringUtils.isNotBlank(encounterDTO.getNextAppointmentDate())) {
+									LocalDate localDate = LocalDate.parse(encounterDTO.getNextAppointmentDate());
+									try {
+										hivEncounterType.setNextAppointmentDate(DateUtil.getXmlDate(Date.valueOf(localDate)));
+									} catch (DatatypeConfigurationException e) {
+										throw new IllegalArgumentException(e);
 									}
-									if(StringUtils.isNotBlank(encounterDTO.getNextAppointmentDate())) {
-										LocalDate localDate = LocalDate.parse(encounterDTO.getNextAppointmentDate());
-										try {
-											hivEncounterType.setNextAppointmentDate(DateUtil.getXmlDate(Date.valueOf(localDate)));
-										} catch (DatatypeConfigurationException e) {
-											throw new IllegalArgumentException(e);
-										}
-									}
+								}
 
-									if (encounterDTO.getWeight() != null) {
-										Integer weight = encounterDTO.getWeight();
-//										log.info("weight, {}", weight);
-										if (weight > 200) {
-											hivEncounterType.setWeight(200);
-										} else if (weight < 0) {
-											hivEncounterType.setWeight(0);
-										} else {
-											hivEncounterType.setWeight(weight);
-										}
+								if (encounterDTO.getWeight() != null) {
+									Integer weight = encounterDTO.getWeight();
+									if (weight > 200) {
+										hivEncounterType.setWeight(200);
+									} else if (weight < 0) {
+										hivEncounterType.setWeight(0);
+									} else {
+										hivEncounterType.setWeight(weight);
 									}
-								   if(encounterDTO.getChildHeight()!= null) {
-									hivEncounterType.setChildHeight(encounterDTO.getChildHeight());
-									}
-								    if(encounterDTO.getBloodPressure() != null) {
-										hivEncounterType.setBloodPressure(encounterDTO.getBloodPressure());
-								    }
-									if(StringUtils.isNotBlank(encounterDTO.getTbStatus())){
-								     hivEncounterType.setTBStatus(encounterDTO.getTbStatus());
-									}
-									Map<String, Object> status =
-											pregnancyStatus.getEDDandPMTCTLinkStatus(demographicDTO.getPersonUuid());
-									if (demographicDTO.getPatientSexCode() != null && demographicDTO.getPatientSexCode().contains("F")) {
-										hivEncounterType.setEDDandPMTCTLink((String) status.get("status"));
-									}
-									hivEncounters.add(hivEncounterType);
-								});
+								}
+							   if(encounterDTO.getChildHeight()!= null) {
+								hivEncounterType.setChildHeight(encounterDTO.getChildHeight());
+								}
+								if(encounterDTO.getBloodPressure() != null) {
+									hivEncounterType.setBloodPressure(encounterDTO.getBloodPressure());
+								}
+								if(StringUtils.isNotBlank(encounterDTO.getTbStatus())){
+								 hivEncounterType.setTBStatus(encounterDTO.getTbStatus());
+								}
+								Map<String, Object> status =
+										pregnancyStatus.getEDDandPMTCTLinkStatus(demographicDTO.getPersonUuid());
+								if (demographicDTO.getPatientSexCode() != null && demographicDTO.getPatientSexCode().contains("F")) {
+									hivEncounterType.setEDDandPMTCTLink((String) status.get("status"));
+								}
+								hivEncounters.add(hivEncounterType);
+							});
 			}catch (Exception e) {
 			 log.error("An exception occurred while processing  the patient encounters error {}", e.getMessage());
 			}
