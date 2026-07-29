@@ -116,7 +116,7 @@ public class RegimenTypeMapper {
 
 							throw new IllegalArgumentException("Regimen type code cannot be null");
 						}
-						//log.info("regimen type mapper " +regimen.getPrescribedRegimenCode() + " " + regimen.getPrescribedRegimenCodeDescTxt() + " " + regimen.getNdrRegimenCode());
+						//log.info("patient uuid " + demographics.getPersonUuid() + " regimen type mapper " +regimen.getPrescribedRegimenCode() + " " + regimen.getPrescribedRegimenCodeDescTxt() + " " + regimen.getNdrRegimenCode());
 						if (StringUtils.isNotBlank(regimen.getPrescribedRegimenCode())
 								&& StringUtils.isNotBlank(regimen.getPrescribedRegimenCodeDescTxt()) && StringUtils.isNotBlank(regimen.getNdrRegimenCode())) {
 							RegimenCodedSimpleType simpleTypeCode = new RegimenCodedSimpleType();

@@ -13,32 +13,33 @@ import java.util.Optional;
 
 public interface NdrXmlStatusRepository extends JpaRepository<NdrXmlStatus, Integer> {
 	
-	@Query(value = "SELECT p.id,p.uuid as personUuid, p.facility_id as facilityId, p.archived \\:\\:BOOLEAN as archived, p.uuid,p.hospital_number as hospitalNumber, \n" +
-			"\t\t\t\t  p.surname, p.first_name as firstName,\n" +
-			"\t\t\t\t  EXTRACT(YEAR from AGE(NOW(),  date_of_birth)) as age,\n" +
-			"\t\t\t\t  p.other_name as otherName, p.sex, p.date_of_birth as dateOfBirth, \n" +
-			"\t\t\t\t  h.date_of_registration as dateOfRegistration, p.marital_status->>'display' as maritalStatus, \n" +
-			"\t\t\t\t  education->>'display' as education, p.employment_status->>'display' as occupation, \n" +
-			"\t\t\t\t  facility.name as facilityName, facility_lga.name as lga, facility_state.name as state, \n" +
-			"\t\t\t\t  boui.code as datimId, r.city as town,res_state.name as residentialState, res_lga.name as residentialLga,\n" +
-			"\t\t\t\t  r.address as address, p.contact_point->'contactPoint'->0->'value'->>0 AS phone\n" +
-			"\t\t\t\t  FROM patient_person p\n" +
-			"\t\t\t\t  INNER JOIN (\n" +
-			"\t\t\t\t  SELECT * FROM (SELECT p.id, REPLACE(REPLACE(REPLACE(address_object->>'line'\\:\\:text, '\"', ''), ']', ''), '[', '') AS address,\n" +
-			"\t\t\t\t\t\t\t\t  REPLACE(REPLACE(REPLACE(address_object->>'city'\\:\\:text, '\\\"', ''), ']', ''), '[', '') AS city,\n" +
-			"\t\t\t\tCASE WHEN address_object->>'stateId'  ~ '^\\d+(\\.\\d+)?$' THEN address_object->>'stateId' ELSE null END  AS stateId,\n" +
-			"\t\t\t\tCASE WHEN address_object->>'district'  ~ '^\\d+(\\.\\d+)?$' THEN address_object->>'district' ELSE null END  AS lgaId\n" +
-			"      \t\t\tFROM patient_person p,\n" +
-			"jsonb_array_elements(p.address-> 'address') with ordinality l(address_object)) as result\n" +
-			"\t\t\t\t  ) r ON r.id=p.id\n" +
-			"\t\t\t\t INNER JOIN base_organisation_unit facility ON facility.id=facility_id\n" +
-			"\t\t\t\t INNER JOIN base_organisation_unit facility_lga ON facility_lga.id=facility.parent_organisation_unit_id\n" +
-			"\t\t\t\t INNER JOIN base_organisation_unit facility_state ON facility_state.id=facility_lga.parent_organisation_unit_id\n" +
-			"\t\t\t\t LEFT JOIN base_organisation_unit res_state ON res_state.id=r.stateid\\:\\:BIGINT\n" +
-			"\t\t\t\t LEFT JOIN base_organisation_unit res_lga ON res_lga.id=r.lgaid\\:\\:BIGINT\n" +
-			"\t\t\t\t INNER JOIN base_organisation_unit_identifier boui ON boui.organisation_unit_id=facility_id AND boui.name ='DATIM_ID' \n" +
-			"\t\t\t\t INNER JOIN hiv_enrollment h ON h.person_uuid = p.uuid\n" +
-			"\t\t\t\t WHERE h.archived=0 AND p.uuid=?1",
+	@Query(value = "SELECT p.id,p.uuid as personUuid, p.facility_id as facilityId, \n" +
+			"CAST(p.archived AS BOOLEAN) as archived, p.uuid,p.hospital_number as hospitalNumber, \n" +
+			"\t\t\t  p.surname, p.first_name as firstName,\n" +
+			"\t\t\t  EXTRACT(YEAR from AGE(NOW(),  date_of_birth)) as age,\n" +
+			"\t\t\t  p.other_name as otherName, p.sex, p.date_of_birth as dateOfBirth, \n" +
+			"\t\t\t  h.date_enrolled_in_hiv_care as dateOfRegistration, p.marital_status->>'display' as maritalStatus, \n" +
+			"\t\t\t  education->>'display' as education, p.employment_status->>'display' as occupation, \n" +
+			"\t\t\t  facility.name as facilityName, facility_lga.name as lga, facility_state.name as state, \n" +
+			"\t\t\t  boui.code as datimId, r.city as town,res_state.name as residentialState, res_lga.name as residentialLga,\n" +
+			"\t\t\t  r.address as address, p.contact_point->'contactPoint'->0->'value'->>0 AS phone\n" +
+			"\t\t\t  FROM patient_person p\n" +
+			"\t\t\t  INNER JOIN (\n" +
+			"\t\t\t  SELECT * FROM (SELECT p.id, REPLACE(REPLACE(REPLACE(CAST(address_object->>'line' AS text), '\\\"', ''), ']', ''), '[', '') AS address,\n" +
+			"\t\t\t  REPLACE(REPLACE(REPLACE(cast(address_object->>'city' AS text), '\\\\\\\"', ''), ']', ''), '[', '') AS city,\n" +
+			"\t\t\tCASE WHEN address_object->>'stateId'  ~ '^\\\\d+(\\\\.\\\\d+)?$' THEN address_object->>'stateId' ELSE null END  AS stateId,\n" +
+			"\t\t\tCASE WHEN address_object->>'district'  ~ '^\\\\d+(\\\\.\\\\d+)?$' THEN address_object->>'district' ELSE null END  AS lgaId\n" +
+			"\t\t\tFROM patient_person p,\n" +
+			"\t\t\tjsonb_array_elements(p.address-> 'address') with ordinality l(address_object)) as result\n" +
+			"\t\t\t  ) r ON r.id=p.id\n" +
+			"\t\t\t INNER JOIN base_organisation_unit facility ON facility.id=facility_id\n" +
+			"\t\t\t INNER JOIN base_organisation_unit facility_lga ON facility_lga.id=facility.parent_organisation_unit_id\n" +
+			"\t\t\t INNER JOIN base_organisation_unit facility_state ON facility_state.id=facility_lga.parent_organisation_unit_id\n" +
+			"\t\t\t LEFT JOIN base_organisation_unit res_state ON res_state.id= CAST(r.stateid AS BIGINT)\n" +
+			"\t\t\t LEFT JOIN base_organisation_unit res_lga ON res_lga.id= CAST(r.lgaid AS BIGINT)\n" +
+			"\t\t\t INNER JOIN base_organisation_unit_identifier boui ON boui.organisation_unit_id=facility_id AND boui.name ='DATIM_ID' \n" +
+			"\t\t\t INNER JOIN hiv_enrollment_commencement h ON h.person_uuid = p.uuid\n" +
+			"\t\t\t WHERE h.archived=0 AND p.uuid=?1",
 			nativeQuery = true)
 	Optional<PatientDemographics> getPatientDemographicsByUUID(String patientUuid);
 	

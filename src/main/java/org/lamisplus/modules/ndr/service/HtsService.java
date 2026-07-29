@@ -110,6 +110,7 @@ public class HtsService {
 		PatientDemographicDTO patientDemographic =
 				getPatientDemographic(facilityId, clientCode, start, ndrErrors);
 
+
 		if (!initial && patientDemographic != null) {
 			Optional<NdrMessageLog> messageLog =
 					data.findFirstByIdentifierAndFileType(patientDemographic.getPatientIdentifier(), "hts");

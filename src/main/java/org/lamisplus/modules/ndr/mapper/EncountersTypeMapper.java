@@ -134,7 +134,14 @@ public class EncountersTypeMapper {
 									}
 								}
 							   if(encounterDTO.getChildHeight()!= null) {
-								hivEncounterType.setChildHeight(encounterDTO.getChildHeight());
+								   Integer height = encounterDTO.getChildHeight();
+								   if (height > 200) {
+									   hivEncounterType.setChildHeight(200);
+								   } else if (height < 0) {
+									   hivEncounterType.setChildHeight(0);
+								   } else {
+									   hivEncounterType.setChildHeight(height);
+								   }
 								}
 								if(encounterDTO.getBloodPressure() != null) {
 									hivEncounterType.setBloodPressure(encounterDTO.getBloodPressure());

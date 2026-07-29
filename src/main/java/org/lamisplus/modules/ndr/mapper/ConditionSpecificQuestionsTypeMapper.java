@@ -248,7 +248,14 @@ public class ConditionSpecificQuestionsTypeMapper {
             }
 
             if(demographics.getHeightAtARTStart() != null){
-                hiv.setHeightAtARTStart(demographics.getHeightAtARTStart());
+                Integer height = demographics.getHeightAtARTStart();
+                if (height > 200) {
+                    hiv.setHeightAtARTStart(200);
+                } else if (height < 0) {
+                    hiv.setHeightAtARTStart(0);
+                } else {
+                    hiv.setHeightAtARTStart(height);
+                }
             }
             //log.info("height {}", demographics.getHeightAtARTStart());
             if(demographics.getBmimuacAtARTStart() != null){
