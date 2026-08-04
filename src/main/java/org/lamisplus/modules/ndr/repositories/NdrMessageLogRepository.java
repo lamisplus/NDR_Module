@@ -200,7 +200,7 @@ public interface NdrMessageLogRepository extends JpaRepository<NdrMessageLog, In
             "                    INNER JOIN hiv_regimen hr ON hr.description = CAST(\n" +
             "                      pharmacy_object ->> 'regimenName' AS VARCHAR\n" +
             "                    ) \n" +
-            "                    LEFT JOIN hiv_regimen_resolver hrr ON hrr.regimensys = hr.description \n" +
+            "                    LEFT JOIN hiv_regimen_resolver hrr ON hrr.regimensys = hr.description OR hrr.regimensys = hr.composition \n" +
             "                    LEFT JOIN ndr_code_set ncs_reg ON ncs_reg.code_description = hrr.regimen \n" +
             "                    LEFT JOIN ndr_code_set ncs_others ON ncs_others.code_description = hr.description \n" +
             "                    LEFT JOIN dsd_devolvement dd ON dd.person_uuid = pharmacy.person_uuid \n" +
