@@ -165,7 +165,7 @@ public class HtsEncounterReportTypeMapper {
             HtsReportDto projection,
             HIVTestingReportType reportType,
             ObjectFactory objectFactory) {
-        log.info("HTS projection for client: {}", projection.toString());
+       // log.info("HTS projection for client: {}", projection.toString());
         validateAndSet(projection.getClientCode(), reportType::setClientCode, "ClientCode"); // required
         validateAndSet(projection.getVisitId(), reportType::setVisitID, "VisitID"); // required
         validateAndSetDate(projection.getVisitDate(), reportType::setVisitDate, "VisitDate"); // required
@@ -385,8 +385,8 @@ public class HtsEncounterReportTypeMapper {
         if (p.getOfferedPns() != null) {
             setIfPresent(p.getOfferedPns(), indexContact::setOfferedIndexTestingServices, this::mapYesNoToCode); //required
         }
-        if (p.getAcceptedPns() != null) {
-            setIfPresent(p.getAcceptedPns(), indexContact::setAcceptedIndexTestingServices, this::mapYesNoToCode); //required
+        if (p.getAcceptedIndexTesting() != null) {
+            setIfPresent(p.getAcceptedIndexTesting().toString(), indexContact::setAcceptedIndexTestingServices, this::mapYesNoToCode); //required
         }
 
         List<IndexContactType> contacts = buildIndexContacts(factory, p);
@@ -748,13 +748,27 @@ public class HtsEncounterReportTypeMapper {
         if (value == null) {
             return "No";
         }
-        String upperValue = value.toUpperCase().replace("YES_NO_", "").trim();
-        if (upperValue.equals("YES") || upperValue.equals("Y") || upperValue.equals("TRUE")) {
-            return "Yes";
+        log.info("value: {}", value);
+        String upperValue = "";
+
+        if (value.contains("false") || value.contains("true")) {
+            upperValue = value.toUpperCase().trim();
+            if (upperValue.equals("TRUE")) {
+                return "Yes";
+            }
+            if (upperValue.equals("FALSE")) {
+                return "No";
+            }
+        } else {
+            upperValue = value.toUpperCase().replace("YES_NO_", "").trim();
+            if (upperValue.equals("YES")) {
+                return "Yes";
+            }
+            if (upperValue.equals("NO")) {
+                return "No";
+            }
         }
-        if (upperValue.equals("NO") || upperValue.equals("N") || upperValue.equals("FALSE")) {
-            return "No";
-        }
+
         return "No";
     }
 

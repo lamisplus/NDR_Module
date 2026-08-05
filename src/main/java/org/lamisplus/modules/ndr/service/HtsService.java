@@ -307,6 +307,8 @@ public class HtsService {
 					if (firstByIdentifier.isPresent()) {
 						messageStatusCode = "UPDATED";
 					}
+				}else {
+
 				}
 				messageHeader.setMessageStatusCode(messageStatusCode);
 				messageHeader.setMessageUniqueID(Long.toString(id));
