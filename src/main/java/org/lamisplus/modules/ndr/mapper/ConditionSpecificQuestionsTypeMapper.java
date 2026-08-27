@@ -91,6 +91,7 @@ public class ConditionSpecificQuestionsTypeMapper {
 
         INITIAL_TB_STATUS_MAPPING.put("TB_STATUS_NO_SIGN_OR_SYMPTOMS_OF_TB", "1");
         INITIAL_TB_STATUS_MAPPING.put("TB_STATUS_TB_SUSPECTED_AND_REFERRED_FOR_EVALUATION", "2");
+        INITIAL_TB_STATUS_MAPPING.put("TB_STATUS_PRESUMPTIVE_TB", "2");
         INITIAL_TB_STATUS_MAPPING.put("TB_STATUS_CURRENTLY_ON_INH_PROPHYLAXIS", "3");
         INITIAL_TB_STATUS_MAPPING.put("TB_STATUS_CURRENTLY_ON_TB_TREATMENT", "4");
         INITIAL_TB_STATUS_MAPPING.put("TB_STATUS_TB_POSITIVE_NOT_ON_TB_DRUGS", "5");
@@ -175,6 +176,10 @@ public class ConditionSpecificQuestionsTypeMapper {
                 hiv.setKPTypology(mappedValue);
             }
 
+            if (demographics.getInitialAdherenceCounselingCompletedDate() != null){
+                hiv.setInitialAdherenceCounselingCompletedDate (getXmlDate (Date.valueOf ((demographics.getInitialAdherenceCounselingCompletedDate()))));
+            }
+
             LocalDate inHIVCareDate = (demographics.getEnrolledInHIVCareDate() != null ? demographics.getEnrolledInHIVCareDate() : demographics.getArtStartDate());
             if(inHIVCareDate != null){
                 hiv.setEnrolledInHIVCareDate(getXmlDate (Date.valueOf (inHIVCareDate)));
@@ -191,7 +196,7 @@ public class ConditionSpecificQuestionsTypeMapper {
                 }
                 if (statusAtRegistration != null) {
                     if (statusAtRegistration.equalsIgnoreCase ("HIV+ non ART")) {
-                        hiv.setFirstConfirmedHIVTestDate (getXmlDate (Date.valueOf (inHIVCareDate)));
+                        hiv.setFirstConfirmedHIVTestDate (getXmlDate (Date.valueOf (demographics.getDateOfConfirmedHIVTest())));
                     }
                     if (statusAtRegistration.equalsIgnoreCase ("ART Transfer In")) {
                         hiv.setPatientTransferredIn(true);
@@ -215,8 +220,6 @@ public class ConditionSpecificQuestionsTypeMapper {
             }else {
                 throw new IllegalArgumentException(" Enrolled In HIVCareDate cannot be null");
             }
-
-            //log.info("art start date {}", demographics.getArtStartDate());
            
             if (demographics.getArtStartDate() != null) {
                 hiv.setARTStartDate (getXmlDate (Date.valueOf ((demographics.getArtStartDate()))));
@@ -262,11 +265,16 @@ public class ConditionSpecificQuestionsTypeMapper {
                 hiv.setBMIMUACAtARTStart(demographics.getBmimuacAtARTStart());
             }
 
+            String cd4CellCount = demographics.getCd4AtStartOfART();
             if(demographics.getCd4AtStartOfART() != null){
-                hiv.setCD4AtStartOfART(demographics.getCd4AtStartOfART());
+                try {
+                    String cd4 = cd4CellCount.trim();
+                    hiv.setCD4AtStartOfART(cd4);
+                } catch (NumberFormatException e) {
+                    log.warn("Invalid CD4 Cell Count At Start: {}", cd4CellCount);
+                }
             }
 
-            String cd4CellCount = demographics.getCd4AtStartOfART();
             if (cd4CellCount != null && !cd4CellCount.trim().isEmpty()) {
                 try {
                     int cd4 = Integer.parseInt(cd4CellCount.trim());

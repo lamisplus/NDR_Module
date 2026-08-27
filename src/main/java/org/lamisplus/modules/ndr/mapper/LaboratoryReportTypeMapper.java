@@ -318,9 +318,15 @@ public class LaboratoryReportTypeMapper {
                                 && !labDTO.getLaboratoryResultAnswerNumeric().trim().isEmpty()
                                 && Objects.equals(labDTO.getLaboratoryResultedTestCodeDescTxt(), VIRALLOAD)) {
 
-                            labResult.setViralLoadResult(
-                                    new BigDecimal(labDTO.getLaboratoryResultAnswerNumeric().trim())
-                            );
+                            if (labDTO.getLaboratoryResultAnswerNumeric().trim().equals("TargetNotDetected")) {
+                                labResult.setViralLoadResult(
+                                        new BigDecimal(0)
+                                );
+                            }else {
+                                labResult.setViralLoadResult(
+                                        new BigDecimal(labDTO.getLaboratoryResultAnswerNumeric().trim())
+                                );
+                            }
                         }
                         //viralLoadResultDate
                         String viralLoadResultDate = labDTO.getResultedTestDate();
@@ -333,21 +339,35 @@ public class LaboratoryReportTypeMapper {
                             }
                         }
                         // cd4CellCount
-                        if(labDTO.getCd4CellCount() != null && !labDTO.getCd4CellCount().trim().isEmpty()) {
-                            labResult.setCD4CellCount(
-                                    new BigDecimal(labDTO.getCd4CellCount().trim())
-                            );
-                            //labResult.setCD4CellCount(BigDecimal.valueOf(Long.parseLong(labDTO.getCd4CellCount())));
+                        String cd4CellCount = labDTO.getCd4CellCount();
+                        if (cd4CellCount != null && !cd4CellCount.trim().isEmpty()) {
+                            try {
+                                int cd4 = Integer.parseInt(cd4CellCount.trim());
+
+                                if (cd4 >= 200) {
+                                    labResult.setCD4CellCount(
+                                            new BigDecimal(labDTO.getCd4CellCount().trim())
+                                    );
+                                } else {
+                                    labResult.setCD4CellCount(
+                                            new BigDecimal(labDTO.getCd4CellCount().trim())
+                                    );
+                                }
+                            } catch (NumberFormatException e) {
+                                log.warn("Invalid CD4 Cell Count: {}", cd4CellCount);
+                            }
                         }
 
                         if(labDTO.getCd4Percentage() != null && !labDTO.getCd4Percentage().trim().isEmpty()) {
-                            labResult.setCD4Percentage(
-                                    new BigDecimal(labDTO.getCd4Percentage().trim())
-                            );
-                            //labResult.setCD4Percentage(BigDecimal.valueOf(Long.parseLong(labDTO.getCd4Percentage())));
+                            try {
+                                labResult.setCD4Percentage(
+                                        new BigDecimal(labDTO.getCd4Percentage().trim())
+                                );
+                            } catch (NumberFormatException e) {
+                                log.warn("Invalid CD4 Percentage Count: {}", labDTO.getCd4Percentage().trim());
+                            }
                         }
 
-                        String cd4CellCount = labDTO.getCd4CellCount();
                         if (cd4CellCount != null && !cd4CellCount.trim().isEmpty()) {
                             try {
                                 int cd4 = Integer.parseInt(cd4CellCount.trim());

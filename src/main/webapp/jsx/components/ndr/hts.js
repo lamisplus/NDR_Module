@@ -156,9 +156,10 @@ export default function Hts(props) {
       axios
         .get(
           `${api.url}ndr/generate/hts?${FacilityIDArray}&isInitial=${status}&patientIds=${selectPatients}`,
-          { headers: { Authorization: `Bearer ${token}` } }
+          { headers: { Authorization: `Bearer ${token}` } },
         )
         .then((response) => {
+          console.log("HTS " + response);
           setSelectPatients([]);
           window.setTimeout(() => {
             toast.success(" Generating HTS XML Successful!");
@@ -322,36 +323,21 @@ export default function Hts(props) {
                 icons={tableIcons}
                 title="Eligible Patients"
                 columns={[
-                  // { title: " ID", field: "Id" },
-                  {
-                    title: "Patient Name",
-                    field: "name",
-                    hidden: showPPI,
-                  },
-                  { title: "Hospital No", field: "uniqueId", filtering: false },
-                  { title: "Sex", field: "sex", filtering: false },
                   { title: "Client Code", field: "uuid", filtering: false },
-                  //{ title: "Age", field: "age", filtering: false },
-                  //{ title: "Enrollment Status", field: "v_status", filtering: false },
-                  //{ title: "ART Number", field: "v_status", filtering: false },
                   { title: "HTS Count", field: "status", filtering: false },
                 ]}
                 data={(query) =>
                   new Promise((resolve, reject) =>
                     axios
                       .get(
-                        `${baseUrl}hts-encounter/hts-patients?pageSize=${query.pageSize}&pageNo=${query.page}&searchValue=${query.search}`,
-                        { headers: { Authorization: `Bearer ${token}` } }
+                        `${baseUrl}hts-encounter/hts-patients?search=${query.search}&page=${query.page}&size=${query.pageSize}`,
+                        { headers: { Authorization: `Bearer ${token}` } },
                       )
                       .then((response) => response)
                       .then((result) => {
                         resolve({
                           data: result.data.records.map((row) => ({
-                            name: row.firstName + " " + row.surname,
-                            uniqueId: row.hospitalNumber,
-                            sex: row.gender,
                             uuid: row.clientCode,
-
                             status: row.htsCount,
                           })),
                           page: query.page,
@@ -360,7 +346,7 @@ export default function Hts(props) {
                       })
                       .then(() => {
                         setSelectedRows([]);
-                      })
+                      }),
                   )
                 }
                 options={{
@@ -376,7 +362,7 @@ export default function Hts(props) {
                   },
                   rowStyle: (rowData) => ({
                     backgroundColor: selectedRows.find(
-                      (row) => row.tableData.id === rowData.tableData.id
+                      (row) => row.tableData.id === rowData.tableData.id,
                     )
                       ? "#B4D3B2"
                       : "",
@@ -405,14 +391,14 @@ export default function Hts(props) {
                             borderRadius: "0.25rem",
                           }}
                         />
-                        <label
+                        {/* <label
                           className="form-check-label"
                           htmlFor="basic_checkbox_1"
                         >
                           <b style={{ color: "#014d88", fontWeight: "bold" }}>
                             SHOW PII
                           </b>
-                        </label>
+                        </label> */}
                       </div>
                       <MTableToolbar {...props} />
                     </div>
