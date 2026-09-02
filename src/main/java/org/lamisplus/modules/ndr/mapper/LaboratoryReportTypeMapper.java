@@ -318,15 +318,11 @@ public class LaboratoryReportTypeMapper {
                                 && !labDTO.getLaboratoryResultAnswerNumeric().trim().isEmpty()
                                 && Objects.equals(labDTO.getLaboratoryResultedTestCodeDescTxt(), VIRALLOAD)) {
 
-                            if (labDTO.getLaboratoryResultAnswerNumeric().trim().equals("TargetNotDetected")) {
-                                labResult.setViralLoadResult(
-                                        new BigDecimal(0)
-                                );
-                            }else {
-                                labResult.setViralLoadResult(
-                                        new BigDecimal(labDTO.getLaboratoryResultAnswerNumeric().trim())
-                                );
-                            }
+                            String resultExtracted = extractNumericValue(labDTO.getLaboratoryResultAnswerNumeric());
+
+                            labResult.setViralLoadResult(
+                                    new BigDecimal(resultExtracted)
+                            );
                         }
                         //viralLoadResultDate
                         String viralLoadResultDate = labDTO.getResultedTestDate();
@@ -408,6 +404,27 @@ public class LaboratoryReportTypeMapper {
             });
         }
         log.info("lab map size: " + laboratoryReport.size());
+    }
+
+    public static String extractNumericValue(String resultString) {
+        if (resultString == null || resultString.trim().isEmpty()) {
+            return null;
+        }
+
+        resultString = resultString.trim();
+
+        resultString = resultString.replaceAll("^[<>]=?|\\s+", "");
+
+        if (resultString.equalsIgnoreCase("NotDetected") ||
+                resultString.equalsIgnoreCase("TargetNotDetected") ) {
+            return "0";
+        }
+
+        if (resultString.equalsIgnoreCase("Titermin")) {
+            return "10";
+        }
+
+        return resultString;
     }
 
 }

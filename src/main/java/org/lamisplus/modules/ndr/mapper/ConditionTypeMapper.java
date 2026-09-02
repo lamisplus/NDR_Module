@@ -145,12 +145,12 @@ public class ConditionTypeMapper {
         if (encounter != null) {
             condition.setEncounters(encounter);
         }
-    
+
         regimenTypeMapper.regimenType(demographics, condition, patientRegimens);
-    
+        
         //Lab
         laboratoryReportTypeMapper.laboratoryReportType(demographics.getPersonUuid(), condition, patientLabEncounters);
-        
+
         return condition;
     }
     

@@ -572,6 +572,8 @@ public class NdrOptimizationService {
 			if (patientPharmacyEncounter.isPresent()) {
 				patientPharmacyEncounterDTO = patientPharmacyEncounter.get();
 				return getPatientRegimenList(patientPharmacyEncounterDTO, objectMapper, ndrErrors);
+			}else{
+				log.info("Patient has no regimen documented");
 			}
 		} catch (Exception e) {
 			log.error("An error occurred while getting patient regimen list error {}", e.getMessage());
