@@ -320,9 +320,7 @@ public class LaboratoryReportTypeMapper {
 
                             String resultExtracted = extractNumericValue(labDTO.getLaboratoryResultAnswerNumeric());
 
-                            labResult.setViralLoadResult(
-                                    new BigDecimal(resultExtracted)
-                            );
+                            labResult.setViralLoadResult(new BigDecimal(resultExtracted));
                         }
                         //viralLoadResultDate
                         String viralLoadResultDate = labDTO.getResultedTestDate();
@@ -416,7 +414,8 @@ public class LaboratoryReportTypeMapper {
         resultString = resultString.replaceAll("^[<>]=?|\\s+", "");
 
         if (resultString.equalsIgnoreCase("NotDetected") ||
-                resultString.equalsIgnoreCase("TargetNotDetected") ) {
+                resultString.equalsIgnoreCase("TargetNotDetected") ||
+                resultString.equalsIgnoreCase("failed")) {
             return "0";
         }
 
