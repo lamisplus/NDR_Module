@@ -62,8 +62,11 @@ public interface NdrMessageLogRepository extends JpaRepository<NdrMessageLog, In
             "            h.date_transferred_in AS transferredInDate,\n" +
             "            h.facility_transferred_from AS transferredInFrom,\n" +
             "            hac.tb_status AS tbStatusNew,\n" +
-            "\t\t\th.date_confirmed_hiv_test AS dateOfConfirmedHIVTest,\n" +
-            "\t\t\th.date_adherence_counseling_completed AS initialAdherenceCounselingCompletedDate\n" +
+            "            h.date_confirmed_hiv_test AS dateOfConfirmedHIVTest,\n" +
+            "            h.date_adherence_counseling_completed AS initialAdherenceCounselingCompletedDate,\n" +
+            "\t\t\thpt.date_of_death AS deathDate,\n" +
+            "\t\t\thpt.date_of_discontinuation AS dateStoppedTreatment,\n" +
+            "\t\t\thpt.reason_for_discountinuation AS reasonForStoppedTreatment\n" +
             "        FROM patient_person p\n" +
             "        INNER JOIN base_organisation_unit facility ON facility.id = p.facility_id\n" +
             "        INNER JOIN base_organisation_unit facility_lga ON facility_lga.id = facility.parent_organisation_unit_id\n" +

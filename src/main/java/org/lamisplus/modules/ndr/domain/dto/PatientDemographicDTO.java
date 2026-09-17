@@ -54,4 +54,8 @@ public interface PatientDemographicDTO {
 	String getTransferredInFrom();
 	LocalDate getDateOfConfirmedHIVTest();
 	LocalDate getInitialAdherenceCounselingCompletedDate();
+	String getStatusAtDeath();
+	LocalDate getDeathDate();
+	LocalDate getDateStoppedTreatment();
+	String getReasonForStoppedTreatment();
 }    

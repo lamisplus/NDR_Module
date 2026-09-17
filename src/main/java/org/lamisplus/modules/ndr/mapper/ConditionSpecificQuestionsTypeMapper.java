@@ -34,6 +34,9 @@ public class ConditionSpecificQuestionsTypeMapper {
     private static final Map<String, String> FIRST_HIV_TEST_MODE_MAPPING = new HashMap<>();
     private static final Map<String, String> INITIAL_TB_STATUS_MAPPING = new HashMap<>();
     private static final Map<Integer, String> TPT_MEDICATION_MAPPING = new HashMap<>();
+    private static final Map<String, String> CAUSE_OF_DEATH = new HashMap<>();
+    //ReasonForStoppedTreatment
+    private static final Map<String, String> REASON_FOR_STOPPED_TREATMENT = new HashMap<>();
 
     private final NDRCodeSetResolverService ndrCodeSetResolverService;
     
@@ -100,9 +103,20 @@ public class ConditionSpecificQuestionsTypeMapper {
         TPT_MEDICATION_MAPPING.put(130, "SixH");
         TPT_MEDICATION_MAPPING.put(1096, "ThreeHP");
         TPT_MEDICATION_MAPPING.put(1095, "Other");
-//        TPT_MEDICATION_MAPPING.put("Isoniazid + Rifapentine", "ThreeHP");
-//        TPT_MEDICATION_MAPPING.put("Isoniazid + Rifampicin", "ThreeHR");
 
+        REASON_FOR_STOPPED_TREATMENT.put("Treatment Stop", "1");
+        REASON_FOR_STOPPED_TREATMENT.put("Death", "2");
+        REASON_FOR_STOPPED_TREATMENT.put("Loss to follow up", "3");
+        REASON_FOR_STOPPED_TREATMENT.put("Self-transfer to another facility", "4");
+
+//        CAUSE_OF_DEATH.put("TB_STATUS_NO_SIGN_OR_SYMPTOMS_OF_TB", "HIVRelated");
+//        CAUSE_OF_DEATH.put("TB_STATUS_NO_SIGN_OR_SYMPTOMS_OF_TB", "TB");
+//        CAUSE_OF_DEATH.put("TB_STATUS_NO_SIGN_OR_SYMPTOMS_OF_TB", "RoadAccident");
+//        CAUSE_OF_DEATH.put("TB_STATUS_NO_SIGN_OR_SYMPTOMS_OF_TB", "Malaria");
+//        CAUSE_OF_DEATH.put("TB_STATUS_NO_SIGN_OR_SYMPTOMS_OF_TB", "COPD");
+//        CAUSE_OF_DEATH.put("TB_STATUS_NO_SIGN_OR_SYMPTOMS_OF_TB", "Hypertension");
+//        CAUSE_OF_DEATH.put("TB_STATUS_NO_SIGN_OR_SYMPTOMS_OF_TB", "Diabetes");
+//        CAUSE_OF_DEATH.put("TB_STATUS_NO_SIGN_OR_SYMPTOMS_OF_TB", "Others");
     }
 
 
@@ -186,6 +200,7 @@ public class ConditionSpecificQuestionsTypeMapper {
                 String statusAtRegistration = demographics.getStatusAtRegistration();
                 String causeOfDeath = demographics.getCauseOfDeath();
                 if(causeOfDeath != null) {
+                    hiv.setPatientHasDied(true);
                     if(causeOfDeath.toUpperCase().contains("HIV")) {
                         hiv.setCauseOfDeathHIVRelated("Y");
                     } else if(causeOfDeath.toUpperCase().contains("UNKNOWN")) {
@@ -193,7 +208,28 @@ public class ConditionSpecificQuestionsTypeMapper {
                     } else {
                         hiv.setCauseOfDeathHIVRelated("N");
                     }
+                    if(demographics.getDeathDate() != null){
+                        hiv.setDeathDate(getXmlDate (Date.valueOf (demographics.getDeathDate())));
+                    }
                 }
+
+                if (demographics.getReasonForStoppedTreatment() != null && (
+                        demographics.getReasonForStoppedTreatment().contains("Self-transfer to another facility") ||
+                        demographics.getReasonForStoppedTreatment().contains("Treatment Stop") ||
+                        demographics.getReasonForStoppedTreatment().contains("Death") ||
+                        demographics.getReasonForStoppedTreatment().contains("Loss to follow up"))
+                ) {
+                    hiv.setStoppedTreatment(true);
+                    if(demographics.getDateStoppedTreatment() != null){
+                        hiv.setDateStoppedTreatment(getXmlDate (Date.valueOf (demographics.getDateStoppedTreatment())));
+                    }
+
+                    if(demographics.getCareEntryPoint() != null){
+                        String mappedValue = REASON_FOR_STOPPED_TREATMENT.get(demographics.getReasonForStoppedTreatment());
+                        hiv.setReasonForStoppedTreatment(mappedValue);
+                    }
+                }
+
                 if (statusAtRegistration != null) {
                     if (statusAtRegistration.equalsIgnoreCase ("HIV+ non ART")) {
                         hiv.setFirstConfirmedHIVTestDate (getXmlDate (Date.valueOf (demographics.getDateOfConfirmedHIVTest())));
@@ -316,6 +352,13 @@ public class ConditionSpecificQuestionsTypeMapper {
             if (demographics.getPatientSexCode() != null && demographics.getPatientSexCode().contains("F")) {
                 hiv.setPregnancyBFStatusAtStart((String) status.get("status"));
             }
+            // PatientHasDied
+            // StatusAtDeath
+            // DeathDate
+            // StoppedTreatment
+            // DateStoppedTreatment
+            // ReasonForStoppedTreatment
+
             //log.info("TB start date {}", demographics.getTbTreatmentStartDate());
             hivQuestions.setHIVQuestions (hiv);
             return hivQuestions;
