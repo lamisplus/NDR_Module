@@ -15,7 +15,7 @@ public interface NdrMessageLogRepository extends JpaRepository<NdrMessageLog, In
     Optional<NdrMessageLog> findFirstByIdentifier(String identifier);
     
     Optional<NdrMessageLog> findFirstByIdentifierAndFileType(String identifier, String fileType);
-    @Query(value="SELECT \n" +
+    @Query(value="\t\tSELECT \n" +
             "            p.uuid AS personUuid,\n" +
             "            p.date_of_registration AS diagnosisDate,\n" +
             "            p.date_of_birth AS dateOfBirth,\n" +
@@ -64,9 +64,11 @@ public interface NdrMessageLogRepository extends JpaRepository<NdrMessageLog, In
             "            hac.tb_status AS tbStatusNew,\n" +
             "            h.date_confirmed_hiv_test AS dateOfConfirmedHIVTest,\n" +
             "            h.date_adherence_counseling_completed AS initialAdherenceCounselingCompletedDate,\n" +
-            "\t\t\thpt.date_of_death AS deathDate,\n" +
-            "\t\t\thpt.date_of_discontinuation AS dateStoppedTreatment,\n" +
-            "\t\t\thpt.reason_for_discountinuation AS reasonForStoppedTreatment\n" +
+            "            hpt.date_of_death AS deathDate,\n" +
+            "            hpt.date_of_discontinuation AS dateStoppedTreatment,\n" +
+            "            hpt.reason_for_discountinuation AS reasonForStoppedTreatment,\n" +
+            "\t\t\thsst.hiv_status AS transferredOutStatus,\n" +
+            "\t\t\thsst.status_date AS TransferredOutDate\n" +
             "        FROM patient_person p\n" +
             "        INNER JOIN base_organisation_unit facility ON facility.id = p.facility_id\n" +
             "        INNER JOIN base_organisation_unit facility_lga ON facility_lga.id = facility.parent_organisation_unit_id\n" +
@@ -90,6 +92,9 @@ public interface NdrMessageLogRepository extends JpaRepository<NdrMessageLog, In
             "        LEFT JOIN ndr_code_set ndrTbstatus ON TRIM(ndrTbstatus.code_description) = TRIM(tbCodeset.display)\n" +
             "        LEFT JOIN ndr_code_set ndrClinicStage ON ndrClinicStage.code_description = csCodeset.display\n" +
             "        LEFT JOIN hiv_patient_tracker hpt ON hpt.person_uuid = p.uuid\n" +
+            "\t\tLEFT JOIN LATERAL (\n" +
+            "\t\t\tSELECT hiv_status, status_date FROM hiv_status_tracker hst WHERE hst.person_id = p.uuid ORDER BY hst.status_date DESC, hst.id DESC LIMIT 1\n" +
+            "\t\t) hsst ON TRUE\n" +
             "        LEFT JOIN biometric b ON b.person_uuid = p.uuid\n" +
             "        WHERE p.uuid = ?1\n" +
             "        AND h.facility_id = ?2\n" +

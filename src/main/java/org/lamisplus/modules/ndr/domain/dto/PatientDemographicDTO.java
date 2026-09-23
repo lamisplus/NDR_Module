@@ -58,4 +58,7 @@ public interface PatientDemographicDTO {
 	LocalDate getDeathDate();
 	LocalDate getDateStoppedTreatment();
 	String getReasonForStoppedTreatment();
+	Boolean getPatientTransferredOut();
+	LocalDate getTransferredOutDate();
+	String getTransferredOutStatus();
 }    

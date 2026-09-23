@@ -208,27 +208,9 @@ public class ConditionSpecificQuestionsTypeMapper {
                     } else {
                         hiv.setCauseOfDeathHIVRelated("N");
                     }
-                    if(demographics.getDeathDate() != null){
-                        hiv.setDeathDate(getXmlDate (Date.valueOf (demographics.getDeathDate())));
-                    }
                 }
 
-                if (demographics.getReasonForStoppedTreatment() != null && (
-                        demographics.getReasonForStoppedTreatment().contains("Self-transfer to another facility") ||
-                        demographics.getReasonForStoppedTreatment().contains("Treatment Stop") ||
-                        demographics.getReasonForStoppedTreatment().contains("Death") ||
-                        demographics.getReasonForStoppedTreatment().contains("Loss to follow up"))
-                ) {
-                    hiv.setStoppedTreatment(true);
-                    if(demographics.getDateStoppedTreatment() != null){
-                        hiv.setDateStoppedTreatment(getXmlDate (Date.valueOf (demographics.getDateStoppedTreatment())));
-                    }
 
-                    if(demographics.getCareEntryPoint() != null){
-                        String mappedValue = REASON_FOR_STOPPED_TREATMENT.get(demographics.getReasonForStoppedTreatment());
-                        hiv.setReasonForStoppedTreatment(mappedValue);
-                    }
-                }
 
                 if (statusAtRegistration != null) {
                     if (statusAtRegistration.equalsIgnoreCase ("HIV+ non ART")) {
@@ -241,8 +223,40 @@ public class ConditionSpecificQuestionsTypeMapper {
                         }else {
                             hiv.setTransferredInDate(getXmlDate(Date.valueOf(inHIVCareDate)));
                         }
-                        //TransferredInFrom
                     }
+                    // handle transferred out, stopped treatment and dead
+                    if (demographics.getTransferredOutStatus() != null && Objects.equals(demographics.getTransferredOutStatus(), "Stopped Treatment")) {
+                        if (demographics.getReasonForStoppedTreatment() != null && (
+                                demographics.getReasonForStoppedTreatment().contains("Self-transfer to another facility") ||
+                                        demographics.getReasonForStoppedTreatment().contains("Treatment Stop") ||
+                                        demographics.getReasonForStoppedTreatment().contains("Death") ||
+                                        demographics.getReasonForStoppedTreatment().contains("Loss to follow up"))
+                        ) {
+                            hiv.setStoppedTreatment(true);
+                            if(demographics.getDateStoppedTreatment() != null){
+                                hiv.setDateStoppedTreatment(getXmlDate (Date.valueOf (demographics.getDateStoppedTreatment())));
+                            }
+
+                            if(demographics.getCareEntryPoint() != null){
+                                String mappedValue = REASON_FOR_STOPPED_TREATMENT.get(demographics.getReasonForStoppedTreatment());
+                                hiv.setReasonForStoppedTreatment(mappedValue);
+                            }
+                        }
+                    }else if (demographics.getTransferredOutStatus() != null && Objects.equals(demographics.getTransferredOutStatus(), "ART Transfer Out")) {
+                        if (demographics.getTransferredOutDate() != null) {
+                            hiv.setPatientTransferredOut(true);
+                            hiv.setTransferredOutStatus("A");
+                            hiv.setTransferredOutDate (getXmlDate (Date.valueOf ((demographics.getTransferredOutDate()))));
+                        }
+
+                    }else if (demographics.getTransferredOutStatus() != null && Objects.equals(demographics.getTransferredOutStatus(), "Died (Confirmed)")) {
+                        if(demographics.getDeathDate() != null){
+                            hiv.setDeathDate(getXmlDate (Date.valueOf (demographics.getDeathDate())));
+                            hiv.setStatusAtDeath("A");
+                        }
+                    }
+
+
                     String tbStatus = demographics.getTbStatus();
                     //log.info("initial tb status {}", tbStatus);
                     if(tbStatus != null){
@@ -324,7 +338,8 @@ public class ConditionSpecificQuestionsTypeMapper {
                     log.warn("Invalid CD4 Cell Count: {}", cd4CellCount);
                 }
             }
-            //log.info("cd4 date {}", demographics.getCd4AtStartOfART());
+
+
             String tptMedication = demographics.getTptMedication();
             if(tptMedication != null){
                 try{
@@ -352,12 +367,6 @@ public class ConditionSpecificQuestionsTypeMapper {
             if (demographics.getPatientSexCode() != null && demographics.getPatientSexCode().contains("F")) {
                 hiv.setPregnancyBFStatusAtStart((String) status.get("status"));
             }
-            // PatientHasDied
-            // StatusAtDeath
-            // DeathDate
-            // StoppedTreatment
-            // DateStoppedTreatment
-            // ReasonForStoppedTreatment
 
             //log.info("TB start date {}", demographics.getTbTreatmentStartDate());
             hivQuestions.setHIVQuestions (hiv);
@@ -511,6 +520,5 @@ public class ConditionSpecificQuestionsTypeMapper {
         }
         if (eligible != null && ! eligible.isEmpty ()) hiv.setReasonMedicallyEligible (eligible);
     }
-
 
 }
