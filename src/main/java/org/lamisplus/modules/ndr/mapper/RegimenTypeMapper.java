@@ -65,6 +65,7 @@ public class RegimenTypeMapper {
 	}
 
 	public void regimenType(PatientDemographicDTO demographics, ConditionType condition, List<RegimenDTO> regimens) {
+		log.info("regimen 1");
 		List<RegimenType> regimenTypeList = condition.getRegimen();
 		if(regimens != null ) {
 			regimens.parallelStream()
@@ -116,7 +117,7 @@ public class RegimenTypeMapper {
 
 							throw new IllegalArgumentException("Regimen type code cannot be null");
 						}
-						// log.info("patient uuid " + demographics.getPersonUuid() + " regimen type mapper " +regimen.getPrescribedRegimenCode() + " " + regimen.getPrescribedRegimenCodeDescTxt() + " " + regimen.getNdrRegimenCode());
+						//log.info("patient uuid " + demographics.getPersonUuid() + " regimen type mapper " +regimen.getPrescribedRegimenCode() + " " + regimen.getPrescribedRegimenCodeDescTxt() + " " + regimen.getNdrRegimenCode());
 						if (StringUtils.isNotBlank(regimen.getPrescribedRegimenCode())
 								&& StringUtils.isNotBlank(regimen.getPrescribedRegimenCodeDescTxt()) && StringUtils.isNotBlank(regimen.getNdrRegimenCode())) {
 							RegimenCodedSimpleType simpleTypeCode = new RegimenCodedSimpleType();
@@ -125,7 +126,6 @@ public class RegimenTypeMapper {
 							simpleTypeCode.setNDRCode(regimen.getNdrRegimenCode());
 							regimenType.setPrescribedRegimen(simpleTypeCode);
 						} else {
-
 							throw new IllegalArgumentException("Prescribed regimen code cannot be null");
 						}
 						if (StringUtils.isNotBlank(regimen.getDateRegimenStarted())) {

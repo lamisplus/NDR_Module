@@ -461,8 +461,6 @@ public class ConditionSpecificQuestionsTypeMapper {
                 hiv.setTransferredOutDate(getXmlDate(Date.valueOf(clientReportingStatus.getDate())));
                 hiv.setPatientTransferredOut(true);
 
-            } else {
-                hiv.setPatientTransferredOut(false);
             }
         } catch (Exception e) {
             log.error("An error occurred while processing transfer-out client status msg {}", e.getMessage());

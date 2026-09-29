@@ -282,7 +282,7 @@ public class NdrOptimizationService {
 
 		//check if xml is eligible for update generation
 		if (!initial && messageLog.isPresent() ) {
-			log.info("updated part 2");
+			log.info("started updated xml generation");
 			start = messageLog.get().getLastUpdated().toLocalDate();
 			List<EncounterDTO> patientEncounters =
 					getPatientEncounters(patientId, facilityId, objectMapper, start, end, ndrErrors);
@@ -305,17 +305,19 @@ public class NdrOptimizationService {
 				System.out.println("getting last lab record");
 				patientLabEncounters = getPatientLastLabEncounter(patientId, facilityId, objectMapper, ndrErrors);
 			}
-			// those that have updated
-
-
+			log.info("starting mortality updated...");
 			MortalityType mortality = mortalityTypeMapper.getMortalityType(patientId, facilityId, start, end, ndrErrors);
+
+			if (mortality != null) {
+				log.info("mortality record available");
+			}
 			String fileName = generatePatientNDRXml(
 					facilityId, patientDemographic,
 					patientEncounters,
 					patientRegimens,
 					patientLabEncounters,
 					mortality,
-					initial,
+					false,
 					ndrErrors, pushIdentifier);
 
 			if (fileName != null) {
@@ -325,7 +327,7 @@ public class NdrOptimizationService {
 
 		}else {
 
-			log.info("updated part 4  --- A");
+			log.info("started initial xml generation");
 			// those that don't have
 			List<EncounterDTO> patientEncounters =
 					getPatientEncounters(patientId, facilityId, objectMapper, start, end, ndrErrors);
@@ -371,7 +373,7 @@ public class NdrOptimizationService {
 				data.findFirstByIdentifierAndFileType(patientDemographic.getPatientIdentifier(), "treatment");
 
 		if ( messageLog.isPresent()) {
-			log.info("updated part 2");
+			log.info("updated mapping part 2");
 			List<EncounterDTO> patientEncounters =
 					getPatientEncounters(patientId, facilityId, objectMapper, startDate.toLocalDate(), endDate.toLocalDate(), ndrErrors);
 
@@ -393,9 +395,9 @@ public class NdrOptimizationService {
 				System.out.println("getting last lab record");
 				patientLabEncounters = getPatientLastLabEncounter(patientId, facilityId, objectMapper, ndrErrors);
 			}
-			// those that have updated
 
 			MortalityType mortality = mortalityTypeMapper.getMortalityType(patientId, facilityId,startDate.toLocalDate(), endDate.toLocalDate(), ndrErrors);
+
 			String fileName = generatePatientNDRXml(
 					facilityId, patientDemographic,
 					patientEncounters,
@@ -413,7 +415,7 @@ public class NdrOptimizationService {
 			LocalDate start = LocalDate.of(1985, Month.JANUARY, 1);
 			LocalDate end = LocalDate.now().plusDays(1);
 
-			log.info("updated part 4 --- B");
+			log.info("initial part 2 --- B");
 			// those that don't have
 			List<EncounterDTO> patientEncounters =
 					getPatientEncounters(patientId, facilityId, objectMapper, start, end, ndrErrors);
@@ -516,7 +518,6 @@ public class NdrOptimizationService {
 					log.info("mortality generated with visit Id {}", mortality.getVisitID());
 					individualReportType.getMortality().add(mortality);
 				}
-
 
 				MessageHeaderType messageHeader = messageHeaderTypeMapper.getMessageHeader(patientDemographic);
 				String messageStatusCode = "INITIAL";

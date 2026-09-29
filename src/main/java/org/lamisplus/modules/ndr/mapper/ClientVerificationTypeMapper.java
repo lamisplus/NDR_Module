@@ -24,6 +24,7 @@ public class ClientVerificationTypeMapper {
     private static final String VERIFICATION_ONGOING = "Verification Ongoing";
     private static final String RECORDS_DISCONTINUED = "Records Discontinued Archived";
     private static final String RECORDS_VERIFIED = "Records Verified";
+    private static final String RECORDS_RETAINED = "Records Retained";
     private static final String PENDING = "Pending";
     private static final String VALID = "Valid";
     private static final String INVALID = "Invalid";
@@ -36,7 +37,6 @@ public class ClientVerificationTypeMapper {
 
         try {
             ClientVerificationDTO clientVerificationVal = ndrMessageLogRepository.getClientVerification(patientId, facilityId, start, end);
-
             if (clientVerificationVal != null) {
 
                 if (clientVerificationVal.getClientVerification() != null) {
@@ -182,7 +182,7 @@ public class ClientVerificationTypeMapper {
             clientVerificationType.setFirstStatus("VerificationOngoing");
         } else if (firstStatus.contains(RECORDS_DISCONTINUED)) {
             clientVerificationType.setFirstStatus("RecordDiscontinued");
-        } else if (firstStatus.contains(RECORDS_VERIFIED)) {
+        } else if (firstStatus.contains(RECORDS_VERIFIED) || firstStatus.contains(RECORDS_RETAINED)) {
             clientVerificationType.setFirstStatus("RecordVerified");
         }
     }
@@ -190,9 +190,9 @@ public class ClientVerificationTypeMapper {
     private void getFirstOutcome(String firstOutcome, ClientVerificationType clientVerificationType) {
         if (firstOutcome.contains(VERIFICATION_ONGOING)) {
             clientVerificationType.setFirstOutcome(PENDING);
-        } else if (firstOutcome.contains("valid")) {
+        } else if (firstOutcome.equalsIgnoreCase("valid")) {
             clientVerificationType.setFirstOutcome(VALID);
-        } else if (firstOutcome.contains("invalid")) {
+        } else if (firstOutcome.equalsIgnoreCase("invalid")) {
             clientVerificationType.setFirstOutcome(INVALID);
         }
     }
@@ -202,7 +202,7 @@ public class ClientVerificationTypeMapper {
             clientVerificationType.setSecondStatus("VerificationOngoing");
         } else if (firstStatus.contains(RECORDS_DISCONTINUED)) {
             clientVerificationType.setSecondStatus("RecordDiscontinued");
-        } else if (firstStatus.contains(RECORDS_VERIFIED)) {
+        } else if (firstStatus.contains(RECORDS_VERIFIED) || firstStatus.contains(RECORDS_RETAINED)) {
             clientVerificationType.setSecondStatus("RecordVerified");
         }
     }
@@ -210,9 +210,9 @@ public class ClientVerificationTypeMapper {
     private void getSecondOutcome(String firstOutcome, ClientVerificationType clientVerificationType) {
         if (firstOutcome.contains(VERIFICATION_ONGOING)) {
             clientVerificationType.setSecondOutcome(PENDING);
-        } else if (firstOutcome.contains("valid")) {
+        } else if (firstOutcome.equalsIgnoreCase("valid")) {
             clientVerificationType.setSecondOutcome(VALID);
-        } else if (firstOutcome.contains("invalid")) {
+        } else if (firstOutcome.equalsIgnoreCase("invalid")) {
             clientVerificationType.setSecondOutcome(INVALID);
         }
     }
@@ -222,7 +222,7 @@ public class ClientVerificationTypeMapper {
             clientVerificationType.setLastStatus("VerificationOngoing");
         } else if (firstStatus.contains(RECORDS_DISCONTINUED)) {
             clientVerificationType.setLastStatus("RecordDiscontinued");
-        } else if (firstStatus.contains(RECORDS_VERIFIED)) {
+        } else if (firstStatus.contains(RECORDS_VERIFIED) || firstStatus.contains(RECORDS_RETAINED)) {
             clientVerificationType.setLastStatus("RecordVerified");
         }
     }
@@ -230,9 +230,9 @@ public class ClientVerificationTypeMapper {
     private void getThirdOutcome(String firstOutcome, ClientVerificationType clientVerificationType) {
         if (firstOutcome.contains(VERIFICATION_ONGOING)) {
             clientVerificationType.setLastOutcome(PENDING);
-        } else if (firstOutcome.contains("valid")) {
+        } else if (firstOutcome.equalsIgnoreCase("valid")) {
             clientVerificationType.setLastOutcome(VALID);
-        } else if (firstOutcome.contains("invalid")) {
+        } else if (firstOutcome.equalsIgnoreCase("invalid")) {
             clientVerificationType.setLastOutcome(INVALID);
         }
     }

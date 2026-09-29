@@ -232,47 +232,51 @@ public interface NdrMessageLogRepository extends JpaRepository<NdrMessageLog, In
     Optional<PatientPharmacyEncounterDTO> getPatientPharmacyEncounter(String identifier, Long facilityId, LocalDate start, LocalDate end);
 
     @Query(value = "SELECT person_uuid, phar.visitDate, cast(json_agg(DISTINCT  jsonb_build_object('visitID', phar.uuid,\n" +
-            "'visitDate', phar.visitDate,\n" +
-            "'prescribedRegimenCode',  phar.prescribedRegimenCode,\n" +
-            "'prescribedRegimenCodeDescTxt', phar.prescribedRegimenCodeDescTxt,\n" +
-            "'prescribedRegimenTypeCode', (CASE WHEN regimen_type_id IN (8,9) THEN 'OI' WHEN regimen_type_id IN (10,11,15) THEN 'TB' ELSE 'ART' END),\n" +
-            "'prescribedRegimenDuration', phar.duration,\n" +
-            "'dateRegimenStarted', phar.visitDate,\n" +
-            "'differentiatedServiceDelivery', phar.dsd_model,\n" +
-            "'dispensing', phar.dsd_type,\n" +
-            "'multiMonthDispensing', phar.mmd_type  \n" +
-            "))as varchar) AS regimens\n" +
-            " \n" +
-            "FROM (\n" +
-            "select * from (\n" +
-            "SELECT DISTINCT pharmacy.person_uuid, pharmacy.uuid, pharmacy.visit_date AS visitDate,\n" +
-            "pharmacy_object ->> 'name' as name, cast(pharmacy_object ->> 'duration' as VARCHAR) as duration, hr.regimen_type_id,\n" +
-            "(Case when ncs_reg.code is not null then ncs_reg.code_description\n" +
-            " when ncs_others.code is not null then ncs_others.code_description \n" +
-            " when ncs_tpt.code is not null then ncs_tpt.code_description end) AS prescribedRegimenCodeDescTxt,\n" +
-            "(\n" +
-            "CASE WHEN ncs_reg.code IS NOT NULL THEN ncs_reg.code\n" +
-            "WHEN ncs_others.code IS NOT NULL THEN ncs_others.code\n" +
-            "WHEN ncs_tpt.code IS NOT NULL THEN ncs_tpt.code\n" +
-            "END\n" +
-            ")AS prescribedRegimenCode,\n" +
-            "dd.dsd_model, \n" +
-            "dd.dsd_type, \n" +
-            "mmd_type \n" +
-            "FROM hiv_art_pharmacy pharmacy\n" +
-            "CROSS JOIN LATERAL jsonb_array_elements(extra->'regimens') with ordinality p(pharmacy_object)\n" +
-            "INNER JOIN hiv_regimen hr ON hr.description=CAST(pharmacy_object ->> 'name' AS VARCHAR)\n" +
-            "LEFT JOIN hiv_regimen_resolver hrr ON hrr.regimensys=hr.description\n" +
-            "LEFT JOIN ndr_code_set ncs_reg ON ncs_reg.code_description=hrr.regimen\n" +
-            "LEFT JOIN ndr_code_set ncs_others ON ncs_others.code_description=hr.description\n" +
-            "LEFT JOIN dsd_devolvement dd ON dd.person_uuid = pharmacy.person_uuid\n" +
-            "LEFT JOIN ndr_code_set ncs_tpt ON hr.description = any(string_to_array(ncs_tpt.alt_description, ','))\n" +
-            "WHERE pharmacy.archived = 0\n" +
-            " AND  pharmacy.person_uuid = ?1\n" +
-            "      AND pharmacy.facility_id = ?2\n" +
-            ") as dt where prescribedRegimenCode is not null\n" +
-            ") phar GROUP BY person_uuid, visitdate, phar.dsd_model, phar.dsd_type,phar.mmd_type\n" +
-            "order by phar.visitDate desc limit 1", nativeQuery = true)
+            "    'visitDate', phar.visitDate,\n" +
+            "    'prescribedRegimenCode',  phar.prescribedRegimenCode,\n" +
+            "    'ndrRegimenCode', phar.ndrCode," +
+            "    'prescribedRegimenCodeDescTxt', phar.prescribedRegimenCodeDescTxt,\n" +
+            "    'prescribedRegimenTypeCode', (CASE WHEN regimen_type_id IN (8,9) THEN 'OI' WHEN regimen_type_id IN (10,11,15) THEN 'TB' ELSE 'ART' END),\n" +
+            "    'prescribedRegimenDuration', phar.duration,\n" +
+            "    'dateRegimenStarted', phar.visitDate,\n" +
+            "    'differentiatedServiceDelivery', phar.dsd_model,\n" +
+            "    'dispensing', phar.dsd_type,\n" +
+            "    'multiMonthDispensing', phar.mmd_type  \n" +
+            "    ))as varchar) AS regimens\n" +
+            "     \n" +
+            "    FROM (\n" +
+            "    select * from (\n" +
+            "    SELECT DISTINCT pharmacy.person_uuid, pharmacy.uuid, pharmacy.visit_date AS visitDate,\n" +
+            "    pharmacy_object ->> 'name' as name, cast(pharmacy_object ->> 'duration' as VARCHAR) as duration, hr.regimen_type_id,\n" +
+            "    (Case when ncs_reg.code is not null then ncs_reg.code_description\n" +
+            "     when ncs_others.code is not null then ncs_others.code_description \n" +
+            "     when ncs_tpt.code is not null then ncs_tpt.code_description end) AS prescribedRegimenCodeDescTxt,\n" +
+            "    (\n" +
+            "    CASE WHEN ncs_reg.code IS NOT NULL THEN ncs_reg.code\n" +
+            "    WHEN ncs_others.code IS NOT NULL THEN ncs_others.code\n" +
+            "    WHEN ncs_tpt.code IS NOT NULL THEN ncs_tpt.code\n" +
+            "    END\n" +
+            "    )AS prescribedRegimenCode,\n" +
+            "\t(\n" +
+            "\t  CASE WHEN ncs_reg.ndr_code IS NOT NULL THEN ncs_reg.ndr_code WHEN ncs_others.ndr_code IS NOT NULL THEN ncs_others.ndr_code WHEN ncs_tpt.ndr_code IS NOT NULL THEN ncs_tpt.ndr_code END\n" +
+            "\t) AS ndrCode, \n" +
+            "    dd.dsd_model, \n" +
+            "    dd.dsd_type, \n" +
+            "    mmd_type \n" +
+            "    FROM hiv_art_pharmacy pharmacy\n" +
+            "    CROSS JOIN LATERAL jsonb_array_elements(extra->'regimens') with ordinality p(pharmacy_object)\n" +
+            "    INNER JOIN hiv_regimen hr ON hr.description=CAST(pharmacy_object ->> 'name' AS VARCHAR)\n" +
+            "    LEFT JOIN hiv_regimen_resolver hrr ON hrr.regimensys=hr.description\n" +
+            "    LEFT JOIN ndr_code_set ncs_reg ON ncs_reg.code_description=hrr.regimen\n" +
+            "    LEFT JOIN ndr_code_set ncs_others ON ncs_others.code_description=hr.description\n" +
+            "    LEFT JOIN dsd_devolvement dd ON dd.person_uuid = pharmacy.person_uuid\n" +
+            "    LEFT JOIN ndr_code_set ncs_tpt ON hr.description = any(string_to_array(ncs_tpt.alt_description, ','))\n" +
+            "    WHERE pharmacy.archived = 0\n" +
+            "     AND  pharmacy.person_uuid = ?1 \n" +
+            "          AND pharmacy.facility_id = ?2\n" +
+            "    ) as dt where prescribedRegimenCode is not null\n" +
+            "    ) phar GROUP BY person_uuid, visitdate, phar.dsd_model, phar.dsd_type,phar.mmd_type\n" +
+            "    order by phar.visitDate desc limit 1", nativeQuery = true)
     Optional<PatientPharmacyEncounterDTO> getPatientLastPharmacyEncounter(String identifier, Long facilityId);
 
    @Query(value = "SELECT DISTINCT person_uuid FROM hiv_art_pharmacy ph\n" +
@@ -531,14 +535,14 @@ public interface NdrMessageLogRepository extends JpaRepository<NdrMessageLog, In
     Optional<PatientLabEncounterDTO> getPatientLastLabEncounter(String identifier, Long facilityId);
 
   @Query(value = "SELECT\n" +
-          "\t\tDISTINCT ON (p.uuid)\n" +
+          "          DISTINCT ON (p.uuid)\n" +
           "          p.uuid,\n" +
           "          COALESCE(hpt.uuid, ho.uuid, last_status.uuid, e.uuid ) AS visitId,\n" +
-          "          COALESCE(CAST(hpt.attempts->0->> 'attemptDate' AS DATE), ho.date_of_observation, last_status.status_date, e.date_of_registration ) AS visitDate,\n" +
+          "          COALESCE(CAST(hpt.attempts->0->> 'attemptDate' AS DATE), ho.date_of_observation, last_status.status_date, e.date_enrolled_in_hiv_care ) AS visitDate,\n" +
           "          hpt.reason_for_tracking,\n" +
           "          hpt.reason_for_tracking_others AS otherTrackingReason,\n" +
           "          CONCAT(p.contact->'contact'->0->>'surname', '', p.contact->'contact'->0->>'otherName') AS partnerFullName,\n" +
-          "          TRANSLATE(CAST(p.contact->'contact'->0->'address'->>'line' AS VARCHAR), '\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\",[\\\\\\\\\\\\\\\\]', ' ') AS addressofTreatmentSupporter,\n" +
+          "          TRANSLATE(CAST(p.contact->'contact'->0->'address'->>'line' AS VARCHAR), '\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\",[\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\]', ' ') AS addressofTreatmentSupporter,\n" +
           "          (p.contact->'contact'->0->'contactPoint'->>'value') AS contactPhoneNumber,\n" +
           "          hpt.date_last_appointment AS dateofLastActualContact,\n" +
           "          hpt.date_missed_appointment AS dateofMissedScheduledAppointment,\n" +
@@ -569,7 +573,7 @@ public interface NdrMessageLogRepository extends JpaRepository<NdrMessageLog, In
           "          FROM\n" +
           "          patient_person p\n" +
           "          INNER JOIN\n" +
-          "          hiv_enrollment e ON p.uuid = e.person_uuid\n" +
+          "          hiv_enrollment_commencement e ON p.uuid = e.person_uuid\n" +
           "          LEFT JOIN (\n" +
           "          SELECT DISTINCT ON (person_uuid) *\n" +
           "          FROM hiv_patient_tracker\n" +
@@ -578,12 +582,12 @@ public interface NdrMessageLogRepository extends JpaRepository<NdrMessageLog, In
           "          SELECT\n" +
           "          person_uuid,\n" +
           "          visit_id,\n" +
-          "\t\t  date_of_observation,\n" +
+          "           date_of_observation,\n" +
           "          uuid,\n" +
           "          data->'attempt'->0->>'outcome' AS clientVerificationStatus,\n" +
           "          CAST(data->'attempt'->0->>'dateOfAttempt' AS DATE) AS dateOfOutcome,\n" +
           "          (data->>'ClientVerificationOther') AS ClientVerificationOther,\n" +
-          "          CAST(TRANSLATE((data->>'anyOfTheFollowing'), '\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\"[]', ' ') AS VARCHAR) AS indicationforClientVerification,\n" +
+          "          CAST(TRANSLATE((data->>'anyOfTheFollowing'), '\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\"[]', ' ') AS VARCHAR) AS indicationforClientVerification,\n" +
           "          ROW_NUMBER() OVER (PARTITION BY person_uuid ORDER BY CAST(data->'attempt'->0->>'dateOfAttempt' AS DATE) DESC) AS rn\n" +
           "          FROM\n" +
           "          public.hiv_observation\n" +
@@ -593,15 +597,15 @@ public interface NdrMessageLogRepository extends JpaRepository<NdrMessageLog, In
           "          ) ho ON ho.person_uuid = e.person_uuid AND ho.rn = 1\n" +
           "          left JOIN (\n" +
           "          SELECT\n" +
-          "\t\t\t  DISTINCT ON (person_id)\n" +
-          "          person_id,\n" +
-          "          hiv_status,\n" +
-          "          status_date,\n" +
-          "          visit_id,\n" +
-          "          uuid,\n" +
-          "          va_cause_of_death,\n" +
-          "          va_cause_of_death_type,\n" +
-          "          ROW_NUMBER() OVER (PARTITION BY person_id ORDER BY status_date DESC) AS rn\n" +
+          "            DISTINCT ON (person_id)\n" +
+          "            person_id,\n" +
+          "            hiv_status,\n" +
+          "            status_date,\n" +
+          "            visit_id,\n" +
+          "            uuid,\n" +
+          "            va_cause_of_death,\n" +
+          "            va_cause_of_death_type,\n" +
+          "            ROW_NUMBER() OVER (PARTITION BY person_id ORDER BY status_date DESC) AS rn\n" +
           "          FROM\n" +
           "          hiv_status_tracker\n" +
           "          WHERE\n" +
@@ -615,44 +619,45 @@ public interface NdrMessageLogRepository extends JpaRepository<NdrMessageLog, In
           "          AND p.uuid = ?1", nativeQuery = true)
   List<MortalityDTO> getPatientMortalities(String identifier, Long facilityId, LocalDate start, LocalDate end);
   @Query(value = "SELECT person_uuid,\n" +
-          "       MAX(CASE WHEN rn = 1 THEN data->>'serialEnrollmentNo' END) AS clientVerification,\n" +
-          "       MAX(CASE WHEN rn = 1 THEN data->'attempt'->0->>'outcome' END) AS firstOutcome,\n" +
-          "       MAX(CASE WHEN rn = 1 THEN data->'attempt'->0->>'verificationStatus' END) AS firstStatus,\n" +
-          "       MAX(CASE WHEN rn = 2 THEN data->'attempt'->0->>'outcome' END) AS secondOutcome,\n" +
-          "       MAX(CASE WHEN rn = 2 THEN data->'attempt'->0->>'verificationStatus' END) AS secondVerificationStatus,\n" +
-          "       MAX(CASE WHEN rn = 3 THEN data->'attempt'->0->>'outcome' END) AS lastOutcome,\n" +
-          "       MAX(CASE WHEN rn = 3 THEN data->'attempt'->0->>'verificationStatus' END) AS lastVerificationStatus,\n" +
-          "       MAX(CASE WHEN rn = 1 THEN CAST(data->'attempt'->0->>'dateOfAttempt' AS DATE) END) AS ct1STDate,\n" +
-          "\t   MAX(CASE WHEN rn = 2 THEN CAST(data->'attempt'->0->>'dateOfAttempt' AS DATE) END) AS ct2NdDate,\n" +
-          "\t   MAX(CASE WHEN rn = 3 THEN CAST(data->'attempt'->0->>'dateOfAttempt' AS DATE) END) AS ctLastDate,\n" +
-          "       MAX(CASE WHEN rn = 1 AND 'No initial fingerprint was captured' IN (SELECT jsonb_array_elements_text(anyThing)) THEN 'No initial biometric capture' END) AS noInitBiometric,\n" +
-          "       MAX(CASE WHEN rn = 1 AND 'Duplicated demographic and clinical variables' IN (SELECT jsonb_array_elements_text(anyThing)) THEN 'Duplicated demographic and clinical variables' END) AS duplicatedDemographic,\n" +
-          "       MAX(CASE WHEN rn = 1 AND 'Records of repeated clinical encounters, with no fingerprint recapture.' IN (SELECT jsonb_array_elements_text(anyThing)) THEN 'No biometrics recapture' END) AS noRecapture,\n" +
-          "       MAX(CASE WHEN rn = 1 AND 'Last clinical visit is over 15 months prior' IN (SELECT jsonb_array_elements_text(anyThing)) THEN 'Last clinical visit is over 15 months prior' END) AS lastVisitIsOver18M,\n" +
-          "       MAX(CASE WHEN rn = 1 AND 'Incomplete visit data on the care card or pharmacy forms or EMR ' IN (SELECT jsonb_array_elements_text(anyThing)) THEN 'Incomplete visit data on the care card or pharmacy forms or EMz' END) AS incompleteVisitData,\n" +
-          "       MAX(CASE WHEN rn = 1 AND 'Records of repeated clinical encounters, with no fingerprint recapture.' IN (SELECT jsonb_array_elements_text(anyThing)) THEN 'Records of repeated clinical encounters, with no fingerprint recapture.' END) AS repeatEncounterNoPrint,\n" +
-          "       MAX(CASE WHEN rn = 1 AND 'Long intervals between ARV pick-ups (pick-ups more than one year apart in the same facility)' IN (SELECT jsonb_array_elements_text(anyThing)) THEN 'Long intervals between ARV pick-ups (pick-ups more than one year apart in the same facility' END) AS LongIntervalsARVPickup,\n" +
-          "       MAX(CASE WHEN rn = 1 AND 'Long intervals between ARV pick-ups (pick-ups more than one year apart in the same facility)' IN (SELECT jsonb_array_elements_text(anyThing)) THEN 'Long intervals between ARV pick-ups (pick-ups more than one year apart in the same facility' END) AS batchPickupDates,\n" +
-          "       MAX(CASE WHEN rn = 1 AND 'Same sex, DOB and ART start date' IN (SELECT jsonb_array_elements_text(anyThing)) THEN 'Same sex, DOB and ART start date' END) AS sameSexDOBARTStartDate,\n" +
-          "       MAX(CASE WHEN rn = 1 AND 'Consistently had drug pickup by proxy without viral load sample collection for two quarters' IN (SELECT jsonb_array_elements_text(anyThing)) THEN 'Consistently had drug pickup by proxy without viral load sample collection for two quarters' END) AS pickupByProxy,\n" +
-          "       MAX(CASE WHEN rn = 1 AND 'Others' IN (SELECT jsonb_array_elements_text(anyThing)) THEN 'Others' END) AS otherSpecifyForCV\n" +
-          "FROM (\n" +
-          "    SELECT person_uuid,\n" +
-          "           data->'anyOfTheFollowing' AS anyThing,\n" +
-          "           date_of_observation,\n" +
-          "           data,\n" +
-          "           ROW_NUMBER() OVER (PARTITION BY person_uuid ORDER BY CAST(data->'attempt'->0->>'dateOfAttempt' AS DATE) DESC) AS rn\n" +
-          "    FROM hiv_observation ho\n" +
-          "    LEFT JOIN patient_person pp ON pp.uuid = ho.person_uuid\n" +
-          "    WHERE type = 'Client Verification'\n" +
-          "       AND pp.uuid = ?1\n" +
-          "       AND pp.archived = 0\n" +
-          "       AND ho.archived = 0\n" +
-          "       AND ho.date_of_observation <= ?4\n" +
-          "       AND ho.date_of_observation >= ?3\n" +
-          "       AND pp.facility_id = ?2\n" +
-          ") cc\n" +
-          "GROUP BY person_uuid", nativeQuery = true)
+          "                 MAX(CASE WHEN rn = 1 THEN data->>'serialEnrollmentNo' END) AS clientVerification,\n" +
+          "                 MAX(CASE WHEN rn = 1 THEN data->'attempt'->0->>'outcome' END) AS firstOutcome,\n" +
+          "                 MAX(CASE WHEN rn = 1 THEN data->'attempt'->0->>'verificationStatus' END) AS firstStatus,\n" +
+          "                 MAX(CASE WHEN rn = 2 THEN data->'attempt'->0->>'outcome' END) AS secondOutcome,\n" +
+          "                 MAX(CASE WHEN rn = 2 THEN data->'attempt'->0->>'verificationStatus' END) AS secondVerificationStatus,\n" +
+          "                 MAX(CASE WHEN rn = 3 THEN data->'attempt'->0->>'outcome' END) AS lastOutcome,\n" +
+          "                 MAX(CASE WHEN rn = 3 THEN data->'attempt'->0->>'verificationStatus' END) AS lastVerificationStatus,\n" +
+          "                 MAX(CASE WHEN rn = 1 THEN CAST(data->'attempt'->0->>'dateOfAttempt' AS DATE) END) AS ct1STDate,\n" +
+          "             MAX(CASE WHEN rn = 2 THEN CAST(data->'attempt'->0->>'dateOfAttempt' AS DATE) END) AS ct2NdDate,\n" +
+          "             MAX(CASE WHEN rn = 3 THEN CAST(data->'attempt'->0->>'dateOfAttempt' AS DATE) END) AS ctLastDate,\n" +
+          "                 MAX(CASE WHEN rn = 1 AND 'No initial fingerprint was captured' IN (SELECT jsonb_array_elements_text(anyThing)) THEN 'No initial biometric capture' END) AS noInitBiometric,\n" +
+          "                 MAX(CASE WHEN rn = 1 AND 'Duplicated demographic and clinical variables' IN (SELECT jsonb_array_elements_text(anyThing)) THEN 'Duplicated demographic and clinical variables' END) AS duplicatedDemographic,\n" +
+          "                 MAX(CASE WHEN rn = 1 AND 'Records of repeated clinical encounters, with no fingerprint recapture.' IN (SELECT jsonb_array_elements_text(anyThing)) THEN 'No biometrics recapture' END) AS noRecapture,\n" +
+          "                 MAX(CASE WHEN rn = 1 AND 'Last clinical visit is over 15 months prior' IN (SELECT jsonb_array_elements_text(anyThing)) THEN 'Last clinical visit is over 15 months prior' END) AS lastVisitIsOver18M,\n" +
+          "                 MAX(CASE WHEN rn = 1 AND 'Incomplete visit data on the care card or pharmacy forms or EMR ' IN (SELECT jsonb_array_elements_text(anyThing)) THEN 'Incomplete visit data on the care card or pharmacy forms or EMz' END) AS incompleteVisitData,\n" +
+          "                 MAX(CASE WHEN rn = 1 AND 'Records of repeated clinical encounters, with no fingerprint recapture.' IN (SELECT jsonb_array_elements_text(anyThing)) THEN 'Records of repeated clinical encounters, with no fingerprint recapture.' END) AS repeatEncounterNoPrint,\n" +
+          "                 MAX(CASE WHEN rn = 1 AND 'Long intervals between ARV pick-ups (pick-ups more than one year apart in the same facility)' IN (SELECT jsonb_array_elements_text(anyThing)) THEN 'Long intervals between ARV pick-ups (pick-ups more than one year apart in the same facility' END) AS LongIntervalsARVPickup,\n" +
+          "                 MAX(CASE WHEN rn = 1 AND 'Long intervals between ARV pick-ups (pick-ups more than one year apart in the same facility)' IN (SELECT jsonb_array_elements_text(anyThing)) THEN 'Long intervals between ARV pick-ups (pick-ups more than one year apart in the same facility' END) AS batchPickupDates,\n" +
+          "                 MAX(CASE WHEN rn = 1 AND 'Same sex, DOB and ART start date' IN (SELECT jsonb_array_elements_text(anyThing)) THEN 'Same sex, DOB and ART start date' END) AS sameSexDOBARTStartDate,\n" +
+          "                 MAX(CASE WHEN rn = 1 AND 'Consistently had drug pickup by proxy without viral load sample collection for two quarters' IN (SELECT jsonb_array_elements_text(anyThing)) THEN 'Consistently had drug pickup by proxy without viral load sample collection for two quarters' END) AS pickupByProxy,\n" +
+          "                 MAX(CASE WHEN rn = 1 AND 'Others' IN (SELECT jsonb_array_elements_text(anyThing)) THEN 'Others' END) AS otherSpecifyForCV\n" +
+          "          FROM (\n" +
+          "              SELECT person_uuid,\n" +
+          "                     data->'anyOfTheFollowing' AS anyThing,\n" +
+          "                     date_of_observation,\n" +
+          "                     data,\n" +
+          "                     ROW_NUMBER() OVER (PARTITION BY person_uuid ORDER BY CAST(data->'attempt'->0->>'dateOfAttempt' AS DATE) DESC) AS rn\n" +
+          "              FROM hiv_observation ho\n" +
+          "              LEFT JOIN patient_person pp ON pp.uuid = ho.person_uuid\n" +
+          "              WHERE type = 'Client Verification'\n" +
+          "                 AND pp.uuid = ?1\n" +
+          "                 AND pp.archived = 0\n" +
+          "                 AND ho.archived = 0\n" +
+          "                 AND ho.date_of_observation <= ?4\n" +
+          "                 AND ho.date_of_observation >= ?3\n" +
+          "                 AND pp.facility_id = ?2\n" +
+          "          ) cc\n" +
+          "    WHERE rn = 1 AND data->'attempt'->0->>'dateOfAttempt' IS NOT NULL\n" +
+          "          GROUP BY person_uuid", nativeQuery = true)
   ClientVerificationDTO getClientVerification(String identifier, Long facilityId, LocalDate start, LocalDate end);
   @Query(value = "SELECT client_code from hts_encounter where facility_id=?1 AND date_modified > ?2 AND archived = false ", nativeQuery = true)
   List<String>getHtsClientCode(Long facilityId, LocalDateTime lastModified);
