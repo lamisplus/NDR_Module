@@ -30,7 +30,7 @@ public class BiometricTemplateMapper {
     public FingerPrintType getFingerPrintTypeForPatient(String patientUuid) {
         log.info ("Generating FingerPrint of patient with uuid {} ", patientUuid);
         boolean biometricModule = moduleService.exist ("biometricModule");
-        log.info ("biometric install {}", biometricModule);
+        //log.info ("biometric install {}", biometricModule);
         try {
             if (biometricModule) {
                 List<BiometricDto> biometrics = ndrCodeSetRepository.getPatientBiometricByPatientUuid(patientUuid);

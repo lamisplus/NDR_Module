@@ -20,4 +20,5 @@ public class RegimenDTO implements Serializable {
 	String   differentiatedServiceDelivery;
 	String   dispensing;
 	String   multiMonthDispensing;
+	String   ndrRegimenCode;
 }

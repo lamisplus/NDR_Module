@@ -3,6 +3,7 @@ package org.lamisplus.modules.ndr.mapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.jooq.Log;
 import org.lamisplus.modules.hiv.domain.entity.ArtPharmacy;
 import org.lamisplus.modules.hiv.domain.entity.Regimen;
 import org.lamisplus.modules.hiv.repositories.ArtPharmacyRepository;
@@ -12,6 +13,7 @@ import org.lamisplus.modules.ndr.domain.dto.PatientDemographics;
 import org.lamisplus.modules.ndr.domain.dto.RegimenDTO;
 import org.lamisplus.modules.ndr.schema.CodedSimpleType;
 import org.lamisplus.modules.ndr.schema.ConditionType;
+import org.lamisplus.modules.ndr.schema.RegimenCodedSimpleType;
 import org.lamisplus.modules.ndr.schema.RegimenType;
 import org.lamisplus.modules.ndr.service.NDRCodeSetResolverService;
 import org.lamisplus.modules.ndr.utility.DateUtil;
@@ -40,7 +42,7 @@ public class RegimenTypeMapper {
 	private final NDRCodeSetResolverService ndrCodeSetResolverService;
 	
 	
-	public ConditionType regimenType(PatientDemographics demographics, ConditionType condition) {
+	public void regimenType(PatientDemographics demographics, ConditionType condition) {
 		if(demographics != null ){
 			Person person = personRepository.getOne(demographics.getId());
 			Comparator<ArtPharmacy> artVisitDateComparator = Comparator.comparing(ArtPharmacy::getVisitDate);
@@ -54,38 +56,16 @@ public class RegimenTypeMapper {
 			patientRegimens.forEach(artPharmacy -> {
 				Set<Regimen> regimens = artPharmacy.getRegimens()
 						.stream()
-						.filter(r -> regimenTypeIds.contains(r.getRegimenType ().getId ())).collect(Collectors.toSet());
+						.filter(r -> regimenTypeIds.contains(r.getRegimenType().getId())).collect(Collectors.toSet());
 				log.info(person.getHospitalNumber() + "regimens : {}", regimens.size() );
 				processAndSetPrescribeRegimen(artPharmacy, regimens, artVisitDateComparator, patientRegimens, condition);
 			});
 		}
 		sortConditionRegimenType(condition);
-		return condition;
 	}
 
-	public ConditionType regimenType(PatientDemographics demographics, ConditionType condition, List<ArtPharmacy> patientRegimens) {
-		if(demographics != null ){
-			Person person = personRepository.getOne(demographics.getId());
-			Comparator<ArtPharmacy> artVisitDateComparator = Comparator.comparing(ArtPharmacy::getVisitDate);
-			 artPharmacyRepository
-					.findAll()
-					.stream()
-					.filter(artPharmacy -> artPharmacy.getPerson().getUuid().equals(person.getUuid()))
-					.collect(Collectors.toSet());
-			log.info(person.getHospitalNumber() + " pharmacy visit is : {}", patientRegimens.size());
-			List<Long> regimenTypeIds = new ArrayList<> (Arrays.asList (1L, 2L, 3L, 4L, 14L, 8L));
-			patientRegimens.forEach(artPharmacy -> {
-				Set<Regimen> regimens = artPharmacy.getRegimens()
-						.stream()
-						.filter(r -> regimenTypeIds.contains(r.getRegimenType ().getId ())).collect(Collectors.toSet());
-				log.info(person.getHospitalNumber() + "regimens : {}", regimens.size() );
-				processAndSetPrescribeRegimen(artPharmacy, regimens, artVisitDateComparator, patientRegimens.stream().collect(Collectors.toSet()), condition);
-			});
-		}
-		sortConditionRegimenType(condition);
-		return condition;
-	}
-	public ConditionType regimenType(PatientDemographicDTO demographics, ConditionType condition, List<RegimenDTO> regimens) {
+	public void regimenType(PatientDemographicDTO demographics, ConditionType condition, List<RegimenDTO> regimens) {
+		log.info("regimen 1");
 		List<RegimenType> regimenTypeList = condition.getRegimen();
 		if(regimens != null ) {
 			regimens.parallelStream()
@@ -113,11 +93,23 @@ public class RegimenTypeMapper {
 						}
 						
 						if (StringUtils.isNotBlank(regimen.getPrescribedRegimenDuration())) {
+							if (Integer.parseInt(regimen.getPrescribedRegimenDuration()) > 180) {
+								regimenType.setPrescribedRegimenDuration("180");
+							}
 							regimenType.setPrescribedRegimenDuration(regimen.getPrescribedRegimenDuration());
 						} else {
 
 							throw new IllegalArgumentException("Regimen duration cannot be null");
 						}
+
+						//NDR Regimen Code
+//						if (StringUtils.isNotBlank(regimen.getNdrRegimenCode())) {
+//							regimenType.setNDRRegimenCode(regimen.getNdrRegimenCode());
+//						} else {
+//							regimenType.setNDRRegimenCode("NDR00000");
+//							log.info("NDR Regimen Code is null");
+//
+//						}
 						
 						if (StringUtils.isNotBlank(regimen.getPrescribedRegimenTypeCode())) {
 							regimenType.setPrescribedRegimenTypeCode(regimen.getPrescribedRegimenTypeCode());
@@ -125,14 +117,15 @@ public class RegimenTypeMapper {
 
 							throw new IllegalArgumentException("Regimen type code cannot be null");
 						}
+						//log.info("patient uuid " + demographics.getPersonUuid() + " regimen type mapper " +regimen.getPrescribedRegimenCode() + " " + regimen.getPrescribedRegimenCodeDescTxt() + " " + regimen.getNdrRegimenCode());
 						if (StringUtils.isNotBlank(regimen.getPrescribedRegimenCode())
-								&& StringUtils.isNotBlank(regimen.getPrescribedRegimenCodeDescTxt())) {
-							CodedSimpleType simpleTypeCode = new CodedSimpleType();
+								&& StringUtils.isNotBlank(regimen.getPrescribedRegimenCodeDescTxt()) && StringUtils.isNotBlank(regimen.getNdrRegimenCode())) {
+							RegimenCodedSimpleType simpleTypeCode = new RegimenCodedSimpleType();
 							simpleTypeCode.setCode(regimen.getPrescribedRegimenCode());
 							simpleTypeCode.setCodeDescTxt(regimen.getPrescribedRegimenCodeDescTxt());
+							simpleTypeCode.setNDRCode(regimen.getNdrRegimenCode());
 							regimenType.setPrescribedRegimen(simpleTypeCode);
 						} else {
-
 							throw new IllegalArgumentException("Prescribed regimen code cannot be null");
 						}
 						if (StringUtils.isNotBlank(regimen.getDateRegimenStarted())) {
@@ -169,10 +162,9 @@ public class RegimenTypeMapper {
 				sortConditionRegimenType(condition);
 			}
 		}
-			return condition;
 	}
 	
-	public ConditionType regimenType(PatientDemographics demographics, ConditionType condition, LocalDateTime lastUpdate) {
+	public void regimenType(PatientDemographics demographics, ConditionType condition, LocalDateTime lastUpdate) {
 		if(demographics != null ){
 			Person person = personRepository.getOne(demographics.getId());
 			Comparator<ArtPharmacy> artVisitDateComparator = Comparator.comparing(ArtPharmacy::getVisitDate);
@@ -193,7 +185,6 @@ public class RegimenTypeMapper {
 			});
 		}
 		sortConditionRegimenType(condition);
-		return condition;
 	}
 	
 	private void processDSD(RegimenType regimenType, RegimenDTO regimen) {
@@ -285,12 +276,12 @@ public class RegimenTypeMapper {
 					Optional<String> regimenLine = ndrCodeSetResolverService.getNDRCodeSetCode("REGIMEN_LINE", regimeLineCode);
 					regimenLine.ifPresent(regimenType::setPrescribedRegimenLineCode);
 				}
-				Optional<CodedSimpleType> regimenCodedSimpleType = ndrCodeSetResolverService.getRegimen(regimen.getDescription());
+				Optional<RegimenCodedSimpleType> regimenCodedSimpleType = ndrCodeSetResolverService.getRegimen(regimen.getDescription());
 				regimenCodedSimpleType.ifPresent(regimenType::setPrescribedRegimen);
 				if (prescribedRegimenType != null && prescribedRegimenType.equals("OI")) {
 					String description = regimen.getDescription();
 					log.info("Regimen Cotrimazole {}", description);
-					Optional<CodedSimpleType> regimenOI = ndrCodeSetResolverService.getNDRCodeSet("OI_REGIMEN", description);
+					Optional<RegimenCodedSimpleType> regimenOI = ndrCodeSetResolverService.getNDRCodeSet("OI_REGIMEN", description);
 					if (regimenOI.isPresent()) {
 						log.info("Regimen Cotrimazole Code {}", regimenOI.get().getCode());
 						regimenType.setPrescribedRegimen(regimenOI.get());

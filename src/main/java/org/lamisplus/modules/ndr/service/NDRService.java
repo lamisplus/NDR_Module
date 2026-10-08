@@ -403,41 +403,6 @@ public class NDRService {
         }
         return null;
     }
-    
-    public String zipFileWithType(PatientDemographics demographics, String sourceFolder, String type) {
-        SimpleDateFormat dateFormat = new SimpleDateFormat (DATEFORMAT);
-        String sCode = "";
-        String lCode = "";
-        Optional<String> stateCode =
-                ndrCodeSetResolverService.getNDRCodeSetCode(STATES, demographics.getState());
-        if(stateCode.isPresent()) sCode = stateCode.get();
-        Optional<String> lgaCode =
-                ndrCodeSetResolverService.getNDRCodeSetCode("LGA", demographics.getLga());
-        if(lgaCode.isPresent()) lCode = lgaCode.get();
-        String fileName = StringUtils.leftPad (sCode, 2, "0") +
-                StringUtils.leftPad ( lCode, 3, "0") + "_" + demographics.getDatimId() +
-                "_" + demographics.getFacilityName()+"_"+type+ "_" + dateFormat.format (new Date());
-        
-        fileName = RegExUtils.replaceAll (fileName, "/", "-");
-        log.info ("file name for download {}", fileName);
-        String finalFileName = fileName.replace(" ", "").replace(",", "")
-                .replace(".", "");
-        String outputZipFile = null;
-        try {
-            outputZipFile = BASE_DIR + "ndr/" + finalFileName;
-            new File (BASE_DIR + "ndr").mkdirs ();
-            new File (Paths.get (outputZipFile).toAbsolutePath ().toString ()).createNewFile ();
-            List<File> files = new ArrayList<> ();
-            files = getFiles (sourceFolder, files);
-            log.info ("Files: {}", files);
-            long fifteenMB = FileUtils.ONE_MB * 15;
-            ZipUtility.zip (files, Paths.get (outputZipFile).toAbsolutePath ().toString (), fifteenMB);
-            return finalFileName;
-        } catch (Exception exception) {
-            log.error ("An error occurred while creating temporary file " + outputZipFile);
-        }
-        return null;
-    }
 
     public List<File> getFiles(String sourceFolder, List<File> files) {
         try (Stream<Path> walk = Files.walk (Paths.get (sourceFolder))) {
@@ -451,19 +416,50 @@ public class NDRService {
     }
 
     @SneakyThrows
+//    public ByteArrayOutputStream downloadFile(String file) {
+//        ByteArrayOutputStream baos = new ByteArrayOutputStream ();
+//        String folder = BASE_DIR + "ndr/";
+//        Optional<String> fileToDownload = listFilesUsingDirectoryStream (folder).stream ()
+//                .filter (f -> f.equals (file))
+//                .findFirst ();
+//        fileToDownload.ifPresent (s -> {
+//            try (InputStream is = new FileInputStream (folder + s)) {
+//                IOUtils.copy (is, baos);
+//            } catch (IOException ignored) {
+//
+//            }
+//        });
+//        return baos;
+//    }
+
     public ByteArrayOutputStream downloadFile(String file) {
-        ByteArrayOutputStream baos = new ByteArrayOutputStream ();
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
         String folder = BASE_DIR + "ndr/";
-        Optional<String> fileToDownload = listFilesUsingDirectoryStream (folder).stream ()
-                .filter (f -> f.equals (file))
-                .findFirst ();
-        fileToDownload.ifPresent (s -> {
-            try (InputStream is = new FileInputStream (folder + s)) {
-                IOUtils.copy (is, baos);
-            } catch (IOException ignored) {
-            
+
+        // Ensure directory exists
+        File dir = new File(folder);
+        if (!dir.exists() || !dir.isDirectory()) {
+            log.error("Download folder does not exist: {}", folder);
+            return baos; // empty
+        }
+
+        // Find matching file (exact or with .zip suffix)
+        Optional<String> fileToDownload = listFilesUsingDirectoryStream(folder).stream()
+                .filter(f -> f.equals(file) || f.equals(file + ".zip"))
+                .findFirst();
+
+        if (fileToDownload.isPresent()) {
+            String fullPath = folder + fileToDownload.get();
+            try (InputStream is = new FileInputStream(fullPath)) {
+                IOUtils.copy(is, baos);
+                log.info("Successfully loaded file: {}", fullPath);
+            } catch (IOException e) {
+                log.error("Failed to read file {}: {}", fullPath, e.getMessage());
             }
-        });
+        } else {
+            log.warn("Requested file {} not found in {}", file, folder);
+        }
+
         return baos;
     }
 
@@ -524,7 +520,7 @@ public class NDRService {
     public String getLga(OrganisationUnit facility) {
         Long lgaId = facility.getParentOrganisationUnitId ();
         OrganisationUnit lgaSystem = organisationUnitService.getOrganizationUnit (lgaId);
-        Optional<CodedSimpleType> lgaNdr = ndrCodeSetResolverService.getNDRCodeSet ("LGA", lgaSystem.getName ());
+        Optional<CodedSimpleType> lgaNdr = ndrCodeSetResolverService.getCodeSet ("LGA", lgaSystem.getName ());
         log.info ("System LGA {}", lgaSystem.getName ());
         StringBuilder lga = new StringBuilder ();
         lgaNdr.ifPresent(codedSimpleType -> lga.append(codedSimpleType.getCode()));
@@ -535,7 +531,7 @@ public class NDRService {
         Long stateId = lgaOrgUnit.getParentOrganisationUnitId ();
         OrganisationUnit stateSystem = organisationUnitService.getOrganizationUnit (stateId);
         Optional<CodedSimpleType> stateNdr = ndrCodeSetResolverService
-                .getNDRCodeSet (STATES, stateSystem.getName ());
+                .getCodeSet (STATES, stateSystem.getName ());
         log.info ("System State {}", stateSystem.getName ());
         StringBuilder state = new StringBuilder ();
         stateNdr.ifPresent(codedSimpleType -> state.append(codedSimpleType.getCode()));

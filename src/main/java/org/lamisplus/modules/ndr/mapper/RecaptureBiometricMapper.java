@@ -3,7 +3,6 @@ package org.lamisplus.modules.ndr.mapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
-import org.lamisplus.modules.base.module.ModuleService;
 import org.lamisplus.modules.ndr.domain.dto.PatientDemographics;
 import org.lamisplus.modules.ndr.domain.dto.RecaptureBiometricDTO;
 import org.lamisplus.modules.ndr.domain.entities.NdrMessageLog;
@@ -85,11 +84,13 @@ public class RecaptureBiometricMapper {
 			PatientDemographicsType patientDemographicsType) {
 		
 		String patientIdentifier = patientDemographicsType.getPatientIdentifier();
+
 		Optional<NdrMessageLog> messageLog =
 				ndrMessageLogRepository.findFirstByIdentifierAndFileType(patientIdentifier, "recaptured-biometric");
-		List<RecaptureBiometricDTO> biometricDTOList;
-		if(messageLog.isPresent()) {
 
+		List<RecaptureBiometricDTO> biometricDTOList;
+
+		if(messageLog.isPresent()) {
 			LocalDate lastUpdated =
 					messageLog.get().getLastUpdated().toLocalDate();
 			log.info("last recapture Date " + lastUpdated);

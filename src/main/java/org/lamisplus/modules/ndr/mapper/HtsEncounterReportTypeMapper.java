@@ -1,0 +1,798 @@
+package org.lamisplus.modules.ndr.mapper;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.lamisplus.modules.ndr.domain.dto.HtsReportDto;
+import org.lamisplus.modules.ndr.domain.dto.NDRErrorDTO;
+import org.lamisplus.modules.ndr.schema.*;
+import org.lamisplus.modules.ndr.utility.DateUtil;
+import org.springframework.stereotype.Component;
+import org.apache.commons.lang3.StringUtils;
+
+import javax.xml.datatype.DatatypeConfigurationException;
+import java.sql.Date;
+import java.time.LocalDate;
+import java.util.*;
+import java.util.function.Consumer;
+import java.util.function.Function;
+
+@Component
+@RequiredArgsConstructor
+@Slf4j
+public class HtsEncounterReportTypeMapper {
+
+    private final ObjectMapper objectMapper;
+    private static final Map<String, String> SETTING_MAPPING = new HashMap<>();
+    private static final Map<String, String> MODALITY_MAPPING = new HashMap<>();
+    private static final Map<String, String> SESSION_TYPE_MAPPING = new HashMap<>();
+    private static final Map<String, String> MARITAL_STATUS_MAPPING = new HashMap<>();
+    private static final Map<String, String> REFERRED_FROM_MAPPING = new HashMap<>();
+    private static final Map<String, String> CLIENT_CATEGORY_MAPPING = new HashMap<>();
+    private static final Map<String, String> RELATIONSHIP_TO_INDEX_MAPPING = new HashMap<>();
+    private static final Map<String, String> RELATIONSHIP_TO_INDEX_CONTACT_MAPPING = new HashMap<>();
+    private static final Map<String, String> NOTIFICATION_METHOD_MAPPING = new HashMap<>();
+    private static final Map<String, String> FOLLOW_UP_LOCATION_MAPPING = new HashMap<>();
+    private static final Map<Boolean, String> BOOLEAN_TO_YN = new HashMap<>();
+    private static final Map<Boolean, String> BOOLEAN_TO_YES_NO = new HashMap<>();
+    private static final Map<String, String> RELATIONSHIP_TO_INDEX = new HashMap<>();
+    private static final Map<String, String> CLIENT_OF_CATEGORY_MAPPING = new HashMap<>();
+
+
+    static {
+        // Setting mappings
+        SETTING_MAPPING.put("CT", HstSetting.TEST_SETTING_CT.getValue());
+        SETTING_MAPPING.put("TB", HstSetting.TEST_SETTING_TB.getValue());
+        SETTING_MAPPING.put("STI", HstSetting.TEST_SETTING_STI.getValue());
+        SETTING_MAPPING.put("FP", HstSetting.TEST_SETTING_FP.getValue());
+        SETTING_MAPPING.put("WARD", HstSetting.TEST_SETTING_WARD.getValue());
+        SETTING_MAPPING.put("OUTREACH", HstSetting.TEST_SETTING_OUTREACH.getValue());
+        SETTING_MAPPING.put("STANDALONE", HstSetting.TEST_SETTING_STANDALONE_HTS.getValue());
+
+        MODALITY_MAPPING.put("CT", "C");
+        MODALITY_MAPPING.put("Inpatient", "I");
+        MODALITY_MAPPING.put("Outpatient", "O");
+        MODALITY_MAPPING.put("Others", "S");
+
+        // Session Type mappings
+        SESSION_TYPE_MAPPING.put("INDIVIDUAL", "1");
+        SESSION_TYPE_MAPPING.put("COUPLE", "2");
+        SESSION_TYPE_MAPPING.put("INDEX_CONTACT_TESTING", "3");
+        SESSION_TYPE_MAPPING.put("INDEX", "3");
+        SESSION_TYPE_MAPPING.put("PREVIOUSLY_SELF_TESTED", "4");
+        SESSION_TYPE_MAPPING.put("SELF_TESTED", "4");
+
+        // Marital status mappings
+        MARITAL_STATUS_MAPPING.put("Married", "M");
+        MARITAL_STATUS_MAPPING.put("Single", "S");
+        MARITAL_STATUS_MAPPING.put("Widowed", "W");
+        MARITAL_STATUS_MAPPING.put("Separated", "A");
+        MARITAL_STATUS_MAPPING.put("Divorced", "D");
+        MARITAL_STATUS_MAPPING.put("Living together", "G");
+
+        // Referred from mappings
+        REFERRED_FROM_MAPPING.put("Self", "1");
+        REFERRED_FROM_MAPPING.put("TB", "2");
+        REFERRED_FROM_MAPPING.put("STI", "3");
+        REFERRED_FROM_MAPPING.put("FP", "4");
+        REFERRED_FROM_MAPPING.put("OPD", "5");
+        REFERRED_FROM_MAPPING.put("Ward", "6");
+        REFERRED_FROM_MAPPING.put("Blood Bank", "7");
+        REFERRED_FROM_MAPPING.put("Others", "8");
+
+        // Boolean mappings
+        BOOLEAN_TO_YN.put(true, "Y");
+        BOOLEAN_TO_YN.put(false, "N");
+        BOOLEAN_TO_YES_NO.put(true, "Yes");
+        BOOLEAN_TO_YES_NO.put(false, "No");
+
+        CLIENT_CATEGORY_MAPPING.put("NEWLY_DIAGNOSED", "ND");
+        CLIENT_CATEGORY_MAPPING.put("VIRALLY_UNSUPPRESSED", "VU");
+        CLIENT_CATEGORY_MAPPING.put("RETURNED_TO_TREATMENT", "RTT");
+        CLIENT_CATEGORY_MAPPING.put("OTHER", "OT");
+
+        CLIENT_OF_CATEGORY_MAPPING.put("SELF","S");
+        CLIENT_OF_CATEGORY_MAPPING.put("PARTNER","P");
+        CLIENT_OF_CATEGORY_MAPPING.put("CAREGIVER","CG");
+        CLIENT_OF_CATEGORY_MAPPING.put("SOCIAL NETWORK","SN");
+
+        // Relationship to Index mappings (NDR numeric codes)
+        RELATIONSHIP_TO_INDEX_MAPPING.put("MOTHER", "M");
+        RELATIONSHIP_TO_INDEX_MAPPING.put("FATHER", "F");
+        RELATIONSHIP_TO_INDEX_MAPPING.put("BIOLOGICAL_CHILD", "C");
+        RELATIONSHIP_TO_INDEX_MAPPING.put("SPOUSE", "S");
+        RELATIONSHIP_TO_INDEX_MAPPING.put("LIVE_IN_PARTNER", "L");
+        RELATIONSHIP_TO_INDEX_MAPPING.put("BOYFRIEND_GIRLFRIEND", "B");
+        RELATIONSHIP_TO_INDEX_MAPPING.put("CASUAL_PARTNER", "P");
+        RELATIONSHIP_TO_INDEX_MAPPING.put("SOCIAL_NETWORK", "N");
+
+        RELATIONSHIP_TO_INDEX_CONTACT_MAPPING.put("MOTHER", "1");
+        RELATIONSHIP_TO_INDEX_CONTACT_MAPPING.put("FATHER", "2");
+        RELATIONSHIP_TO_INDEX_CONTACT_MAPPING.put("BIOLOGICAL_CHILD", "3");
+        RELATIONSHIP_TO_INDEX_CONTACT_MAPPING.put("SPOUSE", "4");
+        RELATIONSHIP_TO_INDEX_CONTACT_MAPPING.put("LIVE_IN_PARTNER", "5");
+        RELATIONSHIP_TO_INDEX_CONTACT_MAPPING.put("BOYFRIEND_GIRLFRIEND", "6");
+        RELATIONSHIP_TO_INDEX_CONTACT_MAPPING.put("CASUAL_PARTNER", "7");
+        RELATIONSHIP_TO_INDEX_CONTACT_MAPPING.put("SOCIAL_NETWORK", "8");
+
+        // Notification Method mappings
+        NOTIFICATION_METHOD_MAPPING.put("PROVIDER_ASSISTED", "A");
+        NOTIFICATION_METHOD_MAPPING.put("PASSIVE_NOTIFICATIONSELF", "B");
+        NOTIFICATION_METHOD_MAPPING.put("CONTRACTED", "C");
+        NOTIFICATION_METHOD_MAPPING.put("HOUSEHOLD_REFERRALCLUSTERING", "D");
+        NOTIFICATION_METHOD_MAPPING.put("NO_NOTIFICATION_NEEDED_KNOWN_HIV_POSITIVE", "E");
+        NOTIFICATION_METHOD_MAPPING.put("NOTIFICATION_NOT_RECOMMENDED_FOR_SAFETY_OF_INDEX_CLIENT", "F");
+
+        // Follow-up Location mappings
+        FOLLOW_UP_LOCATION_MAPPING.put("FACILITY", "FAC");
+        FOLLOW_UP_LOCATION_MAPPING.put("WORKPLACE", "WRK");
+        FOLLOW_UP_LOCATION_MAPPING.put("HOME", "HOM");
+        FOLLOW_UP_LOCATION_MAPPING.put("OTHERS", "OTH");
+    }
+
+    public boolean getHivTestingReportType(
+            IndividualReportType individualReportType,
+            ObjectFactory objectFactory,
+            List<HtsReportDto> projections,
+            List<NDRErrorDTO> errors) {
+
+        log.info("HTS Mapping started... ");
+        if (projections == null || projections.isEmpty()) {
+            return false;
+        }
+
+        List<HIVTestingReportType> hivTestingReport = individualReportType.getHIVTestingReport();
+
+        projections.parallelStream().forEach(projection -> {
+            try {
+                HIVTestingReportType reportType = NDRObjectFactory.createHIVTestingReportType();
+                mapProjectionToReportType(projection, reportType, objectFactory);
+                hivTestingReport.add(reportType);
+            } catch (Exception e) {
+                errors.add(new NDRErrorDTO(
+                        projection.getClientCode(),
+                        null,
+                        e.getMessage() + " | " + Arrays.toString(e.getStackTrace())
+                ));
+                log.error("Error mapping projection for client: {}", projection.getClientCode(), e);
+            }
+        });
+
+        return true;
+    }
+
+    private void mapProjectionToReportType(
+            HtsReportDto projection,
+            HIVTestingReportType reportType,
+            ObjectFactory objectFactory) {
+       // log.info("HTS projection for client: {}", projection.toString());
+        validateAndSet(projection.getClientCode(), reportType::setClientCode, "ClientCode"); // required
+        validateAndSet(projection.getVisitId(), reportType::setVisitID, "VisitID"); // required
+        validateAndSetDate(projection.getVisitDate(), reportType::setVisitDate, "VisitDate"); // required
+
+        setIfPresent(projection.getSetting().contains("HTS_ENTRY_POINT_FACILITY") ? "F" : "C", reportType::setSetting); // required
+        setIfPresent(projection.getModality() != null ? "C" : "S", reportType::setModality); // TODO - get the modalities // required
+        if (projection.getClientAge() != null) {
+            setIfPresent(Integer.parseInt(projection.getClientAge()), reportType::setClientAge); // required
+        }
+        setIfPresent(projection.getSex(), reportType::setSex, this::mapSex); // required
+        setIfPresent(projection.getMaritalStatus(), reportType::setMaritalStatus, this::mapMaritalStatus);
+        setIfPresent(projection.getNoOfAllWives(), reportType::setNoOfAllWives);
+        setIfPresent(projection.getNoOfOwnChildrenLessThan15Years(), reportType::setNoOfOwnChildrenLessThan15Years);
+        setIfPresent(projection.getStateOfResidence(), reportType::setStateOfResidence);
+        setIfPresent(projection.getLgaOfResidence(), reportType::setLGAOfResidence);
+        setIfPresent(projection.getSessionType(), reportType::setSessionType, this::mapSessionType); // required
+        setIfPresent(projection.getHivstResult(), reportType::setModality, this::mapTestResult);
+        setIfPresent(projection.getIndexClientId(), reportType::setIndexClientId);
+        setIfPresent(projection.getRelationshipToIndex(), reportType::setRelationshipToIndex, this::mapRelationshipToIndex);
+        setIfPresent(projection.getClientIsPregnant(), reportType::setClientIsPregnant, this::mapYesNoToCode);
+        setIfPresent(!Objects.equals(projection.getBreastfeeding(), "false") ? "Yes" : "No", reportType::setBreastfeeding);
+        setIfPresent(projection.getDurationOfBreastfeeding(), reportType::setDurationOfBreastfeeding, this::mapDurationOfBreastfeeding);
+        setIfPresent(projection.getSyphilisTestResult(), reportType::setSyphilisTestResult, this::mapSyphilisResult);
+
+        reportType.setPreTestInformation(buildPreTestInformation(objectFactory, projection));
+        reportType.setPostTestCounselling(buildPostTestCounselling(objectFactory, projection));
+        reportType.setIndexContactTesting(buildIndexContactTesting(objectFactory, projection));
+        reportType.setHIVTestResult(buildHIVTestResult(objectFactory, projection));
+    }
+
+    // ==================== Pre-Test Information ====================
+
+    private PreTestInformationType buildPreTestInformation(ObjectFactory factory, HtsReportDto p) {
+        PreTestInformationType preTest = factory.createPreTestInformationType();
+
+        preTest.setKnowledgeAssessment(buildKnowledgeAssessment(factory, p));
+        preTest.setHIVRiskAssessment(buildHIVRiskAssessment(factory, p));
+        preTest.setClinicalTBScreening(buildClinicalTBScreening(factory, p));
+        preTest.setSyndromicSTIScreening(buildSyndromicSTIScreening(factory, p));
+        preTest.setSexPartnerRiskAssessment(buildSexPartnerRiskAssessment(factory, p));
+
+        return preTest;
+    }
+
+    private KnowledgeAssessmentType buildKnowledgeAssessment(ObjectFactory factory, HtsReportDto p) {
+        KnowledgeAssessmentType assessment = factory.createKnowledgeAssessmentType();
+        if (p.getPreviouslyTestedHIVNegative() != null) {
+            setBooleanIfPresent(p.getPreviouslyTestedHIVNegative(), assessment::setPreviouslyTestedHIVNegative);
+        }
+        if (p.getClientInformedAboutHIVTransmissionRoutes() != null) {
+            setBooleanIfPresent(p.getClientInformedAboutHIVTransmissionRoutes(), assessment::setClientInformedAboutHIVTransmissionRoutes);
+        }
+        if (p.getClientPregnant() != null) {
+            setBooleanIfPresent(p.getClientPregnant(), assessment::setClientPregnant);
+        }
+        if (p.getClientInformedOfHIVTransmissionRiskFactors() != null) {
+            setBooleanIfPresent(p.getClientInformedOfHIVTransmissionRiskFactors(), assessment::setClientInformedOfHIVTransmissionRiskFactors);
+        }
+        if (p.getClientInformedAboutPreventingHIV() != null) {
+            setBooleanIfPresent(p.getClientInformedAboutPreventingHIV(), assessment::setClientInformedAboutPreventingHIV);
+        }
+        if (p.getClientInformedAboutPossibleTestResults() != null) {
+            setBooleanIfPresent(p.getClientInformedAboutPossibleTestResults(), assessment::setClientInformedAboutPossibleTestResults);
+        }
+        if (p.getInformedConsentForHIVTestingGiven() != null) {
+            setBooleanIfPresent(p.getInformedConsentForHIVTestingGiven(), assessment::setInformedConsentForHIVTestingGiven);
+        }
+        if (p.getTimeOfLastNegativeTest() != null) {
+            setIfPresent(p.getTimeOfLastNegativeTest(), assessment::setTimeOfLastHIVNegativeTest, this::mapTimeOfLastHIVNegative);
+        }
+        return assessment;
+    }
+
+    private HIVRiskAssessmentType buildHIVRiskAssessment(ObjectFactory factory, HtsReportDto p) {
+        HIVRiskAssessmentType assessment = factory.createHIVRiskAssessmentType();
+        if (p.getEverHadSexualIntercourse() != null) {
+            setBooleanIfPresent(p.getEverHadSexualIntercourse(), assessment::setEverHadSexualIntercourse);
+        }
+        if (p.getBloodTransfussionInLast3Months() != null) {
+            setBooleanIfPresent(p.getBloodTransfussionInLast3Months(), assessment::setBloodTransfussionInLast3Months);
+        }
+        if (p.getUnprotectedSexWithCasualPartnerinLast3Months() != null) {
+            setBooleanIfPresent(p.getUnprotectedSexWithCasualPartnerinLast3Months(), assessment::setUnprotectedSexWithCasualPartnerinLast3Months);
+        }
+        if (p.getUnprotectedSexWithRegularPartnerInLast3Months() != null) {
+            setBooleanIfPresent(p.getUnprotectedSexWithRegularPartnerInLast3Months(), assessment::setUnprotectedSexWithRegularPartnerInLast3Months);
+        }
+        if (p.getMoreThan1SexPartnerDuringLast3Months() != null) {
+            setBooleanIfPresent(p.getMoreThan1SexPartnerDuringLast3Months(), assessment::setMoreThan1SexPartnerDuringLast3Months);
+        }
+        if (p.getStiInLast3Months() != null) {
+            setBooleanIfPresent(p.getStiInLast3Months(), assessment::setSTIInLast3Months);
+        }
+        if (p.getSexUnderInfluenceOfDrugsOrAlcohol() != null) {
+            setBooleanIfPresent(p.getSexUnderInfluenceOfDrugsOrAlcohol(), assessment::setSexUnderInfluenceOfDrugsOrAlcohol);
+        }
+        if (p.getUnprotectedVaginalSex() != null) {
+            setBooleanIfPresent(p.getUnprotectedVaginalSex(), assessment::setUnprotectedVaginalSex);
+        }
+        return assessment;
+    }
+
+    private ClinicalTBScreeningType buildClinicalTBScreening(ObjectFactory factory, HtsReportDto p) {
+        ClinicalTBScreeningType screening = factory.createClinicalTBScreeningType();
+        if (p.getCurrentlyCough() != null) {
+            setBooleanIfPresent(p.getCurrentlyCough(), screening::setCurrentlyCough);
+        }
+        if (p.getWeightLoss() != null) {
+            setBooleanIfPresent(p.getWeightLoss(), screening::setWeightLoss);
+        }
+        if (p.getFever() != null) {
+            setBooleanIfPresent(p.getFever(), screening::setFever);
+        }
+        if (p.getNightSweats() != null) {
+            setBooleanIfPresent(p.getNightSweats(), screening::setNightSweats);
+        }
+        return screening;
+    }
+
+    private SyndromicSTIScreeningType buildSyndromicSTIScreening(ObjectFactory factory, HtsReportDto p) {
+        SyndromicSTIScreeningType screening = factory.createSyndromicSTIScreeningType();
+        if (p.getVaginalDischargeOrBurningWhenUrinating() != null) {
+            setBooleanIfPresent(p.getVaginalDischargeOrBurningWhenUrinating(), screening::setVaginalDischargeOrBurningWhenUrinating);
+        }
+        if (p.getLowerAbdominalPainsWithOrWithoutVaginalDischarge() != null) {
+            setBooleanIfPresent(p.getLowerAbdominalPainsWithOrWithoutVaginalDischarge(), screening::setLowerAbdominalPainsWithOrWithoutVaginalDischarge);
+        }
+        if (p.getUrethralDischargeOrBurningWhenUrinating() != null) {
+            setBooleanIfPresent(p.getUrethralDischargeOrBurningWhenUrinating(), screening::setUrethralDischargeOrBurningWhenUrinating);
+        }
+        if (p.getScrotalSwellingAndPain() != null) {
+            setBooleanIfPresent(p.getScrotalSwellingAndPain(), screening::setScrotalSwellingAndPain);
+        }
+        if (p.getGenitalSore() != null) {
+            setBooleanIfPresent(p.getGenitalSore(), screening::setGenitalSore);
+        }
+        if (p.getGenitalSoreOrSwollenInguinalLymphNodes() != null) {
+            setBooleanIfPresent(p.getGenitalSoreOrSwollenInguinalLymphNodes(), screening::setGenitalSoreOrSwollenInguinalLymphNodes);
+        }
+        return screening;
+    }
+
+    private SexPartnerRiskAssessmentType buildSexPartnerRiskAssessment(ObjectFactory factory, HtsReportDto p) {
+        SexPartnerRiskAssessmentType assessment = factory.createSexPartnerRiskAssessmentType();
+        if (p.getPartnerNewlyDiagnosedOnARTLessThan3To6Months() != null) {
+            setBooleanIfPresent(p.getPartnerNewlyDiagnosedOnARTLessThan3To6Months(), assessment::setPartnerNewlyDiagnosedOnARTLessThan3To6Months);
+        }
+        if (p.getPartnerAdolescent10To19KnownHIVInfected() != null) {
+            setBooleanIfPresent(p.getPartnerAdolescent10To19KnownHIVInfected(), assessment::setPartnerAdolescent10To19KnownHIVInfected);
+        }
+        if (p.getPartnerKnownPositiveNotRegularlyOnDrugs() != null) {
+            setBooleanIfPresent(p.getPartnerKnownPositiveNotRegularlyOnDrugs(), assessment::setPartnerKnownPositiveNotRegularlyOnDrugs);
+        }
+        if (p.getPartnerKnownPositiveRecentlyReturnedAfterLTFU() != null) {
+            setBooleanIfPresent(p.getPartnerKnownPositiveRecentlyReturnedAfterLTFU(), assessment::setPartnerKnownPositiveRecentlyReturnedAfterLTFU);
+        }
+        return assessment;
+    }
+
+    // ==================== HIV Test Result ====================
+
+    private HIVTestResultType buildHIVTestResult(ObjectFactory factory, HtsReportDto p) {
+        HIVTestResultType result = factory.createHIVTestResultType();
+        TestResultType testResult = factory.createTestResultType();
+
+        // Screening test
+//        String screeningResult = mapTestResult(p.getScreeningTestResult());
+//        if (screeningResult != null) {
+//            testResult.setScreeningTestResult(screeningResult);
+//        }
+
+        // Confirmatory test
+        String confirmatoryResult = mapTestResult(p.getConfirmatoryTestResult());
+        String finalTestResult = mapTestResult(p.getFinalTestResult());
+        if (confirmatoryResult != null) {
+            testResult.setConfirmatoryTestResult(determineConfirmatoryResult(confirmatoryResult));
+            testResult.setFinalTestResult(determineFinalResult(finalTestResult));
+        }
+
+        // Dates
+//        setDateIfPresent(p.getScreeningTestResultDate(), testResult::setScreeningTestResultDate);
+//        setDateIfPresent(p.getConfirmatoryTestResultDate(), testResult::setConfirmatoryTestResultDate);
+
+        // Suspected acute infection
+        if (p.getSuspectedAcuteHIVInfection() != null) {
+            testResult.setSuspectedAcuteHIVInfection(BOOLEAN_TO_YES_NO.get(p.getSuspectedAcuteHIVInfection()));
+        }
+
+        result.setTestResult(testResult);
+
+        return result;
+    }
+
+    // ==================== Index Contact ============================
+    private IndexContactTestingType buildIndexContactTesting(ObjectFactory factory, HtsReportDto p) {
+        boolean hasIndexData = StringUtils.isNotBlank(p.getClientCategory()) ||
+                StringUtils.isNotBlank(p.getOfferedPns()) ||
+                StringUtils.isNotBlank(p.getAcceptedPns()) ||
+                StringUtils.isNotBlank(p.getRelationshipToIndex());
+
+        if (!hasIndexData) {
+            return null;
+        }
+
+        IndexContactTestingType indexContact = factory.createIndexContactTestingType();
+
+        setIfPresent(p.getArtClinic() != null ? "Y" : "N", indexContact::setARTClinic);
+        if (p.getIndexClientIDType() != null) {
+            setIfPresent(p.getIndexClientIDType(), indexContact::setIndexClientIDType, this::mapIndexClientIdType);
+        }
+        if (p.getIndexClientID() != null) {
+            setIfPresent(p.getIndexClientID(), indexContact::setIndexClientID);
+        }
+        if (p.getClientCategory() != null) {
+            setIfPresent(p.getClientCategory(), indexContact::setClientCategory, this::mapClientCategory); //required
+        }
+        if (p.getOfferedPns() != null) {
+            setIfPresent(p.getOfferedPns(), indexContact::setOfferedIndexTestingServices, this::mapYesNoToCode); //required
+        }
+        if (p.getAcceptedIndexTesting() != null) {
+            setIfPresent(p.getAcceptedIndexTesting().toString(), indexContact::setAcceptedIndexTestingServices, this::mapYesNoToCode); //required
+        }
+
+        List<IndexContactType> contacts = buildIndexContacts(factory, p);
+        if (!contacts.isEmpty()) {
+            indexContact.getIndexContact().addAll(contacts);
+        }
+
+        return indexContact;
+    }
+
+    private List<IndexContactType> buildIndexContacts(ObjectFactory factory, HtsReportDto p) {
+        List<IndexContactType> contacts = new ArrayList<>();
+
+        // Check if we have contact data
+        boolean hasContactData = StringUtils.isNotBlank(p.getRelationshipToIndex()) ||
+                StringUtils.isNotBlank(p.getNotificationMethod());
+
+        if (!hasContactData) {
+            return contacts;
+        }
+
+        IndexContactType contact = factory.createIndexContactType();
+        if (p.getSerialNo() != null) {
+            contact.setSerialNo(p.getSerialNo()); //required
+        }
+
+        setIfPresent(p.getRelationshipToIndex(), contact::setRelationshipToIndex, this::mapRelationshipToIndexContact); //required
+        if (p.getContactSex() != null) {
+            setIfPresent(p.getContactSex(), contact::setSex, this::mapSex); //required
+        }
+
+        if (p.getAgeGroup() != null) {
+            setIfPresent(p.getAgeGroup(), contact::setAgeGroup, this::mapAgeGroup); //required
+        }
+
+
+        setIfPresent(p.getNotificationMethod(), contact::setNotificationMethod, this::mapNotificationMethod);
+
+        setIfPresent(p.getFollowUpAppointmentLocation(), contact::setFollowUpAppointmentLocation, this::mapFollowUpLocation);
+
+        setIfPresent(p.getContactAttempts(), contact::setContactAttempts, this::parseInteger);
+
+        setIfPresent(p.getKnownHIVPositive(), contact::setKnownHIVPositive, this::mapYesNoToCode);
+
+        setIfPresent(p.getHivTestResult(), contact::setHIVTestResult, this::mapTestResultCode);
+
+        setDateIfPresent(p.getDateTested(), contact::setDateTested);
+        setDateIfPresent(p.getDateEnrolledOnART(), contact::setDateEnrolledOnART);
+        setDateIfPresent(p.getDateEnrolledInOVC(), contact::setDateEnrolledInOVC);
+
+        setIfPresent(p.getOvcid(), contact::setOVCID);
+
+        contacts.add(contact);
+
+        return contacts;
+    }
+
+    // ==================== Post-Test Counselling ====================
+    private PostTestCounsellingType buildPostTestCounselling(ObjectFactory factory, HtsReportDto p) {
+        PostTestCounsellingType postTest = factory.createPostTestCounsellingType();
+
+        // Required field
+        String priorTestStatus = determinePriorTestStatus(p.getTestedForHIVBeforeWithinThisYear());
+        postTest.setTestedForHIVBeforeWithinThisYear(priorTestStatus);
+
+        // Boolean fields
+        setBooleanAsYesNo(p.getAcceptedIndexTesting(), postTest::setAcceptedIndexTesting);
+        setBooleanAsYesNo(p.getProvidedWithInformationOnFPandDualContraception(), postTest::setProvidedWithInformationOnFPandDualContraception);
+        setBooleanAsYesNo(p.getClientOrPartnerUseFPMethodsOtherThanCondoms(), postTest::setClientOrPartnerUseFPMethodsOtherThanCondoms);
+        setBooleanAsYesNo(p.getClientOrPartnerUseCondomsAsOneFPMethods(), postTest::setClientOrPartnerUseCondomsAsOneFPMethods);
+        setBooleanAsYesNo(p.getClientRecievedHIVTestResult(), postTest::setClientRecievedHIVTestResult);
+        setBooleanAsYesNo(p.getCorrectCondomUseDemonstrated(), postTest::setCorrectCondomUseDemonstrated);
+        setBooleanAsYesNo(p.getCondomsProvidedToClient(), postTest::setCondomsProvidedToClient);
+        setBooleanAsYesNo(p.getHivSelfTestKitsProvided(), postTest::setHIVSelfTestKitsProvided);
+//        setIfPresent(p.getHivSelfTestKitsCount(), postTest::setHIVSelfTestKitsCount);
+        setBooleanAsYesNo(p.getClientReferredToOtherServices(), postTest::setClientReferredToOtherServices); // TODO: get correct value
+
+        // Category of client
+        setIfPresent(p.getCategoryOfClient(), postTest::setCategoryOfClient, this::mapCategoryOfClient);
+
+        return postTest;
+    }
+
+    // ==================== Mapping Helper Methods ====================
+
+    private String mapRelationshipToIndex(String relation) {
+        if (relation == null || relation.isEmpty()) {
+            return "P"; // Default to Individual
+        }
+
+        String upperType = relation.toUpperCase().replace("RELATIONSHIP_CONTACT_", "").trim();
+
+        String mappedValue = RELATIONSHIP_TO_INDEX_MAPPING.get(upperType);
+        if (mappedValue != null) {
+            return mappedValue;
+        }
+
+        log.warn("Unknown session type: {} {}, defaulting to Individual (1) (2)", relation, mappedValue);
+        return "P";
+    }
+
+    private String mapRelationshipToIndexContact(String relation) {
+        if (relation == null || relation.isEmpty()) {
+            return "7"; // Default to Individual
+        }
+
+        String upperType = relation.toUpperCase().replace("RELATIONSHIP_CONTACT_", "").trim();
+
+        String mappedValue = RELATIONSHIP_TO_INDEX_CONTACT_MAPPING.get(upperType);
+        if (mappedValue != null) {
+            return mappedValue;
+        }
+
+        log.warn("Unknown session type: {} {}, defaulting to Individual (1) (2)", relation, mappedValue);
+        return "7";
+    }
+    private Integer parseInteger(String value) {
+        if (value == null || value.isEmpty()) {
+            return null;
+        }
+        try {
+            return Integer.parseInt(value);
+        } catch (NumberFormatException e) {
+            return null;
+        }
+    }
+    private String mapTestResultCode(String result) {
+        if (result == null) {
+            return "Neg";
+        }
+        String upperResult = result.toUpperCase();
+        if (upperResult.equals("POSITIVE") || upperResult.equals("POS") || upperResult.equals("R")) {
+            return "Pos";
+        }
+        if (upperResult.equals("NEGATIVE") || upperResult.equals("NEG") || upperResult.equals("NR")) {
+            return "Neg";
+        }
+        return "Neg";
+    }
+    private String mapNotificationMethod(String method) {
+        if (method == null) {
+            return "A";
+        }
+        String upperType = method.toUpperCase().replace("NOTIFICATION_CONTACT_", "").trim();
+
+        String mappedValue = NOTIFICATION_METHOD_MAPPING.get(upperType);
+        if (mappedValue != null) {
+            return mappedValue;
+        }
+        return "A";
+    }
+    private String mapFollowUpLocation(String location) {
+        if (location == null) {
+            return null;
+        }
+
+        String upperType = location.toUpperCase().replace("FOLLOW UP_APPOINTMENT_LOCATION_", "").trim();
+
+        String mappedValue = FOLLOW_UP_LOCATION_MAPPING.get(upperType);
+        if (mappedValue != null) {
+            return mappedValue;
+        }
+
+        return "OTH";
+    }
+    private String mapSex(String sex) {
+        if (sex == null) {
+            return null;
+        }
+        String upperSex = sex.toUpperCase();
+        if (upperSex.contains("SEX_MALE") || upperSex.contains("MALE")) return "M";
+        if (upperSex.startsWith("SEX_FEMALE") || upperSex.contains("FEMALE")) return "F";
+        return null;
+    }
+    private String mapAgeGroup(String ageGroup) {
+        if (ageGroup == null) {
+            return "LT15";
+        }
+        try {
+            int age = Integer.parseInt(ageGroup);
+            return age < 15 ? "LT15" : "GTE15";
+        } catch (NumberFormatException e) {
+            return "LT15";
+        }
+    }
+    private String mapDurationOfBreastfeeding(String duration) {
+        if (duration == null) {
+            return "LT15";
+        }
+        String upperGroup = duration.toUpperCase();
+        if (upperGroup.contains("LT15") || upperGroup.contains("LESS THAN 15") || upperGroup.contains("<15")) {
+            return "LT15";
+        }
+        if (upperGroup.contains("GTE15") || upperGroup.contains("15 AND ABOVE") || upperGroup.contains("≥15") || upperGroup.contains(">=")) {
+            return "GTE15";
+        }
+
+        try {
+            int age = Integer.parseInt(duration);
+            return age < 15 ? "LT6" : "GTE6";
+        } catch (NumberFormatException e) {
+            return null;
+        }
+    }
+    private String mapTimeOfLastHIVNegative(String duration) {
+        if (duration == null|| duration.isEmpty()) {
+            return "LT3M";
+        }
+        String upperGroup = duration.toUpperCase().replace("RECENT_HIV_TEST_", "").trim();
+        if (upperGroup.contains("LAST_3_MONTHS") || upperGroup.contains("LAST_6_MONTHS")) {
+            return "LT3M";
+        }
+        if (upperGroup.contains("MORE_THAN_6_MONTHS")) {
+            return "GT6M";
+        }
+        return "LT3M";
+    }
+    private String mapSessionType(String sessionType) {
+        if (sessionType == null || sessionType.isEmpty()) {
+            return "1"; // Default to Individual
+        }
+
+        String upperType = sessionType.toUpperCase().replace("COUNSELING_TYPE_", "").trim();
+
+        String mappedValue = SESSION_TYPE_MAPPING.get(upperType);
+        if (mappedValue != null) {
+            return mappedValue;
+        }
+
+        log.warn("Unknown session type: {}, defaulting to Individual (1)", sessionType);
+        return "1";
+    }
+    private String mapMaritalStatus(String status) {
+        if (status == null) {
+            return "S";
+        }
+
+        for (Map.Entry<String, String> entry : MARITAL_STATUS_MAPPING.entrySet()) {
+            if (status.contains(entry.getKey())) {
+                return entry.getValue();
+            }
+        }
+        return status;
+    }
+    private String mapTestResult(String result) {
+        if (result == null) {
+            return null;
+        }
+        String upperType = result.toUpperCase().replace("HIV_CONFIRMATORY_TEST_RESULT_", "").trim();
+        return upperType.equalsIgnoreCase("POSITIVE") ? "R" : "NR";
+    }
+    private String mapSyphilisResult(String result) {
+        if (result == null) {
+            return null;
+        }
+        String upperType = result.toUpperCase().replace("SYPHILIS_RESULT_", "").trim();
+        return upperType.equalsIgnoreCase("POSITIVE") ? "R" : "NR";
+    }
+    private String mapCategoryOfClient(String category) {
+
+        if (category == null || category.isEmpty()) {
+            return "S";
+        }
+        String upperType = category.toUpperCase().replace("TARGET_GROUP_", "").trim();
+
+        String mappedValue = CLIENT_OF_CATEGORY_MAPPING.get(upperType);
+        if (mappedValue != null) {
+            return mappedValue;
+        }
+
+        log.warn("Unknown client of category: {}, defaulting to Individual (1)", upperType);
+        return "S";
+    }
+
+    private String determineFinalResult(String finalResult) {
+        if (finalResult == null) {
+            return "Neg";
+        }
+        String upperType = finalResult.toUpperCase().trim();
+        log.info("final result {}", upperType);
+        return upperType.equals("POSITIVE") ? "Pos" : "Neg";
+    }
+
+    private String determineConfirmatoryResult(String confirmatoryResult) {
+        if (confirmatoryResult == null) {
+            return "NR";
+        }
+        String upperType = confirmatoryResult.toUpperCase().replace("HIV_CONFIRMATORY_TEST_RESULT_", "").trim();
+        log.info("confirmatory result {}", upperType);
+        return upperType.equals("POSITIVE") ? "R" : "NR";
+    }
+
+    private String determinePriorTestStatus(String previouslyTested) {
+        if (previouslyTested == null) {
+            return "1";
+        }
+        return Boolean.parseBoolean(previouslyTested) ? "2" : "1";
+    }
+
+    private <T> void validateAndSet(T value, Consumer<T> setter, String fieldName) {
+        if (value != null) {
+            setter.accept(value);
+        } else {
+            throw new IllegalArgumentException(fieldName + " cannot be null");
+        }
+    }
+
+    private <T> void setIfPresent(T value, Consumer<T> setter) {
+        if (value != null) {
+            setter.accept(value);
+        }
+    }
+
+    private <T, R> void setIfPresent(T value, Consumer<R> setter, Function<T, R> mapper) {
+        if (value != null) {
+            R mapped = mapper.apply(value);
+            if (mapped != null) {
+                setter.accept(mapped);
+            }
+        }
+    }
+
+    private void setBooleanIfPresent(Boolean value, Consumer<Boolean> setter) {
+        if (value != null) {
+            setter.accept(value);
+        }
+    }
+
+    private void setBooleanAsYesNo(Boolean value, Consumer<Boolean> setter) {
+        if (value != null) {
+            setter.accept(value);
+        }
+    }
+
+    private void validateAndSetDate(LocalDate date, Consumer<javax.xml.datatype.XMLGregorianCalendar> setter, String fieldName) {
+        if (date != null) {
+            try {
+                setter.accept(DateUtil.getXmlDate(Date.valueOf(date)));
+            } catch (DatatypeConfigurationException e) {
+                throw new RuntimeException("Error setting " + fieldName + ": " + e.getMessage(), e);
+            }
+        } else {
+            throw new IllegalArgumentException(fieldName + " cannot be null");
+        }
+    }
+
+    private void setDateIfPresent(LocalDate date, Consumer<javax.xml.datatype.XMLGregorianCalendar> setter) {
+        if (date != null) {
+            try {
+                setter.accept(DateUtil.getXmlDate(Date.valueOf(date)));
+            } catch (DatatypeConfigurationException e) {
+                log.warn("Error setting date: {}", e.getMessage());
+            }
+        }
+    }
+    private String mapYesNoToCode(String value) {
+        if (value == null) {
+            return "No";
+        }
+        log.info("value: {}", value);
+        String upperValue = "";
+
+        if (value.contains("false") || value.contains("true")) {
+            upperValue = value.toUpperCase().trim();
+            if (upperValue.equals("TRUE")) {
+                return "Yes";
+            }
+            if (upperValue.equals("FALSE")) {
+                return "No";
+            }
+        } else {
+            upperValue = value.toUpperCase().replace("YES_NO_", "").trim();
+            if (upperValue.equals("YES")) {
+                return "Yes";
+            }
+            if (upperValue.equals("NO")) {
+                return "No";
+            }
+        }
+
+        return "No";
+    }
+
+    private String mapClientCategory(String category) {
+        if (category == null) {
+            return "OT";
+        }
+        String upperType = category.toUpperCase().replace("INDEX_CLIENT_CATEGORY_", "").trim();
+
+        String mappedValue = CLIENT_CATEGORY_MAPPING.get(upperType);
+        if (mappedValue != null) {
+            return mappedValue;
+        }
+
+        return "OT";
+    }
+
+    private String mapIndexClientIdType(String type) {
+        if (type == null) {
+            return "HTS";
+        }
+        String upperType = type.toUpperCase();
+        if (upperType.contains("HTS")) return "HTS";
+        if (upperType.contains("ART")) return "ART";
+        return "HTS";
+    }
+
+}
+

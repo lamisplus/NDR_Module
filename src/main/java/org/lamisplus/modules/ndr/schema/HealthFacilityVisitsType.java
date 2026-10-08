@@ -107,7 +107,7 @@ public class HealthFacilityVisitsType {
     @XmlElement(name = "BreastFeeding")
     protected String breastFeeding;
     @XmlElement(name = "PrescribedRegimen")
-    protected CodedSimpleType prescribedRegimen;
+    protected RegimenCodedSimpleType prescribedRegimen;
     @XmlElement(name = "PrescribedRegimenLineCode")
     protected String prescribedRegimenLineCode;
     @XmlElement(name = "MaternalOutcome")
@@ -238,10 +238,10 @@ public class HealthFacilityVisitsType {
      * 
      * @return
      *     possible object is
-     *     {@link CodedSimpleType }
+     *     {@link RegimenCodedSimpleType }
      *     
      */
-    public CodedSimpleType getPrescribedRegimen() {
+    public RegimenCodedSimpleType getPrescribedRegimen() {
         return prescribedRegimen;
     }
 
@@ -250,10 +250,10 @@ public class HealthFacilityVisitsType {
      * 
      * @param value
      *     allowed object is
-     *     {@link CodedSimpleType }
+     *     {@link RegimenCodedSimpleType }
      *     
      */
-    public void setPrescribedRegimen(CodedSimpleType value) {
+    public void setPrescribedRegimen(RegimenCodedSimpleType value) {
         this.prescribedRegimen = value;
     }
 

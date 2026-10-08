@@ -1,7 +1,7 @@
 package org.lamisplus.modules.ndr.domain.dto;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
-
 
 public interface PatientDemographicDTO {
 	Long getPersonId();
@@ -11,7 +11,9 @@ public interface PatientDemographicDTO {
 	String getHospitalNumber();
 	String getStatusAtRegistration();
 	String getCareEntryPoint();
-	
+	String getFirstHIVTestMode();
+	String getPriorArt();
+	String getKpTypology();
 	Integer getAge();
 	String getPatientSexCode();
 	LocalDate getPatientDateOfBirth();
@@ -24,12 +26,13 @@ public interface PatientDemographicDTO {
 	LocalDate getDateOfBirth();
 	String getFirstARTRegimenCodeDescTxt();
 	String getFirstARTRegimenCode();
+	String getNdrCode();
 	String getLgaCode();
 	String getStateCode();
 	String getCountryCode();
 	String getPatientOccupationCode();
 	String getPatientMaritalStatusCode();
-	String getStateOfNigeriaOriginCode();
+	Boolean getBiometricCaptured();
 	String getPatientEducationLevelCode();
 	String getFunctionalStatusStartART();
 	String getWHOClinicalStageART();
@@ -38,4 +41,24 @@ public interface PatientDemographicDTO {
 	String getHtsUuid();
 	String getTbStatus();
 	String getCauseOfDeath();
+	Integer getWeightAtARTStart();
+	Integer getHeightAtARTStart();
+	BigDecimal getBmimuacAtARTStart();
+	String getCd4AtStartOfART();
+	String getTptMedication();
+	String getTptDose();
+	LocalDate getTbTreatmentStartDate();
+	LocalDate getTptCompletionDate();
+	LocalDate getTransferredInDate();
+	String getTbStatusNew();
+	String getTransferredInFrom();
+	LocalDate getDateOfConfirmedHIVTest();
+	LocalDate getInitialAdherenceCounselingCompletedDate();
+	String getStatusAtDeath();
+	LocalDate getDeathDate();
+	LocalDate getDateStoppedTreatment();
+	String getReasonForStoppedTreatment();
+	Boolean getPatientTransferredOut();
+	LocalDate getTransferredOutDate();
+	String getTransferredOutStatus();
 }    

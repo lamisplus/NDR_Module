@@ -2,7 +2,6 @@ package org.lamisplus.modules.ndr.mapper;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.lamisplus.modules.hiv.domain.entity.ArtPharmacy;
 import org.lamisplus.modules.ndr.domain.dto.*;
 import org.lamisplus.modules.ndr.schema.*;
 import org.lamisplus.modules.ndr.service.NDRCodeSetResolverService;
@@ -122,7 +121,7 @@ public class ConditionTypeMapper {
           List<EncounterDTO> patientEncounters,
            List<RegimenDTO> patientRegimens,
            List<LaboratoryEncounterDTO> patientLabEncounters) {
-      
+        log.info("updated part 4  --- A2");
         ConditionType condition = new ConditionType();
         //List of applications code set
         setProgramCodeAndArea(condition);
@@ -146,12 +145,12 @@ public class ConditionTypeMapper {
         if (encounter != null) {
             condition.setEncounters(encounter);
         }
-    
+
         regimenTypeMapper.regimenType(demographics, condition, patientRegimens);
-    
+        
         //Lab
         laboratoryReportTypeMapper.laboratoryReportType(demographics.getPersonUuid(), condition, patientLabEncounters);
-        
+
         return condition;
     }
     

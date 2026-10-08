@@ -2,19 +2,17 @@ package org.lamisplus.modules.ndr.mapper;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.lamisplus.modules.base.service.ApplicationCodesetService;
+
 import org.lamisplus.modules.hiv.domain.dto.HIVStatusDisplay;
-import org.lamisplus.modules.hiv.repositories.RegimenRepository;
+
 import org.lamisplus.modules.hiv.service.StatusManagementService;
 import org.lamisplus.modules.ndr.domain.dto.PatientDemographicDTO;
 import org.lamisplus.modules.ndr.domain.dto.PatientDemographics;
 import org.lamisplus.modules.ndr.domain.dto.ArtCommencementDTO;
 import org.lamisplus.modules.ndr.repositories.NDRCodeSetRepository;
-import org.lamisplus.modules.ndr.schema.CodedSimpleType;
-import org.lamisplus.modules.ndr.schema.ConditionSpecificQuestionsType;
-import org.lamisplus.modules.ndr.schema.HIVQuestionsType;
+import org.lamisplus.modules.ndr.schema.*;
 import org.lamisplus.modules.ndr.service.NDRCodeSetResolverService;
-import org.lamisplus.modules.triage.domain.entity.VitalSign;
+import java.util.*;
 import org.springframework.stereotype.Service;
 
 import javax.xml.datatype.DatatypeConfigurationException;
@@ -28,6 +26,17 @@ import static org.lamisplus.modules.ndr.utility.DateUtil.getXmlDate;
 @RequiredArgsConstructor
 @Slf4j
 public class ConditionSpecificQuestionsTypeMapper {
+    private static final Map<String, String> WHO_STAGE_MAPPING = new HashMap<>();
+    private static final Map<String, String> FUNCTIONAL_STATUS_MAPPING = new HashMap<>();
+    private static final Map<String, String> CARE_ENTRY_POINT_MAPPING = new HashMap<>();
+    private static final Map<String, String> KP_TYPOLOGY_MAPPING = new HashMap<>();
+    private static final Map<String, String> PRIOR_ART_MAPPING = new HashMap<>();
+    private static final Map<String, String> FIRST_HIV_TEST_MODE_MAPPING = new HashMap<>();
+    private static final Map<String, String> INITIAL_TB_STATUS_MAPPING = new HashMap<>();
+    private static final Map<Integer, String> TPT_MEDICATION_MAPPING = new HashMap<>();
+    private static final Map<String, String> CAUSE_OF_DEATH = new HashMap<>();
+    //ReasonForStoppedTreatment
+    private static final Map<String, String> REASON_FOR_STOPPED_TREATMENT = new HashMap<>();
 
     private final NDRCodeSetResolverService ndrCodeSetResolverService;
     
@@ -35,12 +44,79 @@ public class ConditionSpecificQuestionsTypeMapper {
 
     private final StatusManagementService statusManagementService;
 
+    private final PregnancyStatus pregnancyStatus;
+
     public static class LogMessages {
         public static final String GENERATING_COMMON_QUESTIONS = "Generating condition specific questions for patient with uuid {}";
     }
 
     public static class LogErrorMessages {
         public static final String GENERATING_ERROR_MSG = "An error Generating condition specific questions for patient with uuid {}";
+    }
+
+    static {
+        WHO_STAGE_MAPPING.put("CLINICAL_STAGE_STAGE_I", "I");
+        WHO_STAGE_MAPPING.put("CLINICAL_STAGE_STAGE_II", "II");
+        WHO_STAGE_MAPPING.put("CLINICAL_STAGE_STAGE_III", "III");
+        WHO_STAGE_MAPPING.put("CLINICAL_STAGE_STAGE_IV", "IV");
+
+        FUNCTIONAL_STATUS_MAPPING.put("W", "W");
+        FUNCTIONAL_STATUS_MAPPING.put("A", "A");
+        FUNCTIONAL_STATUS_MAPPING.put("B", "B");
+
+        CARE_ENTRY_POINT_MAPPING.put("POINT_ENTRY_OPD", "OPD");
+        CARE_ENTRY_POINT_MAPPING.put("POINT_ENTRY_IN-PATIENT", "Inpatients");
+        CARE_ENTRY_POINT_MAPPING.put("POINT_ENTRY_HTS", "HTS");
+        CARE_ENTRY_POINT_MAPPING.put("POINT_ENTRY_TB_DOTS", "TBDOTS");
+        CARE_ENTRY_POINT_MAPPING.put("POINT_ENTRY_ANC_PMTCT", "ANC_PMTCT");
+        CARE_ENTRY_POINT_MAPPING.put("POINT_ENTRY_TRANSFER-IN", "TransferIn");
+        CARE_ENTRY_POINT_MAPPING.put("POINT_ENTRY_COMMUNITY", "Community");
+        CARE_ENTRY_POINT_MAPPING.put("POINT_ENTRY_STI_CLINIC", "STI");
+        CARE_ENTRY_POINT_MAPPING.put("POINT_ENTRY_HCT", "HCT");
+        CARE_ENTRY_POINT_MAPPING.put("POINT_ENTRY_OTHERS", "Others");
+        CARE_ENTRY_POINT_MAPPING.put("POINT_ENTRY_OUTREACH", "SexWorkersOutreach");
+        CARE_ENTRY_POINT_MAPPING.put("POINT_ENTRY_CBO", "CBO");
+
+        KP_TYPOLOGY_MAPPING.put("KP_TYPE_FSW", "FSW");
+        KP_TYPOLOGY_MAPPING.put("KP_TYPE_MSM", "MSM");
+        KP_TYPOLOGY_MAPPING.put("KP_TYPE_PWID", "PWID");
+        KP_TYPOLOGY_MAPPING.put("KP_TYPE_Trans", "TG");
+        KP_TYPOLOGY_MAPPING.put("KP_TYPE_PERSONS_IN_CUSTODIAL_CENTERS", "Prisoners");
+        KP_TYPOLOGY_MAPPING.put("KP_TYPE_OTHERS", "OtherKP");
+
+        PRIOR_ART_MAPPING.put("PRIOR_ART_EARLIER_ARV_BUT_NOT_A_TRANSFER_IN", "EarlierARV");
+        PRIOR_ART_MAPPING.put("PRIOR_ART_TRANSFER_IN_WITHOUT_RECORDS", "TransferIn");
+        PRIOR_ART_MAPPING.put("PRIOR_ART_PREP", "PREP");
+        PRIOR_ART_MAPPING.put("PRIOR_ART_PEP", "PEP");
+
+        FIRST_HIV_TEST_MODE_MAPPING.put("MODE_HIV_TEST_HIV-AB", "HIVAb");
+        FIRST_HIV_TEST_MODE_MAPPING.put("MODE_HIV_TEST_PCR", "HIVPCR");
+
+        INITIAL_TB_STATUS_MAPPING.put("TB_STATUS_NO_SIGN_OR_SYMPTOMS_OF_TB", "1");
+        INITIAL_TB_STATUS_MAPPING.put("TB_STATUS_TB_SUSPECTED_AND_REFERRED_FOR_EVALUATION", "2");
+        INITIAL_TB_STATUS_MAPPING.put("TB_STATUS_PRESUMPTIVE_TB", "2");
+        INITIAL_TB_STATUS_MAPPING.put("TB_STATUS_CURRENTLY_ON_INH_PROPHYLAXIS", "3");
+        INITIAL_TB_STATUS_MAPPING.put("TB_STATUS_CURRENTLY_ON_TB_TREATMENT", "4");
+        INITIAL_TB_STATUS_MAPPING.put("TB_STATUS_TB_POSITIVE_NOT_ON_TB_DRUGS", "5");
+
+        TPT_MEDICATION_MAPPING.put(115, "SixH");
+        TPT_MEDICATION_MAPPING.put(130, "SixH");
+        TPT_MEDICATION_MAPPING.put(1096, "ThreeHP");
+        TPT_MEDICATION_MAPPING.put(1095, "Other");
+
+        REASON_FOR_STOPPED_TREATMENT.put("Treatment Stop", "1");
+        REASON_FOR_STOPPED_TREATMENT.put("Death", "2");
+        REASON_FOR_STOPPED_TREATMENT.put("Loss to follow up", "3");
+        REASON_FOR_STOPPED_TREATMENT.put("Self-transfer to another facility", "4");
+
+//        CAUSE_OF_DEATH.put("TB_STATUS_NO_SIGN_OR_SYMPTOMS_OF_TB", "HIVRelated");
+//        CAUSE_OF_DEATH.put("TB_STATUS_NO_SIGN_OR_SYMPTOMS_OF_TB", "TB");
+//        CAUSE_OF_DEATH.put("TB_STATUS_NO_SIGN_OR_SYMPTOMS_OF_TB", "RoadAccident");
+//        CAUSE_OF_DEATH.put("TB_STATUS_NO_SIGN_OR_SYMPTOMS_OF_TB", "Malaria");
+//        CAUSE_OF_DEATH.put("TB_STATUS_NO_SIGN_OR_SYMPTOMS_OF_TB", "COPD");
+//        CAUSE_OF_DEATH.put("TB_STATUS_NO_SIGN_OR_SYMPTOMS_OF_TB", "Hypertension");
+//        CAUSE_OF_DEATH.put("TB_STATUS_NO_SIGN_OR_SYMPTOMS_OF_TB", "Diabetes");
+//        CAUSE_OF_DEATH.put("TB_STATUS_NO_SIGN_OR_SYMPTOMS_OF_TB", "Others");
     }
 
 
@@ -55,17 +131,17 @@ public class ConditionSpecificQuestionsTypeMapper {
                                 String enrollmentStatus = demographics.getStatusAtRegistration();
                                 processAndHandleARTStatus (hiv, demographics.getId (), enrollmentStatus);
             }
-            
+
                Optional<ArtCommencementDTO> artCommencement =
                        ndrCodeSetRepository.getArtCommencementByPatientUuid(demographics.getPersonUuid());
-            
+
                 log.info("ART Commencement: {}", artCommencement);
                 if (artCommencement.isPresent()) {
                     processAndSetArtStartDate (hiv, artCommencement.get().getArtStartDate());
                     processAndSetWHOStagingAndFunctionalStatus (hiv, artCommencement.get().getWhoStage(), artCommencement.get().getFunctionStatus());
                     String regimen = artCommencement.get().getRegimen();
                     if(regimen != null) {
-                     Optional<CodedSimpleType> simpleCodeSet = ndrCodeSetResolverService.getRegimen(regimen);
+                     Optional<RegimenCodedSimpleType> simpleCodeSet = ndrCodeSetResolverService.getRegimen(regimen);
                      log.info("ndrRegimen: " + regimen);
                      simpleCodeSet.ifPresent(hiv::setFirstARTRegimen);
                      }
@@ -81,49 +157,42 @@ public class ConditionSpecificQuestionsTypeMapper {
         return null;
 
     }
-    
-    
-    public ConditionSpecificQuestionsType getConditionSpecificQuestionsType(
-            PatientDemographics demographics,
-            ArtCommencementDTO artCommencement) {
-        log.info(LogMessages.GENERATING_COMMON_QUESTIONS, demographics.getPersonUuid());
-        try {
-            ConditionSpecificQuestionsType hivQuestions = new ConditionSpecificQuestionsType ();
-            HIVQuestionsType hiv = new HIVQuestionsType ();
-            processAndSetDateOfRegistration (hiv, demographics.getDateOfRegistration(), demographics.getStatusAtRegistration());
-            processAndSetCareEntryPoint (hiv, demographics.getCareEntryPoint());
-            if (demographics.getDateOfRegistration() != null) {
-                String enrollmentStatus = demographics.getStatusAtRegistration();
-                processAndHandleARTStatus (hiv, demographics.getId (), enrollmentStatus);
-            }
-             log.info("ART Commencement: {}", artCommencement);
-                processAndSetArtStartDate (hiv, artCommencement.getArtStartDate());
-                processAndSetWHOStagingAndFunctionalStatus (hiv, artCommencement.getWhoStage(), artCommencement.getFunctionStatus());
-                String regimen = artCommencement.getRegimen();
-                if(regimen != null) {
-                    Optional<CodedSimpleType> simpleCodeSet = ndrCodeSetResolverService.getRegimen(regimen);
-                    log.info("First ndrRegimen: " + regimen);
-                    simpleCodeSet.ifPresent(hiv::setFirstARTRegimen);
-                }
-                processAndSetCD4 (hiv, demographics.getAge(), artCommencement);
-            
-            hivQuestions.setHIVQuestions (hiv);
-            return hivQuestions;
-        } catch (Exception e) {
-            log.error(LogErrorMessages.GENERATING_ERROR_MSG,
-                    demographics.getPersonUuid());
-            log.error("Error Message:" + e.getMessage());
-        }
-        return null;
-        
-    }
-    
     public ConditionSpecificQuestionsType getConditionSpecificQuestionsType(PatientDemographicDTO demographics) {
+        log.info("updated part 4  --- A3");
         //@XmlElement(name = "EnrolledInHIVCareDate", required = true)
         log.info(LogMessages.GENERATING_COMMON_QUESTIONS, demographics.getPersonUuid());
         try {
             ConditionSpecificQuestionsType hivQuestions = new ConditionSpecificQuestionsType ();
             HIVQuestionsType hiv = new HIVQuestionsType ();
+            if (demographics.getBiometricCaptured()) {
+                hiv.setBiometricCaptured(YNCodeType.valueOf("YES"));
+            } else {
+                hiv.setBiometricCaptured(YNCodeType.valueOf("NO"));
+            }
+
+            if(demographics.getCareEntryPoint() != null){
+                String mappedValue = CARE_ENTRY_POINT_MAPPING.get(demographics.getCareEntryPoint().trim());
+                hiv.setCareEntryPoint(mappedValue);
+            }
+
+            if(demographics.getFirstHIVTestMode() != null){
+                String mappedValue = FIRST_HIV_TEST_MODE_MAPPING.get(demographics.getFirstHIVTestMode().trim());
+                hiv.setFirstHIVTestMode(mappedValue);
+            }
+
+            if(demographics.getPriorArt() != null){
+                String mappedValue = PRIOR_ART_MAPPING.get(demographics.getPriorArt().trim());
+                hiv.setPriorArt(mappedValue);
+            }
+
+            if(demographics.getKpTypology() != null){
+                String mappedValue = KP_TYPOLOGY_MAPPING.get(demographics.getKpTypology().trim());
+                hiv.setKPTypology(mappedValue);
+            }
+
+            if (demographics.getInitialAdherenceCounselingCompletedDate() != null){
+                hiv.setInitialAdherenceCounselingCompletedDate (getXmlDate (Date.valueOf ((demographics.getInitialAdherenceCounselingCompletedDate()))));
+            }
 
             LocalDate inHIVCareDate = (demographics.getEnrolledInHIVCareDate() != null ? demographics.getEnrolledInHIVCareDate() : demographics.getArtStartDate());
             if(inHIVCareDate != null){
@@ -131,6 +200,7 @@ public class ConditionSpecificQuestionsTypeMapper {
                 String statusAtRegistration = demographics.getStatusAtRegistration();
                 String causeOfDeath = demographics.getCauseOfDeath();
                 if(causeOfDeath != null) {
+                    hiv.setPatientHasDied(true);
                     if(causeOfDeath.toUpperCase().contains("HIV")) {
                         hiv.setCauseOfDeathHIVRelated("Y");
                     } else if(causeOfDeath.toUpperCase().contains("UNKNOWN")) {
@@ -139,44 +209,166 @@ public class ConditionSpecificQuestionsTypeMapper {
                         hiv.setCauseOfDeathHIVRelated("N");
                     }
                 }
+
+
+
                 if (statusAtRegistration != null) {
                     if (statusAtRegistration.equalsIgnoreCase ("HIV+ non ART")) {
-                        hiv.setFirstConfirmedHIVTestDate (getXmlDate (Date.valueOf (inHIVCareDate)));
+                        hiv.setFirstConfirmedHIVTestDate (getXmlDate (Date.valueOf (demographics.getDateOfConfirmedHIVTest())));
                     }
                     if (statusAtRegistration.equalsIgnoreCase ("ART Transfer In")) {
-                        hiv.setTransferredInDate (getXmlDate (Date.valueOf (inHIVCareDate)));
+                        hiv.setPatientTransferredIn(true);
+                        if (demographics.getTransferredInDate() != null) {
+                            hiv.setTransferredInDate (getXmlDate (Date.valueOf (demographics.getTransferredInDate())));
+                        }else {
+                            hiv.setTransferredInDate(getXmlDate(Date.valueOf(inHIVCareDate)));
+                        }
                     }
+                    // handle transferred out, stopped treatment and dead
+                    if (demographics.getTransferredOutStatus() != null && Objects.equals(demographics.getTransferredOutStatus(), "Stopped Treatment")) {
+                        if (demographics.getReasonForStoppedTreatment() != null && (
+                                demographics.getReasonForStoppedTreatment().contains("Self-transfer to another facility") ||
+                                        demographics.getReasonForStoppedTreatment().contains("Treatment Stop") ||
+                                        demographics.getReasonForStoppedTreatment().contains("Death") ||
+                                        demographics.getReasonForStoppedTreatment().contains("Loss to follow up"))
+                        ) {
+                            hiv.setStoppedTreatment(true);
+                            if(demographics.getDateStoppedTreatment() != null){
+                                hiv.setDateStoppedTreatment(getXmlDate (Date.valueOf (demographics.getDateStoppedTreatment())));
+                            }
+
+                            if(demographics.getCareEntryPoint() != null){
+                                String mappedValue = REASON_FOR_STOPPED_TREATMENT.get(demographics.getReasonForStoppedTreatment());
+                                hiv.setReasonForStoppedTreatment(mappedValue);
+                            }
+                        }
+                    }else if (demographics.getTransferredOutStatus() != null && Objects.equals(demographics.getTransferredOutStatus(), "ART Transfer Out")) {
+                        if (demographics.getTransferredOutDate() != null) {
+                            hiv.setPatientTransferredOut(true);
+                            hiv.setTransferredOutStatus("A");
+                            hiv.setTransferredOutDate (getXmlDate (Date.valueOf ((demographics.getTransferredOutDate()))));
+                        }
+
+                    }else if (demographics.getTransferredOutStatus() != null && Objects.equals(demographics.getTransferredOutStatus(), "Died (Confirmed)")) {
+                        if(demographics.getDeathDate() != null){
+                            hiv.setDeathDate(getXmlDate (Date.valueOf (demographics.getDeathDate())));
+                            hiv.setStatusAtDeath("A");
+                        }
+                    }
+
+
                     String tbStatus = demographics.getTbStatus();
-                    log.info("initial tb status {}", tbStatus);
+                    //log.info("initial tb status {}", tbStatus);
                     if(tbStatus != null){
                         hiv.setInitialTBStatus(demographics.getTbStatus());
+                    }else if (demographics.getTbStatusNew() != null) {
+                        String mappedValue = INITIAL_TB_STATUS_MAPPING.get(demographics.getTbStatusNew());
+                        hiv.setInitialTBStatus(mappedValue);
                     }
                     processAndHandleARTStatus (hiv, demographics.getPersonId(), statusAtRegistration);
                 }
             }else {
                 throw new IllegalArgumentException(" Enrolled In HIVCareDate cannot be null");
             }
-            if(demographics.getCareEntryPoint() != null){
-                hiv.setCareEntryPoint(demographics.getCareEntryPoint());
-            }
-            log.info("art start date {}", demographics.getArtStartDate());
            
             if (demographics.getArtStartDate() != null) {
                 hiv.setARTStartDate (getXmlDate (Date.valueOf ((demographics.getArtStartDate()))));
             }
-            if(demographics.getFirstARTRegimenCode() != null && demographics.getFirstARTRegimenCodeDescTxt() != null) {
-                CodedSimpleType codedSimpleType = new CodedSimpleType();
+            //log.info("condition specific questions " + demographics.getFirstARTRegimenCode() + " " + demographics.getFirstARTRegimenCodeDescTxt() + " " + demographics.getNdrCode());
+            if(demographics.getFirstARTRegimenCode() != null && demographics.getFirstARTRegimenCodeDescTxt() != null
+                    && demographics.getNdrCode() != null) {
+                RegimenCodedSimpleType codedSimpleType = new RegimenCodedSimpleType();
                 codedSimpleType.setCode(demographics.getFirstARTRegimenCode());
                 codedSimpleType.setCodeDescTxt(demographics.getFirstARTRegimenCodeDescTxt());
+                codedSimpleType.setNDRCode(demographics.getNdrCode());
                 hiv.setFirstARTRegimen(codedSimpleType);
             }
             if(demographics.getFunctionalStatusStartART() != null){
-                hiv.setFunctionalStatusStartART(demographics.getFunctionalStatusStartART());
+                String mappedValue = FUNCTIONAL_STATUS_MAPPING.get(demographics.getFunctionalStatusStartART());
+                hiv.setFunctionalStatusStartART(mappedValue);
             }
+
             if(demographics.getWHOClinicalStageART() != null){
-                hiv.setWHOClinicalStageARTStart(demographics.getWHOClinicalStageART());
+                String mappedValue = WHO_STAGE_MAPPING.get(demographics.getWHOClinicalStageART());
+                hiv.setWHOClinicalStageARTStart(mappedValue);
             }
-            // need more clarity on CD4
+
+            if(demographics.getWeightAtARTStart() != null){
+                if (demographics.getWeightAtARTStart() > 200) {
+                    hiv.setWeightAtARTStart(200);
+                }
+                hiv.setWeightAtARTStart(demographics.getWeightAtARTStart());
+            }
+
+            if(demographics.getHeightAtARTStart() != null){
+                Integer height = demographics.getHeightAtARTStart();
+                if (height > 200) {
+                    hiv.setHeightAtARTStart(200);
+                } else if (height < 0) {
+                    hiv.setHeightAtARTStart(0);
+                } else {
+                    hiv.setHeightAtARTStart(height);
+                }
+            }
+            //log.info("height {}", demographics.getHeightAtARTStart());
+            if(demographics.getBmimuacAtARTStart() != null){
+                hiv.setBMIMUACAtARTStart(demographics.getBmimuacAtARTStart());
+            }
+
+            String cd4CellCount = demographics.getCd4AtStartOfART();
+            if(demographics.getCd4AtStartOfART() != null){
+                try {
+                    String cd4 = cd4CellCount.trim();
+                    hiv.setCD4AtStartOfART(cd4);
+                } catch (NumberFormatException e) {
+                    log.warn("Invalid CD4 Cell Count At Start: {}", cd4CellCount);
+                }
+            }
+
+            if (cd4CellCount != null && !cd4CellCount.trim().isEmpty()) {
+                try {
+                    int cd4 = Integer.parseInt(cd4CellCount.trim());
+
+                    if (cd4 < 200) {
+                        hiv.setCD4LFA("LessThan200");
+                    } else {
+                        hiv.setCD4LFA("GTEqual200");
+                    }
+                } catch (NumberFormatException e) {
+                    log.warn("Invalid CD4 Cell Count: {}", cd4CellCount);
+                }
+            }
+
+
+            String tptMedication = demographics.getTptMedication();
+            if(tptMedication != null){
+                try{
+                    Integer key = Integer.parseInt(demographics.getTptMedication());
+                    String mappedValue = TPT_MEDICATION_MAPPING.get(key);
+                    hiv.setTPTMedication(mappedValue);
+                }catch(NumberFormatException e){
+                    log.warn("Invalid TPT medication value: {}", tptMedication);
+                }
+            }
+            if(demographics.getTptDose() != null){
+                hiv.setTPTDose(demographics.getTptDose());
+            }
+
+            if(demographics.getTptCompletionDate() != null){
+                hiv.setTPTCompletionDate(getXmlDate (Date.valueOf ((demographics.getTptCompletionDate()))));
+            }
+
+            if(demographics.getTbTreatmentStartDate() != null){
+                hiv.setTBTreatmentStartDate(getXmlDate (Date.valueOf ((demographics.getTbTreatmentStartDate()))));
+            }
+
+            Map<String, Object> status =
+                    pregnancyStatus.getPregnancyBFStatusStatus(demographics.getPersonUuid());
+            if (demographics.getPatientSexCode() != null && demographics.getPatientSexCode().contains("F")) {
+                hiv.setPregnancyBFStatusAtStart((String) status.get("status"));
+            }
+
+            //log.info("TB start date {}", demographics.getTbTreatmentStartDate());
             hivQuestions.setHIVQuestions (hiv);
             return hivQuestions;
         } catch (Exception e) {
@@ -186,27 +378,6 @@ public class ConditionSpecificQuestionsTypeMapper {
         }
         return null;
         
-    }
-
-    
-    
-    private void processAndSetHeightAndWeight(HIVQuestionsType hiv, VitalSign vitalSign) {
-        Double bodyWeight = vitalSign.getBodyWeight ();
-        if (bodyWeight > 0) {
-            hiv.setWeightAtARTStart (bodyWeight.intValue ());
-        }
-        if (bodyWeight.intValue () > 200) {
-            int weight = bodyWeight.intValue () / 10;
-            hiv.setWeightAtARTStart (weight);
-        }
-        Double height = vitalSign.getHeight ();
-        if (height > 0) {
-            int heightInCm = (int) (height * 100);
-            if (heightInCm > 200) {
-                heightInCm = heightInCm / 10;
-            }
-            hiv.setChildHeightAtARTStart (heightInCm);
-        }
     }
 
     private void processAndSetWHOStagingAndFunctionalStatus(HIVQuestionsType hiv, String whoStage, String functionalStatus) {
@@ -290,8 +461,6 @@ public class ConditionSpecificQuestionsTypeMapper {
                 hiv.setTransferredOutDate(getXmlDate(Date.valueOf(clientReportingStatus.getDate())));
                 hiv.setPatientTransferredOut(true);
 
-            } else {
-                hiv.setPatientTransferredOut(false);
             }
         } catch (Exception e) {
             log.error("An error occurred while processing transfer-out client status msg {}", e.getMessage());
@@ -349,6 +518,5 @@ public class ConditionSpecificQuestionsTypeMapper {
         }
         if (eligible != null && ! eligible.isEmpty ()) hiv.setReasonMedicallyEligible (eligible);
     }
-
 
 }

@@ -21,6 +21,7 @@ public class NDRCodeSet implements Persistable<String> {
    private String codeDescription;
    private String altDescription;
    private String sysDescription;
+   private String ndrCode;
 
    @Override
    public String getId() {

@@ -39,7 +39,7 @@ public class MessageHeaderTypeMapper {
         MessageHeaderType header = new MessageHeaderType ();
         try {
             header.setMessageCreationDateTime (DateUtil.getXmlDateTime (new Date ()));
-            header.setMessageSchemaVersion (new BigDecimal ("1.6"));
+            header.setMessageSchemaVersion (new BigDecimal ("1.7"));
             FacilityType sendingOrganization = getTreatmentFacility (demographics);
             header.setMessageSendingOrganization (sendingOrganization);
             return header;
