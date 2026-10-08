@@ -686,8 +686,6 @@ public class HtsEncounterReportTypeMapper {
         return Boolean.parseBoolean(previouslyTested) ? "2" : "1";
     }
 
-    // ==================== Generic Helper Methods ====================
-
     private <T> void validateAndSet(T value, Consumer<T> setter, String fieldName) {
         if (value != null) {
             setter.accept(value);

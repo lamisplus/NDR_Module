@@ -15,90 +15,93 @@ public interface NdrMessageLogRepository extends JpaRepository<NdrMessageLog, In
     Optional<NdrMessageLog> findFirstByIdentifier(String identifier);
     
     Optional<NdrMessageLog> findFirstByIdentifierAndFileType(String identifier, String fileType);
-    @Query(value="\t\tSELECT \n" +
-            "            p.uuid AS personUuid,\n" +
-            "            p.date_of_registration AS diagnosisDate,\n" +
-            "            p.date_of_birth AS dateOfBirth,\n" +
-            "            p.id AS personId,\n" +
-            "            p.hospital_number AS hospitalNumber,\n" +
-            "            CONCAT(boui.code, '_', p.uuid) AS patientIdentifier,\n" +
-            "            EXTRACT(YEAR FROM AGE(NOW(), p.date_of_birth)) AS age,\n" +
-            "            CASE WHEN INITCAP(p.sex) = 'Female' THEN 'F' ELSE 'M' END AS patientSexCode,\n" +
-            "            p.date_of_birth AS patientDateOfBirth,\n" +
-            "            'FAC' AS facilityTypeCode,\n" +
-            "            facility.name AS facilityName,\n" +
-            "            facility_lga.name AS lga,\n" +
-            "            facility_state.name AS state,\n" +
-            "            boui.code AS facilityId,\n" +
-            "            h.date_art_started AS artStartDate,\n" +
-            "            hrr.regimen AS firstARTRegimenCodeDescTxt,\n" +
-            "            ncs.code AS firstARTRegimenCode,\n" +
-            "            ncs.ndr_code AS ndrCode,\n" +
-            "            CASE WHEN lgaCode.code = '521' AND stateCode.code = '20' THEN '520' ELSE lgaCode.code END AS lgaCode,\n" +
-            "            enrollStatus.display AS statusAtRegistration,\n" +
-            "            stateCode.code AS stateCode,\n" +
-            "            'NGA' AS countryCode,\n" +
-            "            emplCode.code AS patientOccupationCode,\n" +
-            "            mariCode.code AS PatientMaritalStatusCode,\n" +
-            "            stateCode.code AS stateOfNigeriaOriginCode,\n" +
-            "            eduCode.code AS patientEducationLevelCode,\n" +
-            "            ndrTbstatus.code AS tbStatus,\n" +
-            "            h.clinical_stage_id AS wHOClinicalStageART,\n" +
-            "            CAST(h.weight_kg AS NUMERIC) AS weightAtARTStart,\n" +
-            "            CAST(h.height_cm AS NUMERIC) AS heightAtARTStart,\n" +
-            "            h.bmi AS bmimuacAtARTStart,\n" +
-            "            CAST(h.cd4_at_art_start AS VARCHAR) AS cd4AtStartOfART,\n" +
-            "            COALESCE(ndrFuncStatCodestatus.code, ndrClinicStage.code) AS functionalStatusStartART,\n" +
-            "            CASE WHEN hpt.reason_for_discountinuation = 'Death' THEN hpt.cause_of_death ELSE NULL END AS causeOfDeath,\n" +
-            "            CAST(h.tpt_medication AS VARCHAR) AS tptMedication,\n" +
-            "            h.tpt_dose AS tptDose,\n" +
-            "            h.tpt_start_date AS tbTreatmentStartDate,\n" +
-            "            h.tpt_completion_date AS tptCompletionDate,\n" +
-            "            CASE WHEN b.person_uuid IS NOT NULL THEN TRUE ELSE FALSE END AS biometricCaptured,\n" +
-            "            h.care_entry_point_id AS careEntryPoint,\n" +
-            "            h.mode_of_hiv_test_id AS firstHIVTestMode,\n" +
-            "            h.prior_art_id AS priorArt,\n" +
-            "            h.kp_typology_id AS kpTypology,\n" +
-            "            h.date_transferred_in AS transferredInDate,\n" +
-            "            h.facility_transferred_from AS transferredInFrom,\n" +
-            "            hac.tb_status AS tbStatusNew,\n" +
-            "            h.date_confirmed_hiv_test AS dateOfConfirmedHIVTest,\n" +
-            "            h.date_adherence_counseling_completed AS initialAdherenceCounselingCompletedDate,\n" +
-            "            hpt.date_of_death AS deathDate,\n" +
-            "            hpt.date_of_discontinuation AS dateStoppedTreatment,\n" +
-            "            hpt.reason_for_discountinuation AS reasonForStoppedTreatment,\n" +
-            "\t\t\thsst.hiv_status AS transferredOutStatus,\n" +
-            "\t\t\thsst.status_date AS TransferredOutDate\n" +
-            "        FROM patient_person p\n" +
-            "        INNER JOIN base_organisation_unit facility ON facility.id = p.facility_id\n" +
-            "        INNER JOIN base_organisation_unit facility_lga ON facility_lga.id = facility.parent_organisation_unit_id\n" +
-            "        INNER JOIN base_organisation_unit facility_state ON facility_state.id = facility_lga.parent_organisation_unit_id\n" +
-            "        INNER JOIN base_organisation_unit_identifier boui ON boui.organisation_unit_id = p.facility_id AND boui.name = 'DATIM_ID'\n" +
-            "        INNER JOIN hiv_enrollment_commencement h ON h.person_uuid = p.uuid AND h.archived = 0\n" +
-            "        INNER JOIN hiv_art_clinical hac ON (hac.hiv_enrollment_uuid = h.uuid OR hac.enrollment_commencement_uuid = h.uuid) AND hac.archived = 0\n" +
-            "        INNER JOIN hiv_regimen hr ON hr.id = h.regimen_id\n" +
-            "        INNER JOIN hiv_regimen_resolver hrr ON hrr.regimensys = hr.description\n" +
-            "        INNER JOIN ndr_code_set ncs ON ncs.code_description = hrr.regimen\n" +
-            "        LEFT JOIN ndr_code_set lgaCode ON TRIM(lgaCode.code_description) = TRIM(facility_lga.name) AND lgaCode.code_set_nm = 'LGA'\n" +
-            "        LEFT JOIN base_application_codeset enrollStatus ON enrollStatus.id = h.status_at_registration_id\n" +
-            "        LEFT JOIN ndr_code_set stateCode ON TRIM(stateCode.code_description) = TRIM(facility_state.name) AND stateCode.code_set_nm = 'STATES'\n" +
-            "        LEFT JOIN ndr_code_set emplCode ON emplCode.code_description = p.employment_status->>'display' AND emplCode.code_set_nm = 'OCCUPATION_STATUS'\n" +
-            "        LEFT JOIN ndr_code_set mariCode ON mariCode.code_description = p.marital_status->>'display' AND mariCode.code_set_nm = 'MARITAL_STATUS'\n" +
-            "        LEFT JOIN ndr_code_set eduCode ON eduCode.code_description = p.education->>'display' AND eduCode.code_set_nm = 'EDUCATIONAL_LEVEL'\n" +
-            "        LEFT JOIN base_application_codeset fsCodeset ON fsCodeset.id = hac.functional_status_id\n" +
-            "        LEFT JOIN base_application_codeset tbCodeset ON tbCodeset.id = CASE WHEN hac.tb_status ~ '^[0-9]+$' THEN CAST(hac.tb_status AS INTEGER) ELSE 0 END\n" +
-            "        LEFT JOIN base_application_codeset csCodeset ON csCodeset.code = h.clinical_stage_id\n" +
-            "        LEFT JOIN ndr_code_set ndrFuncStatCodestatus ON ndrFuncStatCodestatus.code_description = fsCodeset.display\n" +
-            "        LEFT JOIN ndr_code_set ndrTbstatus ON TRIM(ndrTbstatus.code_description) = TRIM(tbCodeset.display)\n" +
-            "        LEFT JOIN ndr_code_set ndrClinicStage ON ndrClinicStage.code_description = csCodeset.display\n" +
-            "        LEFT JOIN hiv_patient_tracker hpt ON hpt.person_uuid = p.uuid\n" +
-            "\t\tLEFT JOIN LATERAL (\n" +
-            "\t\t\tSELECT hiv_status, status_date FROM hiv_status_tracker hst WHERE hst.person_id = p.uuid ORDER BY hst.status_date DESC, hst.id DESC LIMIT 1\n" +
-            "\t\t) hsst ON TRUE\n" +
-            "        LEFT JOIN biometric b ON b.person_uuid = p.uuid\n" +
-            "        WHERE p.uuid = ?1\n" +
-            "        AND h.facility_id = ?2\n" +
-            "        LIMIT 1",
+    @Query(value="SELECT \n" +
+            "\tp.uuid AS personUuid,\n" +
+            "\tp.date_of_registration AS diagnosisDate,\n" +
+            "\tp.date_of_birth AS dateOfBirth,\n" +
+            "\tp.id AS personId,\n" +
+            "\tp.hospital_number AS hospitalNumber,\n" +
+            "\tCONCAT(boui.code, '_', p.uuid) AS patientIdentifier,\n" +
+            "\tEXTRACT(YEAR FROM AGE(NOW(), p.date_of_birth)) AS age,\n" +
+            "\tCASE WHEN INITCAP(p.sex) = 'Female' THEN 'F' ELSE 'M' END AS patientSexCode,\n" +
+            "\tp.date_of_birth AS patientDateOfBirth,\n" +
+            "\t'FAC' AS facilityTypeCode,\n" +
+            "\tfacility.name AS facilityName,\n" +
+            "\tfacility_lga.name AS lga,\n" +
+            "\tfacility_state.name AS state,\n" +
+            "\tboui.code AS facilityId,\n" +
+            "\th.date_art_started AS artStartDate,\n" +
+            "\thrr.regimen AS firstARTRegimenCodeDescTxt,\n" +
+            "\tncs.code AS firstARTRegimenCode,\n" +
+            "\tncs.ndr_code AS ndrCode,\n" +
+            "\tCASE WHEN lgaCode.code = '521' AND stateCode.code = '20' THEN '520' ELSE lgaCode.code END AS lgaCode,\n" +
+            "\tenrollStatus.display AS statusAtRegistration,\n" +
+            "\tstateCode.code AS stateCode,\n" +
+            "\t'NGA' AS countryCode,\n" +
+            "\templCode.code AS patientOccupationCode,\n" +
+            "\tmariCode.code AS PatientMaritalStatusCode,\n" +
+            "\tstateCode.code AS stateOfNigeriaOriginCode,\n" +
+            "\teduCode.code AS patientEducationLevelCode,\n" +
+            "\tndrTbstatus.code AS tbStatus,\n" +
+            "\th.clinical_stage_id AS wHOClinicalStageART,\n" +
+            "\tCAST(h.weight_kg AS NUMERIC) AS weightAtARTStart,\n" +
+            "\tCAST(h.height_cm AS NUMERIC) AS heightAtARTStart,\n" +
+            "\th.bmi AS bmimuacAtARTStart,\n" +
+            "\tCAST(h.cd4_at_art_start AS VARCHAR) AS cd4AtStartOfART,\n" +
+            "\tCOALESCE(ndrFuncStatCodestatus.code, ndrClinicStage.code) AS functionalStatusStartART,\n" +
+            "\tCASE WHEN hpt.reason_for_discountinuation = 'Death' THEN hpt.cause_of_death ELSE NULL END AS causeOfDeath,\n" +
+            "\tCAST(h.tpt_medication AS VARCHAR) AS tptMedication,\n" +
+            "\th.tpt_dose AS tptDose,\n" +
+            "\th.tpt_start_date AS tbTreatmentStartDate,\n" +
+            "\th.tpt_completion_date AS tptCompletionDate,\n" +
+            "\tCASE WHEN b.person_uuid IS NOT NULL THEN TRUE ELSE FALSE END AS biometricCaptured,\n" +
+            "\th.care_entry_point_id AS careEntryPoint,\n" +
+            "\th.mode_of_hiv_test_id AS firstHIVTestMode,\n" +
+            "\th.prior_art_id AS priorArt,\n" +
+            "\th.kp_typology_id AS kpTypology,\n" +
+            "\th.date_transferred_in AS transferredInDate,\n" +
+            "\th.facility_transferred_from AS transferredInFrom,\n" +
+            "\thac.tb_status AS tbStatusNew,\n" +
+            "\th.date_confirmed_hiv_test AS dateOfConfirmedHIVTest,\n" +
+            "\th.date_adherence_counseling_completed AS initialAdherenceCounselingCompletedDate,\n" +
+            "\thpt.date_of_death AS deathDate,\n" +
+            "\thpt.date_of_discontinuation AS dateStoppedTreatment,\n" +
+            "\thpt.reason_for_discountinuation AS reasonForStoppedTreatment,\n" +
+            "\thsst.hiv_status AS transferredOutStatus,\n" +
+            "\thsst.status_date AS TransferredOutDate\n" +
+            "FROM patient_person p\n" +
+            "INNER JOIN base_organisation_unit facility ON facility.id = p.facility_id\n" +
+            "INNER JOIN base_organisation_unit facility_lga ON facility_lga.id = facility.parent_organisation_unit_id\n" +
+            "INNER JOIN base_organisation_unit facility_state ON facility_state.id = facility_lga.parent_organisation_unit_id\n" +
+            "INNER JOIN base_organisation_unit_identifier boui ON boui.organisation_unit_id = p.facility_id AND boui.name = 'DATIM_ID'\n" +
+            "INNER JOIN hiv_enrollment_commencement h ON h.person_uuid = p.uuid AND h.archived = 0\n" +
+            "INNER JOIN hiv_art_clinical hac ON (hac.hiv_enrollment_uuid = h.uuid OR hac.enrollment_commencement_uuid = h.uuid) AND hac.archived = 0\n" +
+            "INNER JOIN hiv_regimen hr ON hr.id = h.regimen_id\n" +
+            "INNER JOIN hiv_regimen_resolver hrr ON hrr.regimensys = hr.description\n" +
+            "INNER JOIN ndr_code_set ncs ON ncs.code_description = hrr.regimen\n" +
+            "LEFT JOIN ndr_code_set lgaCode ON TRIM(lgaCode.code_description) = TRIM(facility_lga.name) AND lgaCode.code_set_nm = 'LGA'\n" +
+            "LEFT JOIN base_application_codeset enrollStatus ON enrollStatus.id = h.status_at_registration_id\n" +
+            "LEFT JOIN ndr_code_set stateCode ON TRIM(stateCode.code_description) = TRIM(facility_state.name) AND stateCode.code_set_nm = 'STATES'\n" +
+            "LEFT JOIN ndr_code_set emplCode ON emplCode.code_description = p.employment_status->>'display' AND emplCode.code_set_nm = 'OCCUPATION_STATUS'\n" +
+            "LEFT JOIN ndr_code_set mariCode ON mariCode.code_description = p.marital_status->>'display' AND mariCode.code_set_nm = 'MARITAL_STATUS'\n" +
+            "LEFT JOIN ndr_code_set eduCode ON eduCode.code_description = p.education->>'display' AND eduCode.code_set_nm = 'EDUCATIONAL_LEVEL'\n" +
+            "LEFT JOIN base_application_codeset fsCodeset ON fsCodeset.id = hac.functional_status_id\n" +
+            "LEFT JOIN base_application_codeset tbCodeset ON tbCodeset.id = CASE WHEN hac.tb_status ~ '^[0-9]+$' THEN CAST(hac.tb_status AS INTEGER) ELSE 0 END\n" +
+            "LEFT JOIN base_application_codeset csCodeset ON csCodeset.code = h.clinical_stage_id\n" +
+            "LEFT JOIN ndr_code_set ndrFuncStatCodestatus ON ndrFuncStatCodestatus.code_description = fsCodeset.display\n" +
+            "LEFT JOIN ndr_code_set ndrTbstatus ON TRIM(ndrTbstatus.code_description) = TRIM(tbCodeset.display)\n" +
+            "LEFT JOIN ndr_code_set ndrClinicStage ON ndrClinicStage.code_description = csCodeset.display\n" +
+            "LEFT JOIN LATERAL (\n" +
+            "\tSELECT reason_for_discountinuation, date_of_discontinuation, date_of_death, cause_of_death\n" +
+            "\tFROM hiv_patient_tracker hppt WHERE hppt.person_uuid = p.uuid ORDER BY hppt.date_of_observation DESC, hppt.id DESC LIMIT 1\n" +
+            ") hpt ON TRUE\n" +
+            "LEFT JOIN LATERAL (\n" +
+            "SELECT hiv_status, status_date FROM hiv_status_tracker hst WHERE hst.person_id = p.uuid ORDER BY hst.status_date DESC, hst.id DESC LIMIT 1\n" +
+            ") hsst ON TRUE\n" +
+            "LEFT JOIN biometric b ON b.person_uuid = p.uuid\n" +
+            "WHERE p.uuid = ?1\n" +
+            "AND h.facility_id = ?2\n" +
+            "LIMIT 1",
             nativeQuery = true)
     Optional<PatientDemographicDTO> getPatientDemographics(String identifier, Long facilityId);
 
@@ -534,89 +537,88 @@ public interface NdrMessageLogRepository extends JpaRepository<NdrMessageLog, In
             "LIMIT 1", nativeQuery = true)
     Optional<PatientLabEncounterDTO> getPatientLastLabEncounter(String identifier, Long facilityId);
 
-  @Query(value = "SELECT\n" +
-          "          DISTINCT ON (p.uuid)\n" +
-          "          p.uuid,\n" +
-          "          COALESCE(hpt.uuid, ho.uuid, last_status.uuid, e.uuid ) AS visitId,\n" +
-          "          COALESCE(CAST(hpt.attempts->0->> 'attemptDate' AS DATE), ho.date_of_observation, last_status.status_date, e.date_enrolled_in_hiv_care ) AS visitDate,\n" +
-          "          hpt.reason_for_tracking,\n" +
-          "          hpt.reason_for_tracking_others AS otherTrackingReason,\n" +
-          "          CONCAT(p.contact->'contact'->0->>'surname', '', p.contact->'contact'->0->>'otherName') AS partnerFullName,\n" +
-          "          TRANSLATE(CAST(p.contact->'contact'->0->'address'->>'line' AS VARCHAR), '\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\",[\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\]', ' ') AS addressofTreatmentSupporter,\n" +
-          "          (p.contact->'contact'->0->'contactPoint'->>'value') AS contactPhoneNumber,\n" +
-          "          hpt.date_last_appointment AS dateofLastActualContact,\n" +
-          "          hpt.date_missed_appointment AS dateofMissedScheduledAppointment,\n" +
-          "          CAST(hpt.attempts->0->> 'attemptDate' AS DATE) AS datePatientContacted,\n" +
-          "          hpt.attempts->0->> 'whoAttemptedContact' AS nameofPersonWhoAttemptedContact,\n" +
-          "          hpt.attempts->0->> 'modeOfConatct' AS modeofCommunication,\n" +
-          "          hpt.attempts->0->> 'personContacted' AS personContacted,\n" +
-          "          hpt.attempts->0->> 'reasonForDefaulting' AS reasonforDefaulting,\n" +
-          "          hpt.attempts->0->> 'reasonForDefaultingOthers' AS otherReasonforDefaulting,\n" +
-          "          CASE WHEN last_status.HIV_STATUS = 'LOST_TO_FOLLOWUP' THEN TRUE ELSE FALSE END AS losttoFollowup,\n" +
-          "          hpt.reason_for_loss_to_follow_up AS reasonforLosttoFollowup,\n" +
-          "          CASE WHEN last_status.HIV_STATUS = 'LOST_TO_FOLLOWUP' THEN last_status.status_date ELSE NULL END AS dateLosttoFollowup,\n" +
-          "          NULL AS previousARVExposure,\n" +
-          "          hpt.date_of_discontinuation AS dateofTermination,\n" +
-          "          hpt.reason_for_discountinuation AS reasonforTermination,\n" +
-          "          NULL AS transferredOutTo,\n" +
-          "          CASE WHEN last_status.HIV_STATUS IN ('Died (Confirmed)', 'KNOWN_DEATH') THEN last_status.HIV_STATUS ELSE NULL END AS death,\n" +
-          "          last_status.va_cause_of_death_type AS vaCauseofDeath,\n" +
-          "          hpt.cause_of_death_others AS otherCauseofDeath,\n" +
-          "          last_status.va_cause_of_death AS causeOfDeath,\n" +
-          "          hpt.reason_for_discountinuation AS discontinuedCare,\n" +
-          "          NULL AS discontinueCareOtherSpecify,\n" +
-          "          hpt.date_return_to_care AS dateReturnedtoCare,\n" +
-          "          hpt.referred_for AS reffferedFor,\n" +
-          "          hpt.referred_for_others AS reffferedForOther,\n" +
-          "          NULL AS nameofContactTracer,\n" +
-          "          CAST(NULL AS DATE) AS contactTrackerSignatureDate\n" +
-          "          FROM\n" +
-          "          patient_person p\n" +
-          "          INNER JOIN\n" +
-          "          hiv_enrollment_commencement e ON p.uuid = e.person_uuid\n" +
-          "          LEFT JOIN (\n" +
-          "          SELECT DISTINCT ON (person_uuid) *\n" +
-          "          FROM hiv_patient_tracker\n" +
-          "          ) hpt ON hpt.person_uuid = e.person_uuid\n" +
-          "          left JOIN (\n" +
-          "          SELECT\n" +
-          "          person_uuid,\n" +
-          "          visit_id,\n" +
-          "           date_of_observation,\n" +
-          "          uuid,\n" +
-          "          data->'attempt'->0->>'outcome' AS clientVerificationStatus,\n" +
-          "          CAST(data->'attempt'->0->>'dateOfAttempt' AS DATE) AS dateOfOutcome,\n" +
-          "          (data->>'ClientVerificationOther') AS ClientVerificationOther,\n" +
-          "          CAST(TRANSLATE((data->>'anyOfTheFollowing'), '\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\"[]', ' ') AS VARCHAR) AS indicationforClientVerification,\n" +
-          "          ROW_NUMBER() OVER (PARTITION BY person_uuid ORDER BY CAST(data->'attempt'->0->>'dateOfAttempt' AS DATE) DESC) AS rn\n" +
-          "          FROM\n" +
-          "          public.hiv_observation\n" +
-          "          WHERE\n" +
-          "          type = 'Client Verification'\n" +
-          "          AND archived = 0\n" +
-          "          ) ho ON ho.person_uuid = e.person_uuid AND ho.rn = 1\n" +
-          "          left JOIN (\n" +
-          "          SELECT\n" +
-          "            DISTINCT ON (person_id)\n" +
-          "            person_id,\n" +
-          "            hiv_status,\n" +
-          "            status_date,\n" +
-          "            visit_id,\n" +
-          "            uuid,\n" +
-          "            va_cause_of_death,\n" +
-          "            va_cause_of_death_type,\n" +
-          "            ROW_NUMBER() OVER (PARTITION BY person_id ORDER BY status_date DESC) AS rn\n" +
-          "          FROM\n" +
-          "          hiv_status_tracker\n" +
-          "          WHERE\n" +
-          "          archived = 0\n" +
-          "          ) last_status ON last_status.person_id = e.person_uuid AND last_status.rn = 1\n" +
-          "          WHERE\n" +
-          "          p.archived = 0\n" +
-          "          AND last_status.status_date <= ?4\n" +
-          "          AND last_status.status_date >= ?3\n" +
-          "          AND p.facility_id = ?2\n" +
-          "          AND p.uuid = ?1", nativeQuery = true)
+  @Query(value = "WITH ranked_enrollment AS (\n" +
+          "    SELECT *,\n" +
+          "           ROW_NUMBER() OVER (PARTITION BY person_uuid ORDER BY date_enrolled_in_hiv_care DESC) AS rn\n" +
+          "    FROM hiv_enrollment_commencement\n" +
+          "),\n" +
+          "ranked_tracker AS (\n" +
+          "    SELECT *,\n" +
+          "           ROW_NUMBER() OVER (PARTITION BY person_uuid ORDER BY date_of_observation DESC) AS rn\n" +
+          "    FROM hiv_patient_tracker\n" +
+          "),\n" +
+          "ranked_observation AS (\n" +
+          "    SELECT \n" +
+          "        person_uuid,\n" +
+          "        visit_id,\n" +
+          "        date_of_observation,\n" +
+          "        uuid,\n" +
+          "        data->'attempt'->0->>'outcome' AS clientVerificationStatus,\n" +
+          "        CAST(data->'attempt'->0->>'dateOfAttempt' AS DATE) AS dateOfOutcome,\n" +
+          "        (data->>'ClientVerificationOther') AS ClientVerificationOther,\n" +
+          "        CAST(TRANSLATE((data->>'anyOfTheFollowing'), '\\\"[]', ' ') AS VARCHAR) AS indicationforClientVerification,\n" +
+          "        ROW_NUMBER() OVER (PARTITION BY person_uuid ORDER BY CAST(data->'attempt'->0->>'dateOfAttempt' AS DATE) DESC) AS rn\n" +
+          "    FROM public.hiv_observation \n" +
+          "    WHERE type = 'Client Verification' AND archived = 0\n" +
+          "),\n" +
+          "ranked_status AS (\n" +
+          "    SELECT \n" +
+          "        person_id,\n" +
+          "        hiv_status,\n" +
+          "        status_date,\n" +
+          "        visit_id,\n" +
+          "        uuid,\n" +
+          "        va_cause_of_death,\n" +
+          "        va_cause_of_death_type,\n" +
+          "        ROW_NUMBER() OVER (PARTITION BY person_id ORDER BY status_date DESC) AS rn\n" +
+          "    FROM hiv_status_tracker \n" +
+          "    WHERE archived = 0\n" +
+          ")\n" +
+          "SELECT\n" +
+          "    p.uuid,\n" +
+          "    COALESCE(hpt.uuid, ho.uuid, last_status.uuid, e.uuid) AS visitId,\n" +
+          "    COALESCE(CAST(hpt.attempts->0->> 'attemptDate' AS DATE), ho.date_of_observation, last_status.status_date, e.date_enrolled_in_hiv_care) AS visitDate,\n" +
+          "    hpt.reason_for_tracking,\n" +
+          "    hpt.reason_for_tracking_others AS otherTrackingReason,\n" +
+          "    CONCAT(p.contact->'contact'->0->>'surname', '', p.contact->'contact'->0->>'otherName') AS partnerFullName,\n" +
+          "    TRANSLATE(CAST(p.contact->'contact'->0->'address'->>'line' AS VARCHAR), '\\\"[]', ' ') AS addressofTreatmentSupporter,\n" +
+          "    (p.contact->'contact'->0->'contactPoint'->>'value') AS contactPhoneNumber,\n" +
+          "    hpt.date_last_appointment AS dateofLastActualContact,\n" +
+          "    hpt.date_missed_appointment AS dateofMissedScheduledAppointment,\n" +
+          "    CAST(hpt.attempts->0->> 'attemptDate' AS DATE) AS datePatientContacted,\n" +
+          "    hpt.attempts->0->> 'whoAttemptedContact' AS nameofPersonWhoAttemptedContact,\n" +
+          "    hpt.attempts->0->> 'modeOfConatct' AS modeofCommunication,\n" +
+          "    hpt.attempts->0->> 'personContacted' AS personContacted,\n" +
+          "    hpt.attempts->0->> 'reasonForDefaulting' AS reasonforDefaulting,\n" +
+          "    hpt.attempts->0->> 'reasonForDefaultingOthers' AS otherReasonforDefaulting,\n" +
+          "    CASE WHEN last_status.HIV_STATUS = 'LOST_TO_FOLLOWUP' THEN TRUE ELSE FALSE END AS losttoFollowup,\n" +
+          "    hpt.reason_for_loss_to_follow_up AS reasonforLosttoFollowup,\n" +
+          "    CASE WHEN last_status.HIV_STATUS = 'LOST_TO_FOLLOWUP' THEN last_status.status_date ELSE NULL END AS dateLosttoFollowup,\n" +
+          "    NULL AS previousARVExposure,\n" +
+          "    hpt.date_of_discontinuation AS dateofTermination,\n" +
+          "    hpt.reason_for_discountinuation AS reasonforTermination,\n" +
+          "    NULL AS transferredOutTo,\n" +
+          "    CASE WHEN last_status.HIV_STATUS IN ('Died (Confirmed)', 'KNOWN_DEATH') THEN last_status.HIV_STATUS ELSE NULL END AS death,\n" +
+          "    last_status.va_cause_of_death_type AS vaCauseofDeath,\n" +
+          "    hpt.cause_of_death_others AS otherCauseofDeath,\n" +
+          "    last_status.va_cause_of_death AS causeOfDeath,\n" +
+          "    hpt.reason_for_discountinuation AS discontinuedCare,\n" +
+          "    NULL AS discontinueCareOtherSpecify,\n" +
+          "    hpt.date_return_to_care AS dateReturnedtoCare,\n" +
+          "    hpt.referred_for AS reffferedFor,\n" +
+          "    hpt.referred_for_others AS reffferedForOther,\n" +
+          "    NULL AS nameofContactTracer,\n" +
+          "    CAST(NULL AS DATE) AS contactTrackerSignatureDate\n" +
+          "FROM patient_person p\n" +
+          "INNER JOIN ranked_enrollment e ON p.uuid = e.person_uuid AND e.rn = 1\n" +
+          "LEFT JOIN ranked_tracker hpt ON hpt.person_uuid = e.person_uuid AND hpt.rn = 1\n" +
+          "LEFT JOIN ranked_observation ho ON ho.person_uuid = e.person_uuid AND ho.rn = 1\n" +
+          "LEFT JOIN ranked_status last_status ON last_status.person_id = e.person_uuid AND last_status.rn = 1\n" +
+          "WHERE p.archived = 0\n" +
+          "AND last_status.status_date <= ?4\n" +
+          "AND last_status.status_date >= ?3\n" +
+          "AND p.facility_id = ?2\n" +
+          "AND p.uuid = ?1", nativeQuery = true)
   List<MortalityDTO> getPatientMortalities(String identifier, Long facilityId, LocalDate start, LocalDate end);
   @Query(value = "SELECT person_uuid,\n" +
           "                 MAX(CASE WHEN rn = 1 THEN data->>'serialEnrollmentNo' END) AS clientVerification,\n" +
