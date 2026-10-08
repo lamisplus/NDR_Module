@@ -27,7 +27,6 @@
     "@mui/icons-material": "^5.8.4",
     "@mui/material": "^5.5.0",
     "@reach/menu-button": "^0.10.1",
-    "file-saver": "^2.0.5",
     "@svg-maps/usa": "^1.1.1",
     "@svg-maps/world": "^1.0.1",
     "@sweetalert/with-react": "^0.1.1",
@@ -126,9 +125,9 @@
     "yup": "^0.32.8"
   },
   "scripts": {
-    "start": "react-scripts --openssl-legacy-provider start",
+    "start": "react-scripts start",
     "jsreport": "jsreport-start",
-    "build": "react-scripts --openssl-legacy-provider build && xcopy /s /y build src\\main\\resources\\views\\static\\ndr",
+    "build": "react-scripts build && xcopy /s /y build src\\main\\resources\\views\\static\\ndr",
     "serve": "serve -s build",
     "run-build": "react-scripts build && serve",
     "test": "react-scripts test --env=jsdom",

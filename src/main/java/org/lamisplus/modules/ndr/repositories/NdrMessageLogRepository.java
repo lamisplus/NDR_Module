@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.Optional;
 
 public interface NdrMessageLogRepository extends JpaRepository<NdrMessageLog, Integer> {
+    List<NdrMessageLog> getNdrMessageLogByIdentifier(String identifier);
     
     Optional<NdrMessageLog> findFirstByIdentifier(String identifier);
     
@@ -234,6 +235,47 @@ public interface NdrMessageLogRepository extends JpaRepository<NdrMessageLog, In
             "            person_uuid", nativeQuery = true)
     Optional<PatientPharmacyEncounterDTO> getPatientPharmacyEncounter(String identifier, Long facilityId, LocalDate start, LocalDate end);
 
+//   @Query(value = "SELECT person_uuid, cast(json_agg(DISTINCT  jsonb_build_object('visitID', phar.uuid,\n" +
+//           "'visitDate', phar.visitDate,\n" +
+//           "'prescribedRegimenCode',  phar.prescribedRegimenCode,\n" +
+//           "'prescribedRegimenCodeDescTxt', phar.prescribedRegimenCodeDescTxt,\n" +
+//           "'prescribedRegimenTypeCode', (CASE WHEN regimen_type_id=8 THEN 'OI' WHEN regimen_type_id=15 THEN 'TB' ELSE 'ART' END),\n" +
+//           "'prescribedRegimenDuration', phar.duration,\n" +
+//           "'dateRegimenStarted', phar.visitDate,\n" +
+//           "'differentiatedServiceDelivery', phar.dsd_model,\n" +
+//           "'dispensing', phar.dsd_type,\n" +
+//           "'multiMonthDispensing', phar.mmd_type))as varchar) AS regimens\n" +
+//           "FROM (\n" +
+//           "select * from (\n" +
+//           "SELECT DISTINCT pharmacy.person_uuid, pharmacy.uuid, pharmacy.visit_date AS visitDate,\n" +
+//           "pharmacy_object ->> 'name' as name, cast(pharmacy_object ->> 'duration' as VARCHAR) as duration, hr.regimen_type_id,\n" +
+//           "(CASE WHEN hrr.regimen IS NULL THEN hr.description ELSE hrr.regimen END) AS prescribedRegimenCodeDescTxt,\n" +
+//           "(\n" +
+//           "CASE WHEN ncs_reg.code IS NOT NULL THEN ncs_reg.code\n" +
+//           "WHEN ncs_others.code IS NOT NULL THEN ncs_others.code\n" +
+//           "WHEN ncs_tpt.code IS NOT NULL THEN ncs_tpt.code\n" +
+//           "END\n" +
+//           ")AS prescribedRegimenCode,\n" +
+//           "dd.dsd_model, \n" +
+//           "\tdd.dsd_type, \n" +
+//           "mmd_type \n" +
+//           "FROM hiv_art_pharmacy pharmacy\n" +
+//           "CROSS JOIN LATERAL jsonb_array_elements(extra->'regimens') with ordinality p(pharmacy_object)\n" +
+//           "INNER JOIN hiv_regimen hr ON hr.description=CAST(pharmacy_object ->> 'name' AS VARCHAR)\n" +
+//           "LEFT JOIN hiv_regimen_resolver hrr ON hrr.regimensys=hr.description\n" +
+//           "LEFT JOIN ndr_code_set ncs_reg ON ncs_reg.code_description=hrr.regimen\n" +
+//           "LEFT JOIN ndr_code_set ncs_others ON ncs_others.code_description=hr.description \n" +
+//           "LEFT JOIN dsd_devolvement dd ON dd.person_uuid = pharmacy.person_uuid\n" +
+//           "LEFT JOIN ndr_code_set ncs_tpt ON hr.description = any(string_to_array(ncs_tpt.alt_description, ','))\n" +
+//           "WHERE pharmacy.archived = 0\n" +
+//           "AND pharmacy.person_uuid = ?1    \n" +
+//           "\tAND pharmacy.facility_id = ?2    \n" +
+//           "\tAND pharmacy.visit_date >= ?3   \n" +
+//           "\tAND pharmacy.visit_date <= ?4\n" +
+//           ") as dt where prescribedRegimenCode is not null\n" +
+//           ") phar GROUP BY person_uuid", nativeQuery = true)
+//   Optional<PatientPharmacyEncounterDTO> getPatientPharmacyEncounter(String identifier, Long facilityId, LocalDate start, LocalDate end);
+
     @Query(value = "SELECT person_uuid, phar.visitDate, cast(json_agg(DISTINCT  jsonb_build_object('visitID', phar.uuid,\n" +
             "    'visitDate', phar.visitDate,\n" +
             "    'prescribedRegimenCode',  phar.prescribedRegimenCode,\n" +
@@ -281,6 +323,48 @@ public interface NdrMessageLogRepository extends JpaRepository<NdrMessageLog, In
             "    ) phar GROUP BY person_uuid, visitdate, phar.dsd_model, phar.dsd_type,phar.mmd_type\n" +
             "    order by phar.visitDate desc limit 1", nativeQuery = true)
     Optional<PatientPharmacyEncounterDTO> getPatientLastPharmacyEncounter(String identifier, Long facilityId);
+
+//    @Query(value = "SELECT person_uuid, phar.visitDate, cast(json_agg(DISTINCT  jsonb_build_object('visitID', phar.uuid,\n" +
+//            "'visitDate', phar.visitDate,\n" +
+//            "'prescribedRegimenCode',  phar.prescribedRegimenCode,\n" +
+//            "'prescribedRegimenCodeDescTxt', phar.prescribedRegimenCodeDescTxt,\n" +
+//            "'prescribedRegimenTypeCode', (CASE WHEN regimen_type_id=8 THEN 'OI' WHEN regimen_type_id=15 THEN 'TB' ELSE 'ART' END),\n" +
+//            "'prescribedRegimenDuration', phar.duration,\n" +
+//            "'dateRegimenStarted', phar.visitDate,\n" +
+//            "'differentiatedServiceDelivery', phar.dsd_model,\n" +
+//            "'dispensing', phar.dsd_type,\n" +
+//            "'multiMonthDispensing', phar.mmd_type  \n" +
+//            "))as varchar) AS regimens\n" +
+//            " \n" +
+//            "FROM (\n" +
+//            "select * from (\n" +
+//            "SELECT DISTINCT pharmacy.person_uuid, pharmacy.uuid, pharmacy.visit_date AS visitDate,\n" +
+//            "pharmacy_object ->> 'name' as name, cast(pharmacy_object ->> 'duration' as VARCHAR) as duration, hr.regimen_type_id,\n" +
+//            "(CASE WHEN hrr.regimen IS NULL THEN hr.description ELSE hrr.regimen END) AS prescribedRegimenCodeDescTxt,\n" +
+//            "(\n" +
+//            "CASE WHEN ncs_reg.code IS NOT NULL THEN ncs_reg.code\n" +
+//            "WHEN ncs_others.code IS NOT NULL THEN ncs_others.code\n" +
+//            "WHEN ncs_tpt.code IS NOT NULL THEN ncs_tpt.code\n" +
+//            "END\n" +
+//            ")AS prescribedRegimenCode,\n" +
+//            "dd.dsd_model, \n" +
+//            "dd.dsd_type, \n" +
+//            "mmd_type \n" +
+//            "FROM hiv_art_pharmacy pharmacy\n" +
+//            "CROSS JOIN LATERAL jsonb_array_elements(extra->'regimens') with ordinality p(pharmacy_object)\n" +
+//            "INNER JOIN hiv_regimen hr ON hr.description=CAST(pharmacy_object ->> 'name' AS VARCHAR)\n" +
+//            "LEFT JOIN hiv_regimen_resolver hrr ON hrr.regimensys=hr.description\n" +
+//            "LEFT JOIN ndr_code_set ncs_reg ON ncs_reg.code_description=hrr.regimen\n" +
+//            "LEFT JOIN ndr_code_set ncs_others ON ncs_others.code_description=hr.description\n" +
+//            "LEFT JOIN dsd_devolvement dd ON dd.person_uuid = pharmacy.person_uuid\n" +
+//            "LEFT JOIN ndr_code_set ncs_tpt ON hr.description = any(string_to_array(ncs_tpt.alt_description, ','))\n" +
+//            "WHERE pharmacy.archived = 0\n" +
+//            " AND  pharmacy.person_uuid = ?1\n" +
+//            "      AND pharmacy.facility_id = ?2\n" +
+//            ") as dt where prescribedRegimenCode is not null\n" +
+//            ") phar GROUP BY person_uuid, visitdate, phar.dsd_model, phar.dsd_type,phar.mmd_type\n" +
+//            "order by phar.visitDate desc limit 1", nativeQuery = true)
+//    Optional<PatientPharmacyEncounterDTO> getPatientLastPharmacyEncounter(String identifier, Long facilityId);
 
    @Query(value = "SELECT DISTINCT person_uuid FROM hiv_art_pharmacy ph\n" +
            "           INNER JOIN patient_person p ON p.uuid = ph.person_uuid\n" +
@@ -1159,6 +1243,7 @@ public interface NdrMessageLogRepository extends JpaRepository<NdrMessageLog, In
           "          AND hts_en.date_modified > ?3 \n" +
           "          AND hts_en.archived = false", nativeQuery = true) List<HtsReportDto> getHstReportByClientCodeAndLastModified(Long facilityId, String clientCode, LocalDateTime lastModified);
 
+  // client verification query
    @Query(value = "SELECT DISTINCT p.uuid FROM patient_person AS p\n" +
             "\tJOIN hiv_enrollment AS e on e.person_uuid = p.uuid\n" +
             "\tINNER JOIN hiv_art_clinical hac ON hac.hiv_enrollment_uuid = e.uuid\n" +
