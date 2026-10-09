@@ -998,13 +998,10 @@ public interface NdrMessageLogRepository extends JpaRepository<NdrMessageLog, In
           "          hts_en.setting,\n" +
           "          EXTRACT( YEAR FROM AGE(pp.date_of_birth)) AS age,\n" +
           "          pp.sex AS sex,\n" +
-          "          -- hts_en.observation->>'maritalStatusId' maritalStatusId,\n" +
           "          pp.marital_status->>'display' maritalStatus,\n" +
           "          hts_en.observation->>'numberOfWives' noOfAllWives,\n" +
           "          hts_en.observation->>'numberOfBiologicalChildren' noOfOwnChildrenLessThan15Years,\n" +
-          "          -- hts_en.observation ->> 'stateId' stateId, \n" +
           "          boustate.name AS stateOfResidence,\n" +
-          "          -- hts_en.observation->>'district' district, \n" +
           "          boudistrict.name AS lgaOfResidence,\n" +
           "          hts_en.observation->>'typeOfSession' sessionType,\n" +
           "          hts_icten.data->>'indexClientId' indexClientId, \n" +
@@ -1099,9 +1096,10 @@ public interface NdrMessageLogRepository extends JpaRepository<NdrMessageLog, In
           "            hts_en.observation->>'suspectedAcuteInfection' suspectedAcuteHIVInfection,\n" +
           "            hts_en.observation->>'confirmatoryHivTest' confirmatoryTestResult,\n" +
           "            hts_en.observation->>'syphilisTestResult' syphilisTestResult,\n" +
-          "\t\t\thts_en.observation->>'finalHivTestResult' finalTestResult,\n" +
+          "            hts_en.observation->>'finalHivTestResult' finalTestResult,\n" +
           "            hts_en.observation->>'recencyTest' recencyTest,\n" +
           "            hts_en.observation->>'previouslyTestedThisYear' previouslyTestedThisYear,\n" +
+          "          CAST(hts_en.observation->>'dateOfFinalHivTestDone' AS Date) AS confirmatoryTestResultDate,\n" +
           "          CAST(CASE WHEN UPPER(hts_en.observation->>'acceptedIndexTesting') = 'YES_NO_YES' THEN true\n" +
           "          WHEN UPPER(hts_en.observation->>'acceptedIndexTesting') = 'YES_NO_NO' THEN false\n" +
           "          ELSE NULL END AS boolean) AS acceptedIndexTesting,\n" +

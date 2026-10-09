@@ -26,11 +26,10 @@ import java.util.*;
 public class NDRController {
     private final NDRService ndrService;
     private final NdrOptimizationService ndrOptmizationService;
-    private final NDROptimization4SpeedService ndrOptimization4SpeedService;
-
     private final SimpMessageSendingOperations messagingTemplate;
     private final HtsService htsService;
     private final RedactService redactService;
+//    private final PrEPService prEPService;
     public static class Constants {
         public static final String FILE_GENERATION_TIME = "Total time taken to generate a file: {}";
     }
@@ -66,7 +65,6 @@ public class NDRController {
         messagingTemplate.convertAndSend("/topic/ndr-status", "start");
         Stopwatch stopwatch = Stopwatch.createStarted();
         facilityIds.forEach (facilityId -> ndrOptmizationService.generateNDRXMLByFacilityAndListOfPatient(facilityId,initial,patientIds));
-        //facilityIds.forEach (facilityId -> ndrOptimization4SpeedService.generatePatientsNDRXml(facilityId,initial,patientIds));
         messagingTemplate.convertAndSend("/topic/ndr-status", "end");
         log.info(Constants.FILE_GENERATION_TIME.replace("{}", String.valueOf(stopwatch.elapsed().toMillis())));
     }
@@ -88,7 +86,6 @@ public class NDRController {
     public ResponseEntity<Void> generateWithOptimization(@RequestParam List<Long> facilityIds, @RequestParam boolean isInitial) {
         Stopwatch stopwatch = Stopwatch.createStarted();
         facilityIds.forEach(facilityId -> ndrOptmizationService.generatePatientsNDRXml(facilityId, isInitial));
-        //facilityIds.forEach(facilityId -> ndrOptimization4SpeedService.generateAllPatientsNDRXmls(facilityId, isInitial));
         log.info(Constants.FILE_GENERATION_TIME.replace("{}", String.valueOf(stopwatch.elapsed().toMinutes())));
         return ResponseEntity.ok().build();
     }
@@ -113,14 +110,28 @@ public class NDRController {
         return ResponseEntity.ok().build();
     }
 
-    //testing single HTS file
     @GetMapping("/generate_one_hts")
     public void generateOneHTSPatientXml(@RequestParam("clientCode") String clientCode, @RequestParam("facility") Long facility) {
         Stopwatch stopwatch = Stopwatch.createStarted();
         htsService.generateOnePatientHtsNDRXml(facility, true, clientCode);
         log.info(Constants.FILE_GENERATION_TIME.replace("{}", String.valueOf(stopwatch.elapsed().toMillis())));
     }
-    
+
+//    @GetMapping("/prep")
+//    public ResponseEntity<Void> generatePrep(@RequestParam List<Long> facilityIds, @RequestParam boolean isInitial) {
+//        Stopwatch stopwatch = Stopwatch.createStarted();
+//        facilityIds.forEach(facilityId -> prEPService.generatePatientsPrepNDRXml(facilityId, isInitial));
+//        log.info(Constants.FILE_GENERATION_TIME.replace("{}", String.valueOf(stopwatch.elapsed().toMinutes())));
+//        return ResponseEntity.ok().build();
+//    }
+
+    //testing single prep file
+//    @GetMapping("/generate_one_prep")
+//    public void generateOnePrepPatientXml(@RequestParam("clientCode") String clientCode, @RequestParam("facility") Long facility) {
+//        Stopwatch stopwatch = Stopwatch.createStarted();
+//        prEPService.generateOnePatientHtsNDRXml(facility, true, clientCode);
+//        log.info(Constants.FILE_GENERATION_TIME.replace("{}", String.valueOf(stopwatch.elapsed().toMillis())));
+//    }
 
     @GetMapping("/download/{file}")
     public void downloadFile(@PathVariable String file, HttpServletResponse response) throws IOException {

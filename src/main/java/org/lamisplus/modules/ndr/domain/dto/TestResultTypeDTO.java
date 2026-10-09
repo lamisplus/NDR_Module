@@ -13,6 +13,5 @@ public interface TestResultTypeDTO {
 	 String getSuspectedAcuteHIVInfection();
 	 String getConfirmatoryTestResult();
 	 LocalDate getConfirmatoryTestResultDate();
-
 	 String getFinalTestResult();
 }

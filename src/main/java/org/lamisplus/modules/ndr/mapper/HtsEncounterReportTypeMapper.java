@@ -187,9 +187,10 @@ public class HtsEncounterReportTypeMapper {
         setIfPresent(projection.getRelationshipToIndex(), reportType::setRelationshipToIndex, this::mapRelationshipToIndex);
         setIfPresent(projection.getClientIsPregnant(), reportType::setClientIsPregnant, this::mapYesNoToCode);
         setIfPresent(!Objects.equals(projection.getBreastfeeding(), "false") ? "Yes" : "No", reportType::setBreastfeeding);
-        setIfPresent(projection.getDurationOfBreastfeeding(), reportType::setDurationOfBreastfeeding, this::mapDurationOfBreastfeeding);
+        if (projection.getBreastfeeding() != null) {
+            setIfPresent(projection.getDurationOfBreastfeeding(), reportType::setDurationOfBreastfeeding, this::mapDurationOfBreastfeeding);
+        }
         setIfPresent(projection.getSyphilisTestResult(), reportType::setSyphilisTestResult, this::mapSyphilisResult);
-
         reportType.setPreTestInformation(buildPreTestInformation(objectFactory, projection));
         reportType.setPostTestCounselling(buildPostTestCounselling(objectFactory, projection));
         reportType.setIndexContactTesting(buildIndexContactTesting(objectFactory, projection));
@@ -332,21 +333,23 @@ public class HtsEncounterReportTypeMapper {
         TestResultType testResult = factory.createTestResultType();
 
         // Screening test
-//        String screeningResult = mapTestResult(p.getScreeningTestResult());
-//        if (screeningResult != null) {
-//            testResult.setScreeningTestResult(screeningResult);
-//        }
+        String screeningResult = mapTestResult(p.getInitialHivTest());
+        if (screeningResult != null) {
+            testResult.setScreeningTestResult(screeningResult);
+        }
 
         // Confirmatory test
         String confirmatoryResult = mapTestResult(p.getConfirmatoryTestResult());
-        String finalTestResult = mapTestResult(p.getFinalTestResult());
+        String finalTestResult = mapFinalTestResult(p.getFinalTestResult());
         if (confirmatoryResult != null) {
-            testResult.setConfirmatoryTestResult(determineConfirmatoryResult(confirmatoryResult));
-            testResult.setFinalTestResult(determineFinalResult(finalTestResult));
+            testResult.setConfirmatoryTestResult(confirmatoryResult);
+            testResult.setFinalTestResult(finalTestResult);
         }
 
         // Dates
-//        setDateIfPresent(p.getScreeningTestResultDate(), testResult::setScreeningTestResultDate);
+        validateAndSetDate(p.getVisitDate(), testResult::setScreeningTestResultDate, "ScreeningTestResultDate");
+        validateAndSetDate(p.getConfirmatoryTestResultDate(), testResult::setConfirmatoryTestResultDate, "ConfirmatoryTestResultDate");
+//        setDateIfPresent(p.getVisitDate(), testResult::setScreeningTestResultDate);
 //        setDateIfPresent(p.getConfirmatoryTestResultDate(), testResult::setConfirmatoryTestResultDate);
 
         // Suspected acute infection
@@ -574,22 +577,16 @@ public class HtsEncounterReportTypeMapper {
     }
     private String mapDurationOfBreastfeeding(String duration) {
         if (duration == null) {
-            return "LT15";
+            return "LT6";
         }
         String upperGroup = duration.toUpperCase();
-        if (upperGroup.contains("LT15") || upperGroup.contains("LESS THAN 15") || upperGroup.contains("<15")) {
-            return "LT15";
+        if (upperGroup.contains("DURATION_OF_BREASTFEEDING_<6MONTHS")) {
+            return "LT6";
         }
-        if (upperGroup.contains("GTE15") || upperGroup.contains("15 AND ABOVE") || upperGroup.contains("≥15") || upperGroup.contains(">=")) {
-            return "GTE15";
+        if (upperGroup.contains("DURATION_OF_BREASTFEEDING_>_=6_MONTHS")) {
+            return "GTE6";
         }
-
-        try {
-            int age = Integer.parseInt(duration);
-            return age < 15 ? "LT6" : "GTE6";
-        } catch (NumberFormatException e) {
-            return null;
-        }
+        return "LT6";
     }
     private String mapTimeOfLastHIVNegative(String duration) {
         if (duration == null|| duration.isEmpty()) {
@@ -636,7 +633,16 @@ public class HtsEncounterReportTypeMapper {
             return null;
         }
         String upperType = result.toUpperCase().replace("HIV_CONFIRMATORY_TEST_RESULT_", "").trim();
+        log.info("confirmatory result {}", upperType);
         return upperType.equalsIgnoreCase("POSITIVE") ? "R" : "NR";
+    }
+
+    private String mapFinalTestResult(String result) {
+        if (result == null) {
+            return null;
+        }
+        String upperType = result.toUpperCase().replace("HIV_CONFIRMATORY_TEST_RESULT_", "").trim();
+        return upperType.equalsIgnoreCase("POSITIVE") ? "Pos" : "Neg";
     }
     private String mapSyphilisResult(String result) {
         if (result == null) {
@@ -660,25 +666,6 @@ public class HtsEncounterReportTypeMapper {
         log.warn("Unknown client of category: {}, defaulting to Individual (1)", upperType);
         return "S";
     }
-
-    private String determineFinalResult(String finalResult) {
-        if (finalResult == null) {
-            return "Neg";
-        }
-        String upperType = finalResult.toUpperCase().trim();
-        log.info("final result {}", upperType);
-        return upperType.equals("POSITIVE") ? "Pos" : "Neg";
-    }
-
-    private String determineConfirmatoryResult(String confirmatoryResult) {
-        if (confirmatoryResult == null) {
-            return "NR";
-        }
-        String upperType = confirmatoryResult.toUpperCase().replace("HIV_CONFIRMATORY_TEST_RESULT_", "").trim();
-        log.info("confirmatory result {}", upperType);
-        return upperType.equals("POSITIVE") ? "R" : "NR";
-    }
-
     private String determinePriorTestStatus(String previouslyTested) {
         if (previouslyTested == null) {
             return "1";
