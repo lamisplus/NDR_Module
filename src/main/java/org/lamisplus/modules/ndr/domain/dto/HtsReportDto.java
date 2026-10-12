@@ -49,5 +49,6 @@ public interface HtsReportDto extends
     String getOfferedPns();
     String getAcceptedPns();
     String getContactSex();
+    String getInitialHivTest();
 
 }
