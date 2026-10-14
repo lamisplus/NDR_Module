@@ -2,7 +2,6 @@ package org.lamisplus.modules.ndr.domain.dto.prep;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
-
 public interface PrepScreeningAndEligibilityTypeProjection {
     String getUniqueClientId();
     LocalDate getDateOfVisit();
@@ -38,7 +37,7 @@ public interface PrepScreeningAndEligibilityTypeProjection {
     Boolean getUsesAmphetamine();
     Boolean getUsesCodeineSyrup();
     Boolean getUsesOtherDrugs();
-    String getOtherDrugsSpecify();
+    String  getOtherDrugsSpecify();
     Boolean getRouteInject();
     Boolean getRouteSniff();
     Boolean getRouteSnort();
@@ -57,10 +56,10 @@ public interface PrepScreeningAndEligibilityTypeProjection {
     Boolean getAnalPainOnStooling();
     Boolean getAnalItching();
     Boolean getAnalDischarge();
-    String getLastHivTestTimeframe();
+    String  getLastHivTestTimeframe();
     Boolean getRecommendedForHivRetest();
     Boolean getTestedInOtherClinicalSettings();
-    String getHivTestResult();
+    String  getHivTestResult();
     Boolean getReportsOngoingHivRiskBehaviors();
     Boolean getReportsSpecificHivExposureLast3Months();
     Boolean getAcuteHivInfectionRetestRecommended();
@@ -76,7 +75,7 @@ public interface PrepScreeningAndEligibilityTypeProjection {
     Boolean getWillingToCommencePrEP();
     Boolean getReceivedPrepForFirstTimeThisYear();
     Boolean getClientReferredToOtherServices();
-    String getReferralServiceSpecify();
+    String  getReferralServiceSpecify();
     Boolean getDeclineNoNeedForPrep();
     Boolean getDeclineDoesNotWishDailyMedication();
     Boolean getDeclineConcernAboutSideEffects();
@@ -84,6 +83,6 @@ public interface PrepScreeningAndEligibilityTypeProjection {
     Boolean getDeclineConcernAboutClinicFollowupTime();
     Boolean getDeclineConcernAboutSafetyOfMedication();
     Boolean getDeclineConcernAboutEffectiveness();
-    String getDeclineOtherReasonSpecify();
-
+    String  getDeclineOtherReasonSpecify();
 }
+

@@ -112,7 +112,7 @@ public class PatientDemographicsMapper {
         }
     }
     
-    public PatientDemographicsType getPatientDemographics(PatientDemographicDTO demographicDTO, boolean isHts) {
+    public PatientDemographicsType getPatientDemographics(PatientDemographicDTO demographicDTO, boolean isPrep) {
 
         PatientDemographicsType patientDemographicsType = new PatientDemographicsType ();
 
