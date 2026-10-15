@@ -117,13 +117,23 @@ public class NDRController {
         log.info(Constants.FILE_GENERATION_TIME.replace("{}", String.valueOf(stopwatch.elapsed().toMillis())));
     }
 
-//    @GetMapping("/prep")
-//    public ResponseEntity<Void> generatePrep(@RequestParam List<Long> facilityIds, @RequestParam boolean isInitial) {
-//        Stopwatch stopwatch = Stopwatch.createStarted();
-//        facilityIds.forEach(facilityId -> prEPService.generatePatientsPrepNDRXml(facilityId, isInitial));
-//        log.info(Constants.FILE_GENERATION_TIME.replace("{}", String.valueOf(stopwatch.elapsed().toMinutes())));
-//        return ResponseEntity.ok().build();
-//    }
+    @GetMapping("/prep")
+    public ResponseEntity<Void> generatePrep(@RequestParam List<Long> facilityIds, @RequestParam boolean isInitial) {
+        Stopwatch stopwatch = Stopwatch.createStarted();
+        facilityIds.forEach(facilityId -> prEPService.generatePatientsPrepNDRXml(facilityId, isInitial));
+        log.info(Constants.FILE_GENERATION_TIME.replace("{}", String.valueOf(stopwatch.elapsed().toMinutes())));
+        return ResponseEntity.ok().build();
+    }
+    @GetMapping("/generate/prep")
+    public ResponseEntity<Void> generateSelectedPatientsPrepNDRXml(
+            @RequestParam List<Long> facilityIds,
+            @RequestParam boolean isInitial,
+            @RequestParam List<String> patientIds){
+        Stopwatch stopwatch = Stopwatch.createStarted();
+        facilityIds.forEach(facilityId -> prEPService.generateSelectedPatientsPrepNDRXml(facilityId, isInitial, patientIds));
+        log.info(Constants.FILE_GENERATION_TIME.replace("{}", String.valueOf(stopwatch.elapsed().toMinutes())));
+        return ResponseEntity.ok().build();
+    }
 
     //testing single prep file
     @GetMapping("/generate_one_prep")

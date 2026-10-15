@@ -291,7 +291,7 @@ public class HtsService {
 			Container container = new Container();
 			JAXBContext jaxbContext = JAXBContext.newInstance(Container.class);
 			PatientDemographicsType patientDemographics =
-					patientDemographicsMapper.getPatientDemographics(patientDemographic, true);
+					patientDemographicsMapper.getPatientDemographics(patientDemographic, "HTS");
 			if (patientDemographics != null) {
 				log.info("fetching treatment details... ");
 				IndividualReportType individualReportType = new IndividualReportType();

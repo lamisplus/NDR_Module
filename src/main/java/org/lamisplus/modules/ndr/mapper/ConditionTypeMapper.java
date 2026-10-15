@@ -156,9 +156,6 @@ public class ConditionTypeMapper {
     
     public ConditionType getConditionType(PatientDemographicDTO demographics, boolean isHts) {
         ConditionType condition = new ConditionType();
-        log.info("I am in address");
-
-        //List of applications code set
         setProgramCodeAndArea(condition);
         //Address
         AddressType address = addressTypeMapper.getPatientAddress(demographics);

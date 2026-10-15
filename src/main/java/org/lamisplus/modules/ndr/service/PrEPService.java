@@ -1,9 +1,7 @@
 package org.lamisplus.modules.ndr.service;
 
-import com.sun.xml.bind.v2.TODO;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.lamisplus.modules.ndr.domain.dto.HtsReportDto;
 import org.lamisplus.modules.ndr.domain.dto.NDRErrorDTO;
 import org.lamisplus.modules.ndr.domain.dto.PatientDemographicDTO;
 import org.lamisplus.modules.ndr.domain.dto.PrepDTO;
@@ -61,7 +59,7 @@ public class PrEPService {
     private final NdrOptimizationService ndrOptimizationService;
     private static final String TEMP = "temp/";
 
-    public void generateOnePatientHtsNDRXml(long facilityId, boolean initial, String clientCode) {
+    public void generateOnePatientHtsNDRXml(long facilityId, boolean initial, String patientId) {
         ObjectFactory objectFactory = new ObjectFactory();
         final String pathname = BASE_DIR + TEMP + facilityId + "/";
         log.info("folder -> "+ pathname);
@@ -80,7 +78,7 @@ public class PrEPService {
 
         log.info("Prep patient single -> "+ patientIds.size());
 
-        if (getPatientPrepNDRXml(clientCode, facilityId, initial,objectFactory, ndrErrors)) {
+        if (getPatientPrepNDRXml(patientId, facilityId, initial,objectFactory, ndrErrors)) {
             generatedCount.getAndIncrement();
         } else {
             errorCount.getAndIncrement();
@@ -106,129 +104,128 @@ public class PrEPService {
         log.error("error list size {}", ndrErrors.size());
     }
 
-//    public void generateSelectedPatientsPrepNDRXml(long facilityId, boolean initial, List<String> patientIds) {
-//        ObjectFactory objectFactory = new ObjectFactory();
-//        final String pathname = BASE_DIR + TEMP + facilityId + "/";
-//        log.info("folder -> "+ pathname);
-//        ndrService.cleanupFacility(facilityId, pathname);
-//        AtomicInteger generatedCount = new AtomicInteger();
-//        AtomicInteger errorCount = new AtomicInteger();
-//        LocalDateTime start;
-//
-//        List<NDRErrorDTO> ndrErrors = new ArrayList<>();
-//        PatientDemographicDTO[] patientDemographicDTO = new PatientDemographicDTO[1];
-//
-//        if (initial) {
-//            start = LocalDateTime.of(1984, 1, 1, 0, 0);
-//            //patientIds = data.getHtsClientCode(facilityId, start);
-//            log.info("generating initial 4 selected....");
-//            log.info("patient size -> "+ patientIds.size());
-//            log.info("patient ids -> "+ patientIds);
-//            patientIds.parallelStream()
-//                    .forEach(id -> {
-//                        if (getPatientPrepNDRXml(id, facilityId, initial,objectFactory, ndrErrors)) {
-//                            generatedCount.getAndIncrement();
-//                            patientDemographicDTO[0] = data.getHtsPatientDemographics(facilityId, id , start).get();
-//                        } else {
-//                            errorCount.getAndIncrement();
-//                        }
-//                    });
-//        }else {
-//            log.info("generating updated 4 selected....");
-//            Optional<Timestamp> lastGenerateDateTimeByFacilityId =
-//                    ndrXmlStatusRepository.getLastGenerateDateTimeByFacilityId(facilityId,"hts");
-//            if (lastGenerateDateTimeByFacilityId.isPresent()) {
-//                start = lastGenerateDateTimeByFacilityId.get().toLocalDateTime();
-//                log.info("Last Generated Date: " + start);
-//                patientIds = data.getHtsClientCode(facilityId,start);
-//
-//                patientIds.parallelStream()
-//                        .forEach(id -> {
-//                            if (getPatientPrepNDRXml(id, facilityId, false,objectFactory, ndrErrors)) {
-//                                generatedCount.getAndIncrement();
-//                                patientDemographicDTO[0] = data.getHtsPatientDemographics(facilityId, id , start).get();
-//                            } else {
-//                                errorCount.getAndIncrement();
-//                            }
-//                        });
-//            }
-//        }
-//
-//        log.info("generated  {}/{}", generatedCount.get(), patientIds.size());
-//        log.info("files not generated  {}/{}", errorCount.get(), patientIds.size());
-//        File folder = new File(BASE_DIR + TEMP + facilityId + "/");
-//        log.info("fileSize {} bytes ", ZipUtility.getFolderSize(folder));
-//        if (ZipUtility.getFolderSize(folder) >= 15_000_000) {
-//            log.info(BASE_DIR + TEMP + facilityId + "/" + " will be split into two");
-//        }
-//        if (generatedCount.get() > 0) {
-//            ndrOptimizationService.zipAndSaveTheFilesforDownload(
-//                    facilityId,
-//                    pathname,
-//                    generatedCount,
-//                    patientDemographicDTO[0],
-//                    ndrErrors,
-//                    "hts", patientDemographicDTO[0].getPatientIdentifier()
-//            );
-//        }
-//        log.error("error list size {}", ndrErrors.size());
-//    }
-//
-//    public void generatePatientsPrepNDRXml(long facilityId, boolean initial) {
-//        ObjectFactory objectFactory = new ObjectFactory();
-//        final String pathname = BASE_DIR + TEMP + facilityId + "/";
-//        log.info("folder -> "+ pathname);
-//        ndrService.cleanupFacility(facilityId, pathname);
-//        AtomicInteger generatedCount = new AtomicInteger();
-//        AtomicInteger errorCount = new AtomicInteger();
-//        LocalDateTime start = LocalDateTime.of(1984, 1, 1, 0, 0);
-//        List<String> patientIds = new ArrayList<>();
-//        List<NDRErrorDTO> ndrErrors = new ArrayList<>();
-//        PatientDemographicDTO[] patientDemographicDTO = new PatientDemographicDTO[1];
-//        if (initial) {
-//            patientIds = data.getHtsClientCode(facilityId, start);
-//            log.info("generating initial ....");
-//        }else {
-//            log.info("generating updated....");
-//            Optional<Timestamp> lastGenerateDateTimeByFacilityId =
-//                    ndrXmlStatusRepository.getLastGenerateDateTimeByFacilityId(facilityId,"prep");
-//            if (lastGenerateDateTimeByFacilityId.isPresent()) {
-//                start = lastGenerateDateTimeByFacilityId.get().toLocalDateTime();
-//                log.info("Last Generated Date: " + start);
-//                patientIds = data.getHtsClientCode(facilityId,start);
-//            }
-//        }
-//
-//        log.info("patient size -> "+ patientIds.size());
-//        LocalDateTime finalStart = start;
-//        patientIds.parallelStream()
-//                .forEach(id -> {
-//                    if (getPatientPrepNDRXml(id, facilityId, initial,objectFactory, ndrErrors)) {
-//                        generatedCount.getAndIncrement();
-//                        patientDemographicDTO[0] = data.getHtsPatientDemographics(facilityId, id , finalStart).get();
-//                    } else {
-//                        errorCount.getAndIncrement();
-//                    }
-//                });
-//        log.info("generated  {}/{}", generatedCount.get(), patientIds.size());
-//        log.info("files not generated  {}/{}", errorCount.get(), patientIds.size());
-//        File folder = new File(BASE_DIR + TEMP + facilityId + "/");
-//        log.info("fileSize {} bytes ", ZipUtility.getFolderSize(folder));
-//        if (ZipUtility.getFolderSize(folder) >= 15_000_000) {
-//            log.info(BASE_DIR + TEMP + facilityId + "/" + " will be split into two");
-//        }
-//        if (generatedCount.get() > 0) {
-//            ndrOptimizationService.zipAndSaveTheFilesforDownload(
-//                    facilityId,
-//                    pathname,
-//                    generatedCount,
-//                    patientDemographicDTO[0],
-//                    ndrErrors,
-//                    "hts", patientDemographicDTO[0].getPatientIdentifier()
-//            );
-//        }
-//        log.error("error list size {}", ndrErrors.size());
-//    }
+    public void generateSelectedPatientsPrepNDRXml(long facilityId, boolean initial, List<String> patientIds) {
+        ObjectFactory objectFactory = new ObjectFactory();
+        final String pathname = BASE_DIR + TEMP + facilityId + "/";
+        log.info("folder -> "+ pathname);
+        ndrService.cleanupFacility(facilityId, pathname);
+        AtomicInteger generatedCount = new AtomicInteger();
+        AtomicInteger errorCount = new AtomicInteger();
+        LocalDateTime start;
+
+        List<NDRErrorDTO> ndrErrors = new ArrayList<>();
+        PatientDemographicDTO[] patientDemographicDTO = new PatientDemographicDTO[1];
+
+        if (initial) {
+            start = LocalDateTime.of(1984, 1, 1, 0, 0);
+            log.info("generating initial prep selected....");
+            log.info("patient size -> "+ patientIds.size());
+            log.info("patient ids -> "+ patientIds);
+            patientIds.parallelStream()
+                    .forEach(id -> {
+                        if (getPatientPrepNDRXml(id, facilityId, initial,objectFactory, ndrErrors)) {
+                            generatedCount.getAndIncrement();
+                            patientDemographicDTO[0] = ndrQueryRepository.getPrepPatientDemographics(id, facilityId, start).get();
+                        } else {
+                            errorCount.getAndIncrement();
+                        }
+                    });
+        }else {
+            log.info("generating updated prep selected....");
+            Optional<Timestamp> lastGenerateDateTimeByFacilityId =
+                    ndrXmlStatusRepository.getLastGenerateDateTimeByFacilityId(facilityId,"prep");
+            if (lastGenerateDateTimeByFacilityId.isPresent()) {
+                start = lastGenerateDateTimeByFacilityId.get().toLocalDateTime();
+                log.info("Last Generated Date: " + start);
+                patientIds = ndrQueryRepository.getPrepId(facilityId,start);
+
+                patientIds.parallelStream()
+                        .forEach(id -> {
+                            if (getPatientPrepNDRXml(id, facilityId, false,objectFactory, ndrErrors)) {
+                                generatedCount.getAndIncrement();
+                                patientDemographicDTO[0] = ndrQueryRepository.getPrepPatientDemographics(id, facilityId, start).get();
+                            } else {
+                                errorCount.getAndIncrement();
+                            }
+                        });
+            }
+        }
+
+        log.info("generated  {}/{}", generatedCount.get(), patientIds.size());
+        log.info("files not generated  {}/{}", errorCount.get(), patientIds.size());
+        File folder = new File(BASE_DIR + TEMP + facilityId + "/");
+        log.info("fileSize {} bytes ", ZipUtility.getFolderSize(folder));
+        if (ZipUtility.getFolderSize(folder) >= 15_000_000) {
+            log.info(BASE_DIR + TEMP + facilityId + "/" + " will be split into two");
+        }
+        if (generatedCount.get() > 0) {
+            ndrOptimizationService.zipAndSaveTheFilesforDownload(
+                    facilityId,
+                    pathname,
+                    generatedCount,
+                    patientDemographicDTO[0],
+                    ndrErrors,
+                    "prep", patientDemographicDTO[0].getPatientIdentifier()
+            );
+        }
+        log.error("error list size {}", ndrErrors.size());
+    }
+
+    public void generatePatientsPrepNDRXml(long facilityId, boolean initial) {
+        ObjectFactory objectFactory = new ObjectFactory();
+        final String pathname = BASE_DIR + TEMP + facilityId + "/";
+        log.info("folder -> "+ pathname);
+        ndrService.cleanupFacility(facilityId, pathname);
+        AtomicInteger generatedCount = new AtomicInteger();
+        AtomicInteger errorCount = new AtomicInteger();
+        LocalDateTime start = LocalDateTime.of(1984, 1, 1, 0, 0);
+        List<String> patientIds = new ArrayList<>();
+        List<NDRErrorDTO> ndrErrors = new ArrayList<>();
+        PatientDemographicDTO[] patientDemographicDTO = new PatientDemographicDTO[1];
+        if (initial) {
+            patientIds = ndrQueryRepository.getPrepId(facilityId,start);
+            log.info("generating prep initial all....");
+        }else {
+            log.info("generating prep updated all....");
+            Optional<Timestamp> lastGenerateDateTimeByFacilityId =
+                    ndrXmlStatusRepository.getLastGenerateDateTimeByFacilityId(facilityId,"prep");
+            if (lastGenerateDateTimeByFacilityId.isPresent()) {
+                start = lastGenerateDateTimeByFacilityId.get().toLocalDateTime();
+                log.info("Last Generated Date: " + start);
+                patientIds = ndrQueryRepository.getPrepId(facilityId,start);
+            }
+        }
+
+        log.info("patient size -> "+ patientIds.size());
+        LocalDateTime finalStart = start;
+        patientIds.parallelStream()
+                .forEach(id -> {
+                    if (getPatientPrepNDRXml(id, facilityId, initial,objectFactory, ndrErrors)) {
+                        generatedCount.getAndIncrement();
+                        patientDemographicDTO[0] = data.getHtsPatientDemographics(facilityId, id , finalStart).get();
+                    } else {
+                        errorCount.getAndIncrement();
+                    }
+                });
+        log.info("generated  {}/{}", generatedCount.get(), patientIds.size());
+        log.info("files not generated  {}/{}", errorCount.get(), patientIds.size());
+        File folder = new File(BASE_DIR + TEMP + facilityId + "/");
+        log.info("fileSize {} bytes ", ZipUtility.getFolderSize(folder));
+        if (ZipUtility.getFolderSize(folder) >= 15_000_000) {
+            log.info(BASE_DIR + TEMP + facilityId + "/" + " will be split into two");
+        }
+        if (generatedCount.get() > 0) {
+            ndrOptimizationService.zipAndSaveTheFilesforDownload(
+                    facilityId,
+                    pathname,
+                    generatedCount,
+                    patientDemographicDTO[0],
+                    ndrErrors,
+                    "hts", patientDemographicDTO[0].getPatientIdentifier()
+            );
+        }
+        log.error("error list size {}", ndrErrors.size());
+    }
 
     private boolean getPatientPrepNDRXml(String patientId, long facilityId, boolean initial, ObjectFactory obj, List<NDRErrorDTO> ndrErrors) {
         log.info("starting process patient xml file information");
@@ -270,8 +267,8 @@ public class PrEPService {
 
     PatientDemographicDTO getPatientDemographic( long facilityId, String patientId, LocalDateTime lastModified,  List<NDRErrorDTO> ndrErrors){
         try {
-            Optional<PatientDemographicDTO> prepPatientDemographics = ndrQueryRepository.getPrepPatientDemographics(patientId, facilityId);
-            log.info("check patient Demographics.... "+ prepPatientDemographics.isPresent());
+            Optional<PatientDemographicDTO> prepPatientDemographics = ndrQueryRepository.getPrepPatientDemographics(patientId, facilityId, lastModified);
+            log.info("checking prep patient Demographics.... "+ prepPatientDemographics.isPresent());
             if(prepPatientDemographics.isPresent()){
                 log.info("Prep patient available....");
                 return prepPatientDemographics.get();
@@ -286,7 +283,21 @@ public class PrEPService {
 
     List<PrepDTO> getPatientPrepDetails(long facilityId, String patientId, LocalDateTime lastModified ){
         log.info("Getting Prep data for client: " + patientId);
-        return ndrQueryRepository.getPrepReportByClientCodeAndLastModified(facilityId, patientId,lastModified);
+        //return ndrQueryRepository.getPrepReportByClientCodeAndLastModified(facilityId, patientId,lastModified);
+
+        List<PrepDTO> screeningReports = ndrQueryRepository.getPrepReportByClientCodeAndLastModified(facilityId, patientId,lastModified);
+//        List<PrepDTO> enrollmentReports = ndrQueryRepository.getCardEnrollment(facilityId, patientId,lastModified);
+
+        List<PrepDTO> combinedReports = new ArrayList<>();
+        if (screeningReports != null) {
+            combinedReports.addAll(screeningReports);
+        }
+//        if (enrollmentReports != null) {
+//            combinedReports.addAll(enrollmentReports);
+//        }
+
+        return combinedReports;
+
     }
 
     private String generatePatientPrepNDRXml(
@@ -309,7 +320,7 @@ public class PrEPService {
                     ObjectFactory.class);
 
             PatientDemographicsType patientDemographics =
-                    patientDemographicsMapper.getPatientDemographics(patientDemographic, true);
+                    patientDemographicsMapper.getPatientDemographics(patientDemographic, "PrEP");
 
             if (patientDemographics != null) {
                 IndividualReportType individualReportType = new IndividualReportType();

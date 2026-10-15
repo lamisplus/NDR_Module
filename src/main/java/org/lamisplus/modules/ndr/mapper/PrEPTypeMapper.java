@@ -33,7 +33,15 @@ public class PrEPTypeMapper {
     private static final Map<String, String> SEX_PARTNER_MAPPING = new HashMap<>();
     private static final Map<String, String> PREGNANCY_STATUS_MAPPING = new HashMap<>();
     private static final Map<String, String> LAST_HIV_TEST_TIME_FRAME_MAPPING = new HashMap<>();
+    private static final Map<String, String> EDUCATION_LEVEL_MAPPING = new HashMap<>();
+    private static final Map<String, String> ENROLLMENT_TYPE_MAPPING = new HashMap<>();
+    private static final Map<String, String> MARITAL_STATUS_MAPPING = new HashMap<>();
+    private static final Map<String, String> HTS_ENTRY_POINT_MAPPING = new HashMap<>();
     private static final Map<String, String> HIV_TEST_RESULT_MAPPING = new HashMap<>();
+    private static final Map<String, String> PREP_TYPE_MAPPING = new HashMap<>();
+    private static final Map<String, String> PREP_REGIMEN_MAPPING = new HashMap<>();
+    private static final Map<String, String> PREP_HISTORY_OF_DRUG_INTERACTIONS_MAPPING = new HashMap<>();
+//    private static final Map<String, String> PREP_URINALYSIS_RESULT_MAPPING = new HashMap<>();
 
     private static final DatatypeFactory DATATYPE_FACTORY;
     private static final ZoneId DEFAULT_ZONE_ID = ZoneId.systemDefault();
@@ -94,7 +102,6 @@ public class PrEPTypeMapper {
         SEX_PARTNER_MAPPING.put("SEX_PARTNERS_FEMALE", "Female");
         SEX_PARTNER_MAPPING.put("SEX_PARTNERS_BOTH", "Both");
 
-
         PREGNANCY_STATUS_MAPPING.put("PREGANACY_STATUS_PREGNANT", "P");
         PREGNANCY_STATUS_MAPPING.put("PREGANACY_STATUS_BREASTFEEDING", "BF");
         PREGNANCY_STATUS_MAPPING.put("PREGANACY_STATUS_NOT_PREGNANT", "NP");
@@ -105,8 +112,56 @@ public class PrEPTypeMapper {
         LAST_HIV_TEST_TIME_FRAME_MAPPING.put("CT", "4To6Months");
         LAST_HIV_TEST_TIME_FRAME_MAPPING.put("CT", "MoreThan6Months");
 
-        HIV_TEST_RESULT_MAPPING.put("CT", "Negative");
-        HIV_TEST_RESULT_MAPPING.put("CT", "Positive");
+        ENROLLMENT_TYPE_MAPPING.put("PREP_PEP_ENROLLMENT_TYPE_PREP", "PrEP");
+        ENROLLMENT_TYPE_MAPPING.put("PREP_PEP_ENROLLMENT_TYPE_PEP", "PEP");
+
+        MARITAL_STATUS_MAPPING.put("MARITAL_STATUS_SINGLE", "1");
+        MARITAL_STATUS_MAPPING.put("MARITAL_STATUS_MARRIED", "2");
+        MARITAL_STATUS_MAPPING.put("MARITAL_STATUS_DIVORCED", "3");
+        MARITAL_STATUS_MAPPING.put("MARITAL_STATUS_SEPARATED", "4");
+        MARITAL_STATUS_MAPPING.put("MARITAL_STATUS_COHABITING", "5");
+        MARITAL_STATUS_MAPPING.put("MARITAL_STATUS_WIDOWED", "6");
+
+        EDUCATION_LEVEL_MAPPING.put("EDUCATION_LEVEL_NO_FORMAL_EDUCATION", "1");
+        EDUCATION_LEVEL_MAPPING.put("EDUCATION_LEVEL_PRIMARY", "2");
+        EDUCATION_LEVEL_MAPPING.put("EDUCATION_SENIOR_SECONDARY", "3");
+        EDUCATION_LEVEL_MAPPING.put("EDUCATION_JUNIOR_SECONDARY", "3");
+        EDUCATION_LEVEL_MAPPING.put("EDUCATION_POST_SECONDARY", "4");
+        EDUCATION_LEVEL_MAPPING.put("EDUCATION_NONE", "1");
+
+        HTS_ENTRY_POINT_MAPPING.put("HTS_ENTRY_POINT_FACILITY", "1");
+        HTS_ENTRY_POINT_MAPPING.put("HTS_ENTRY_POINT_COMMUNITY", "2");
+        HTS_ENTRY_POINT_MAPPING.put("HTS_ENTRY_POINT_OTHERS", "3");
+
+        HIV_TEST_RESULT_MAPPING.put("HIV_TEST_RESULT_NEGATIVE", "Negative");
+        HIV_TEST_RESULT_MAPPING.put("HIV_TEST_RESULT_POSITIVE", "Positive");
+        HIV_TEST_RESULT_MAPPING.put("HIV_TEST_RESULT_EARLY_DETECT", "SuspectedAcuteHIVInfection");
+
+        PREP_TYPE_MAPPING.put("PREP_TYPE_ORAL", "1");
+        PREP_TYPE_MAPPING.put("PREP_TYPE_INJECTIBLES", "2");
+        PREP_TYPE_MAPPING.put("PREP_TYPE_RING", "3");
+        PREP_TYPE_MAPPING.put("PREP_TYPE_OTHERS", "4");
+
+        PREP_REGIMEN_MAPPING.put("PREP_REGIMEN_TDF_FTC", "1");
+        PREP_REGIMEN_MAPPING.put("PREP_REGIMEN_TDF_3TC", "2");
+        PREP_REGIMEN_MAPPING.put("PREP_REGIMEN_CABOTEGRAVIR", "3");
+        PREP_REGIMEN_MAPPING.put("PREP_REGIMEN_LENACAPAVIR", "4");
+        PREP_REGIMEN_MAPPING.put("PREP_REGIMEN_OTHERS", "5");
+
+        PREP_HISTORY_OF_DRUG_INTERACTIONS_MAPPING.put("PREP_HISTORY_OF_DRUG_INTERACTIONS_RIFAMPIN", "1");
+        PREP_HISTORY_OF_DRUG_INTERACTIONS_MAPPING.put("PREP_HISTORY_OF_DRUG_INTERACTIONS_RIFAPENTINE", "2");
+        PREP_HISTORY_OF_DRUG_INTERACTIONS_MAPPING.put("PREP_HISTORY_OF_DRUG_INTERACTIONS_CARBAMAZEPINE", "3");
+        PREP_HISTORY_OF_DRUG_INTERACTIONS_MAPPING.put("PREP_HISTORY_OF_DRUG_INTERACTIONS_OXCARBAZEPINE", "4");
+        PREP_HISTORY_OF_DRUG_INTERACTIONS_MAPPING.put("PREP_HISTORY_OF_DRUG_INTERACTIONS_PHENOBARBITAL", "5");
+        PREP_HISTORY_OF_DRUG_INTERACTIONS_MAPPING.put("PREP_HISTORY_OF_DRUG_INTERACTIONS_PHENYTOIN", "6");
+        PREP_HISTORY_OF_DRUG_INTERACTIONS_MAPPING.put("PREP_HISTORY_OF_DRUG_INTERACTIONS_METHADONE", "7");
+        PREP_HISTORY_OF_DRUG_INTERACTIONS_MAPPING.put("PREP_HISTORY_OF_DRUG_INTERACTIONS_EXOGENOUS_HORMONES", "8");
+
+//        PREP_URINALYSIS_RESULT_MAPPING.put("PREP_TYPE_ORAL", "1");
+//        PREP_URINALYSIS_RESULT_MAPPING.put("PREP_TYPE_INJECTIBLES", "2");
+//        PREP_URINALYSIS_RESULT_MAPPING.put("PREP_TYPE_RING", "3");
+//        PREP_URINALYSIS_RESULT_MAPPING.put("PREP_TYPE_OTHERS", "4");
+
     }
 
     public boolean getPrEPType(
@@ -126,17 +181,21 @@ public class PrEPTypeMapper {
         boolean mappedAny = false;
 
         for (PrepDTO projection : projections) {
-            log.info("Inspecting PrepDTO - UniqueClientId: {}, DateOfVisit: {}, HospitalNumber: {}, DateEnrolled: {}",
-                    projection.getUniqueClientId(), projection.getDateOfVisit(), projection.getHospitalNumber(), projection.getDateEnrolled());
-
-            if (!hasScreeningData(projection)
-                    && (projection.getPrepFollowUpVisits() == null || projection.getPrepFollowUpVisits().isEmpty())
-                    && (projection.getPepFollowUpVisits() == null || projection.getPepFollowUpVisits().isEmpty())) {
-                log.warn("PrepDTO for client {} has no valid screening, enrollment, discontinuation, or visit data!", projection.getUniqueClientId()); }
-
             try {
-                mapProjectionToPrEPType(projection, prepPepType, objectFactory);
-                mappedAny = true;
+                boolean rowMapped = false;
+
+                if (hasScreeningData(projection)) {
+                    mapScreeningAndEligibility(projection, prepPepType, objectFactory); rowMapped = true;
+                }
+
+//                if (hasEnrollmentData(projection)) {
+//                    mapCardEnrollment(projection, prepPepType, objectFactory); rowMapped = true;
+//                }
+
+                if (rowMapped) { mappedAny = true; }
+
+                //mapProjectionToPrEPType(projection, prepPepType, objectFactory);
+                //mappedAny = true;
             } catch (Exception e) {
                 log.error("Error mapping PrEP projection for client: {}",
                         projection.getUniqueClientId(), e);
@@ -159,17 +218,17 @@ public class PrEPTypeMapper {
         return false;
     }
 
-    private void mapProjectionToPrEPType(
-            final PrepDTO projection,
-            final PrEPType prepType,
-            final ObjectFactory objectFactory) {
-
-        mapScreeningAndEligibility(projection, prepType, objectFactory);
+//    private void mapProjectionToPrEPType(
+//            final PrepDTO projection,
+//            final PrEPType prepType,
+//            final ObjectFactory objectFactory) {
+//
+//        mapScreeningAndEligibility(projection, prepType, objectFactory);
 //        mapCardEnrollment(projection, prepType, objectFactory);
 //        mapPrepFollowUpVisits(projection, prepType, objectFactory);
 //        mapPepFollowUpVisits(projection, prepType, objectFactory);
 //        mapDiscontinuation(projection, prepType, objectFactory);
-    }
+//    }
 
     private void mapScreeningAndEligibility(
             final PrepDTO p,
@@ -183,15 +242,10 @@ public class PrEPTypeMapper {
         final PrepScreeningAndEligibilityType s = factory.createPrepScreeningAndEligibilityType();
         validateAndSet(p.getUniqueClientId(), s::setUniqueClientId, "UniqueClientId"); // required
         validateAndSetDate(p.getDateOfVisit(), s::setDateOfVisit, "DateOfVisit");
-//        if (p.getUniqueClientId() != null) s.setUniqueClientId(p.getUniqueClientId());
-//        if (p.getDateOfVisit() != null) s.setDateOfVisit(toXMLGregorianCalendar(p.getDateOfVisit()));
-//        if (p.getReferredFrom() != null) s.setReferredFrom(p.getReferredFrom());
         setIfPresent(p.getReferredFrom(), s::setReferredFrom, this::mapPrepSource);
         if (p.getReferredFromOtherSpecify() != null) s.setReferredFromOtherSpecify(p.getReferredFromOtherSpecify());
-//        if (p.getSetting() != null) s.setSetting(p.getSetting());
         setIfPresent(p.getSetting(), s::setSetting, this::mapPrepSetting);
         if (p.getSettingOtherSpecify() != null) s.setSettingOtherSpecify(p.getSettingOtherSpecify());
-
         if (p.getAge() != null) s.setAge(p.getAge());
         if (p.getSex() != null) s.setSex(p.getSex());
         setIfPresent(p.getVisitType(), s::setVisitType, this::mapVisitType);
@@ -201,20 +255,15 @@ public class PrEPTypeMapper {
         if (p.getMaritalStatus() != null) s.setMaritalStatus(p.getMaritalStatus());
         if (p.getNumberOfOwnChildrenUnder5() != null) s.setNumberOfOwnChildrenUnder5(p.getNumberOfOwnChildrenUnder5());
         if (p.getWeight() != null) s.setWeight(p.getWeight());
-//        if (p.getTypeOfSession() != null) s.setTypeOfSession(p.getTypeOfSession());
         setIfPresent(p.getTypeOfSession(), s::setTypeOfSession, this::mapPrepSession);
-//        if (p.getSexPartners() != null) s.setSexPartners(p.getSexPartners());
         setIfPresent(p.getSexPartners(), s::setSexPartners, this::mapSexPartner);
-//        if (p.getPregnancyStatus() != null) s.setPregnancyStatus(p.getPregnancyStatus());
         setIfPresent(p.getPregnancyStatus(), s::setPregnancyStatus, this::mapPregnancyStatus);
-
         if (p.getPartnerIsHivPositive() != null) s.setPartnerIsHivPositive(p.getPartnerIsHivPositive());
         if (p.getPartnerInjectsDrugs() != null) s.setPartnerInjectsDrugs(p.getPartnerInjectsDrugs());
         if (p.getPartnerHasSexWithMen() != null) s.setPartnerHasSexWithMen(p.getPartnerHasSexWithMen());
         if (p.getPartnerIsTransgender() != null) s.setPartnerIsTransgender(p.getPartnerIsTransgender());
         if (p.getPartnerHasMultiplePartnersWithoutCondoms() != null)
             s.setPartnerHasMultiplePartnersWithoutCondoms(p.getPartnerHasMultiplePartnersWithoutCondoms());
-
         if (p.getUnprotectedVaginalSexWithCasualPartner() != null)
             s.setUnprotectedVaginalSexWithCasualPartner(p.getUnprotectedVaginalSexWithCasualPartner());
         if (p.getUnprotectedAnalSex() != null) s.setUnprotectedAnalSex(p.getUnprotectedAnalSex());
@@ -222,7 +271,6 @@ public class PrEPTypeMapper {
             s.setSharedNeedlesOrInjectingMaterials(p.getSharedNeedlesOrInjectingMaterials());
         if (p.getMoreThanOneSexPartner() != null) s.setMoreThanOneSexPartner(p.getMoreThanOneSexPartner());
         if (p.getPaidOrBeenPaidForSex() != null) s.setPaidOrBeenPaidForSex(p.getPaidOrBeenPaidForSex());
-
         if (p.getUsesCocaine() != null) s.setUsesCocaine(p.getUsesCocaine());
         if (p.getUsesHeroin() != null) s.setUsesHeroin(p.getUsesHeroin());
         if (p.getUsesMarijuana() != null) s.setUsesMarijuana(p.getUsesMarijuana());
@@ -235,16 +283,13 @@ public class PrEPTypeMapper {
         if (p.getRouteSnort() != null) s.setRouteSnort(p.getRouteSnort());
         if (p.getRouteSmoke() != null) s.setRouteSmoke(p.getRouteSmoke());
         if (p.getUsesDrugsForSexualEnhancement() != null) s.setUsesDrugsForSexualEnhancement(p.getUsesDrugsForSexualEnhancement());
-
         if (p.getHadSexWithoutCondomUnkHivStatLast72Hours() != null)
             s.setHadSexWithoutCondomUnkHivStatLast72Hours(p.getHadSexWithoutCondomUnkHivStatLast72Hours());
         if (p.getSharedInjectionEquipmentUnkHivStatLast72Hours() != null)
             s.setSharedInjectionEquipmentUnkHivStatLast72Hours(p.getSharedInjectionEquipmentUnkHivStatLast72Hours());
-
         if (p.getHadColdFluSymptomsLast2Weeks() != null) s.setHadColdFluSymptomsLast2Weeks(p.getHadColdFluSymptomsLast2Weeks());
         if (p.getHadUnprotectedSexOrSharedMaterialsLast28Days() != null)
             s.setHadUnprotectedSexOrSharedMaterialsLast28Days(p.getHadUnprotectedSexOrSharedMaterialsLast28Days());
-
         if (p.getFemaleVaginalDischargeOrBurning() != null) s.setFemaleVaginalDischargeOrBurning(p.getFemaleVaginalDischargeOrBurning());
         if (p.getFemaleLowerAbdominalPain() != null) s.setFemaleLowerAbdominalPain(p.getFemaleLowerAbdominalPain());
         if (p.getMaleUrethralDischargeOrBurning() != null) s.setMaleUrethralDischargeOrBurning(p.getMaleUrethralDischargeOrBurning());
@@ -254,7 +299,6 @@ public class PrEPTypeMapper {
         if (p.getAnalPainOnStooling() != null) s.setAnalPainOnStooling(p.getAnalPainOnStooling());
         if (p.getAnalItching() != null) s.setAnalItching(p.getAnalItching());
         if (p.getAnalDischarge() != null) s.setAnalDischarge(p.getAnalDischarge());
-
         if (p.getLastHivTestTimeframe() != null) s.setLastHivTestTimeframe(p.getLastHivTestTimeframe());
         if (p.getRecommendedForHivRetest() != null) s.setRecommendedForHivRetest(p.getRecommendedForHivRetest());
         if (p.getTestedInOtherClinicalSettings() != null) s.setTestedInOtherClinicalSettings(p.getTestedInOtherClinicalSettings());
@@ -264,24 +308,20 @@ public class PrEPTypeMapper {
             s.setReportsSpecificHivExposureLast3Months(p.getReportsSpecificHivExposureLast3Months());
         if (p.getAcuteHivInfectionRetestRecommended() != null)
             s.setAcuteHivInfectionRetestRecommended(p.getAcuteHivInfectionRetestRecommended());
-
         if (p.getHivNegative() != null) s.setHivNegative(p.getHivNegative());
         if (p.getHivRiskScoreAtLeastOne() != null) s.setHivRiskScoreAtLeastOne(p.getHivRiskScoreAtLeastOne());
         if (p.getNoSignsOfAcuteHivInfection() != null) s.setNoSignsOfAcuteHivInfection(p.getNoSignsOfAcuteHivInfection());
         if (p.getNoIndicationForPep() != null) s.setNoIndicationForPep(p.getNoIndicationForPep());
         if (p.getHasNoProteinuria() != null) s.setHasNoProteinuria(p.getHasNoProteinuria());
-
         if (p.getNoHistoryOfLiverAbnormalities() != null) s.setNoHistoryOfLiverAbnormalities(p.getNoHistoryOfLiverAbnormalities());
         if (p.getNoHistoryOfDrugDrugInteractionsForInjectable() != null)
             s.setNoHistoryOfDrugDrugInteractionsForInjectable(p.getNoHistoryOfDrugDrugInteractionsForInjectable());
         if (p.getNoHistoryOfDrugHypersensitivity() != null) s.setNoHistoryOfDrugHypersensitivity(p.getNoHistoryOfDrugHypersensitivity());
-
         if (p.getPrepOffered() != null) s.setPrepOffered(p.getPrepOffered());
         if (p.getWillingToCommencePrEP() != null) s.setWillingToCommencePrEP(p.getWillingToCommencePrEP());
         if (p.getReceivedPrepForFirstTimeThisYear() != null) s.setReceivedPrepForFirstTimeThisYear(p.getReceivedPrepForFirstTimeThisYear());
         if (p.getClientReferredToOtherServices() != null) s.setClientReferredToOtherServices(p.getClientReferredToOtherServices());
         if (p.getReferralServiceSpecify() != null) s.setReferralServiceSpecify(p.getReferralServiceSpecify());
-
         if (p.getDeclineNoNeedForPrep() != null) s.setDeclineNoNeedForPrep(p.getDeclineNoNeedForPrep());
         if (p.getDeclineDoesNotWishDailyMedication() != null) s.setDeclineDoesNotWishDailyMedication(p.getDeclineDoesNotWishDailyMedication());
         if (p.getDeclineConcernAboutSideEffects() != null) s.setDeclineConcernAboutSideEffects(p.getDeclineConcernAboutSideEffects());
@@ -305,37 +345,49 @@ public class PrEPTypeMapper {
 
         final PrepPepCardEnrollmentType e = factory.createPrepPepCardEnrollmentType();
 
-        if (p.getHospitalNumber() != null) e.setHospitalNumber(p.getHospitalNumber());
+//        if (p.getHospitalNumber() != null) e.setHospitalNumber(p.getHospitalNumber());
+        validateAndSet(p.getHospitalNumber(), e::setHospitalNumber, "HospitalNumber");
         if (p.getEnrollmentType() != null) e.setEnrollmentType(p.getEnrollmentType());
-        if (p.getUniqueId() != null) e.setUniqueId(p.getUniqueId());
-        if (p.getDateEnrolled() != null) e.setDateEnrolled(toXMLGregorianCalendar(p.getDateEnrolled()));
+        setIfPresent(p.getEnrollmentType(), e::setEnrollmentType, this::mapEnrollmentType);
+//        if (p.getUniqueId() != null) e.setUniqueId(p.getUniqueId());
+//        if (p.getDateEnrolled() != null) e.setDateEnrolled(toXMLGregorianCalendar(p.getDateEnrolled()));
+        validateAndSet(p.getUniqueId(), e::setUniqueId, "UniqueId"); // required
+        validateAndSetDate(p.getDateEnrolled(), e::setDateEnrolled, "DateEnrolled");
         if (p.getPartnerAncOrUniqueArtNumber() != null) e.setPartnerAncOrUniqueArtNumber(p.getPartnerAncOrUniqueArtNumber());
 
         if (p.getSex() != null) e.setSex(p.getSex());
         if (p.getAge() != null) e.setAge(p.getAge());
-        if (p.getMaritalStatus() != null) e.setMaritalStatus(p.getMaritalStatus());
+//        if (p.getMaritalStatus() != null) e.setMaritalStatus(p.getMaritalStatus());
+        setIfPresent(p.getMaritalStatus(), e::setMaritalStatus, this::mapMaritalStatus);
         if (p.getOccupation() != null) e.setOccupation(p.getOccupation());
-        if (p.getEducationLevel() != null) e.setEducationLevel(p.getEducationLevel());
+//        if (p.getEducationLevel() != null) e.setEducationLevel(p.getEducationLevel());
+        setIfPresent(p.getEducationLevel(), e::setEducationLevel, this::mapEducationLevel);
 
-        if (p.getHivTestingPoint() != null) e.setHivTestingPoint(p.getHivTestingPoint());
+//        if (p.getHivTestingPoint() != null) e.setHivTestingPoint(p.getHivTestingPoint());
+        setIfPresent(p.getHivTestingPoint(), e::setHivTestingPoint, this::mapHtsEntryPoint);
         if (p.getDateOfLastHivTest() != null) e.setDateOfLastHivTest(toXMLGregorianCalendar(p.getDateOfLastHivTest()));
-        if (p.getHivTestResult() != null) e.setHivTestResult(p.getHivTestResult());
+//        if (p.getHivTestResult() != null) e.setHivTestResult(p.getHivTestResult());
+        setIfPresent(p.getHivTestResult(), e::setHivTestResult, this::mapHtsTestResult);
 
         if (p.getDateReferred() != null) e.setDateReferred(toXMLGregorianCalendar(p.getDateReferred()));
-        if (p.getPopulationType() != null) e.setPopulationType(p.getPopulationType());
+//        if (p.getPopulationType() != null) e.setPopulationType(p.getPopulationType());
+        setIfPresent(p.getPopulationType(), e::setPopulationType, this::mapPopulationType);
         if (p.getOtherPopulationSpecify() != null) e.setOtherPopulationSpecify(p.getOtherPopulationSpecify());
 
         if (p.getDateInitialAdherenceCounseling() != null) e.setDateInitialAdherenceCounseling(toXMLGregorianCalendar(p.getDateInitialAdherenceCounseling()));
         if (p.getDateStarted() != null) e.setDateStarted(toXMLGregorianCalendar(p.getDateStarted()));
-        if (p.getPrepTypeAtStart() != null) e.setPrepTypeAtStart(p.getPrepTypeAtStart());
-        if (p.getPrepRegimen() != null) e.setPrepRegimen(p.getPrepRegimen());
+//        if (p.getPrepTypeAtStart() != null) e.setPrepTypeAtStart(p.getPrepTypeAtStart());
+        setIfPresent(p.getPrepTypeAtStart(), e::setPrepTypeAtStart, this::mapPrepType);
+//        if (p.getPrepRegimen() != null) e.setPrepRegimen(p.getPrepRegimen());
+        setIfPresent(p.getPrepRegimen(), e::setPrepRegimen, this::mapPrepRegimen);
         if (p.getWeight() != null) e.setWeight(p.getWeight());
         if (p.getHeight() != null) e.setHeight(p.getHeight());
         if (p.getBMI() != null) e.setBMI(p.getBMI());
         if (p.getIsPregnant() != null) e.setIsPregnant(p.getIsPregnant());
         if (p.getIsBreastfeeding() != null) e.setIsBreastfeeding(p.getIsBreastfeeding());
         if (p.getHistoryOfDrugAllergies() != null) e.setHistoryOfDrugAllergies(p.getHistoryOfDrugAllergies());
-        if (p.getHistoryOfDrugDrugInteractions() != null) e.setHistoryOfDrugDrugInteractions(p.getHistoryOfDrugDrugInteractions());
+//        if (p.getHistoryOfDrugDrugInteractions() != null) e.setHistoryOfDrugDrugInteractions(p.getHistoryOfDrugDrugInteractions());
+        setIfPresent(p.getHistoryOfDrugDrugInteractions(), e::setHistoryOfDrugDrugInteractions, this::mapPrepDrugInteraction);
         if (p.getUrinalysisResult() != null) e.setUrinalysisResult(p.getUrinalysisResult());
         if (p.getLiverFunctionTestResult() != null) e.setLiverFunctionTestResult(p.getLiverFunctionTestResult());
         if (p.getReferredAtInitiation() != null) e.setReferredAtInitiation(p.getReferredAtInitiation());
@@ -549,6 +601,80 @@ public class PrEPTypeMapper {
             return mappedValue;
         }
         return "NP";
+    }
+
+    private String mapEnrollmentType(String method) {
+        String upperType = method.toUpperCase().trim();
+
+        String mappedValue = ENROLLMENT_TYPE_MAPPING.get(upperType);
+        if (mappedValue != null) {
+            return mappedValue;
+        }
+        return "PrEP";
+    }
+
+    private String mapMaritalStatus(String method) {
+        String upperType = method.toUpperCase().trim();
+
+        String mappedValue = MARITAL_STATUS_MAPPING.get(upperType);
+        if (mappedValue != null) {
+            return mappedValue;
+        }
+        return "1";
+    }
+
+    private String mapEducationLevel(String method) {
+
+        String upperType = method.toUpperCase().trim();
+        String mappedValue = EDUCATION_LEVEL_MAPPING.get(upperType);
+        if (mappedValue != null) {
+            return mappedValue;
+        }
+        return "1";
+    }
+    private String mapHtsEntryPoint(String method) {
+
+        String upperType = method.toUpperCase().trim();
+        String mappedValue = HTS_ENTRY_POINT_MAPPING.get(upperType);
+        if (mappedValue != null) {
+            return mappedValue;
+        }
+        return "1";
+    }
+    private String mapHtsTestResult(String method) {
+        String upperType = method.toUpperCase().trim();
+        String mappedValue = HIV_TEST_RESULT_MAPPING.get(upperType);
+        if (mappedValue != null) {
+            return mappedValue;
+        }
+        return "Negative";
+    }
+    private String mapPrepType(String method) {
+
+        String upperType = method.toUpperCase().trim();
+        String mappedValue = PREP_TYPE_MAPPING.get(upperType);
+        if (mappedValue != null) {
+            return mappedValue;
+        }
+        return "1";
+    }
+    private String mapPrepRegimen(String method) {
+
+        String upperType = method.toUpperCase().trim();
+        String mappedValue = PREP_REGIMEN_MAPPING.get(upperType);
+        if (mappedValue != null) {
+            return mappedValue;
+        }
+        return "1";
+    }
+    private String mapPrepDrugInteraction(String method) {
+
+        String upperType = method.toUpperCase().trim();
+        String mappedValue = PREP_HISTORY_OF_DRUG_INTERACTIONS_MAPPING.get(upperType);
+        if (mappedValue != null) {
+            return mappedValue;
+        }
+        return "1";
     }
 }
 
