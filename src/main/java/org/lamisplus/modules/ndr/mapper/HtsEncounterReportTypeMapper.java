@@ -489,7 +489,6 @@ public class HtsEncounterReportTypeMapper {
         log.warn("Unknown session type: {} {}, defaulting to Individual (1) (2)", relation, mappedValue);
         return "P";
     }
-
     private String mapRelationshipToIndexContact(String relation) {
         if (relation == null || relation.isEmpty()) {
             return "7"; // Default to Individual
@@ -635,7 +634,6 @@ public class HtsEncounterReportTypeMapper {
         log.info("confirmatory result {}", upperType);
         return upperType.equalsIgnoreCase("POSITIVE") ? "R" : "NR";
     }
-
     private String mapFinalTestResult(String result) {
         if (result == null) {
             return null;
@@ -718,7 +716,6 @@ public class HtsEncounterReportTypeMapper {
             throw new IllegalArgumentException(fieldName + " cannot be null");
         }
     }
-
     private void setDateIfPresent(LocalDate date, Consumer<javax.xml.datatype.XMLGregorianCalendar> setter) {
         if (date != null) {
             try {

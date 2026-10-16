@@ -41,7 +41,8 @@ public class PrEPTypeMapper {
     private static final Map<String, String> PREP_TYPE_MAPPING = new HashMap<>();
     private static final Map<String, String> PREP_REGIMEN_MAPPING = new HashMap<>();
     private static final Map<String, String> PREP_HISTORY_OF_DRUG_INTERACTIONS_MAPPING = new HashMap<>();
-//    private static final Map<String, String> PREP_URINALYSIS_RESULT_MAPPING = new HashMap<>();
+    private static final Map<String, String> PREP_URINALYSIS_RESULT_MAPPING = new HashMap<>();
+    private static final Map<String, String> PREP_SERVICE_PROVIDED_MAPPING = new HashMap<>();
 
     private static final DatatypeFactory DATATYPE_FACTORY;
     private static final ZoneId DEFAULT_ZONE_ID = ZoneId.systemDefault();
@@ -157,10 +158,15 @@ public class PrEPTypeMapper {
         PREP_HISTORY_OF_DRUG_INTERACTIONS_MAPPING.put("PREP_HISTORY_OF_DRUG_INTERACTIONS_METHADONE", "7");
         PREP_HISTORY_OF_DRUG_INTERACTIONS_MAPPING.put("PREP_HISTORY_OF_DRUG_INTERACTIONS_EXOGENOUS_HORMONES", "8");
 
-//        PREP_URINALYSIS_RESULT_MAPPING.put("PREP_TYPE_ORAL", "1");
-//        PREP_URINALYSIS_RESULT_MAPPING.put("PREP_TYPE_INJECTIBLES", "2");
-//        PREP_URINALYSIS_RESULT_MAPPING.put("PREP_TYPE_RING", "3");
-//        PREP_URINALYSIS_RESULT_MAPPING.put("PREP_TYPE_OTHERS", "4");
+        PREP_URINALYSIS_RESULT_MAPPING.put("PREP_TYPE_ORAL", "1");
+        PREP_URINALYSIS_RESULT_MAPPING.put("PREP_TYPE_INJECTIBLES", "2");
+        PREP_URINALYSIS_RESULT_MAPPING.put("PREP_TYPE_RING", "3");
+        PREP_URINALYSIS_RESULT_MAPPING.put("PREP_TYPE_OTHERS", "4");
+
+        PREP_SERVICE_PROVIDED_MAPPING.put("PREP_TYPE_ORAL", "1");
+        PREP_SERVICE_PROVIDED_MAPPING.put("SERVICE_PROVIDED_STI_SERVICE", "2");
+        PREP_SERVICE_PROVIDED_MAPPING.put("SERVICE_PROVIDED_FAMILY_PLANNING", "3");
+        PREP_SERVICE_PROVIDED_MAPPING.put("SERVICE_PROVIDED_ANTIRETROVIRAL_THERAPY", "4");
 
     }
 
@@ -188,14 +194,12 @@ public class PrEPTypeMapper {
                     mapScreeningAndEligibility(projection, prepPepType, objectFactory); rowMapped = true;
                 }
 
-//                if (hasEnrollmentData(projection)) {
-//                    mapCardEnrollment(projection, prepPepType, objectFactory); rowMapped = true;
-//                }
+                if (hasEnrollmentData(projection)) {
+                    mapCardEnrollment(projection, prepPepType, objectFactory); rowMapped = true;
+                }
 
                 if (rowMapped) { mappedAny = true; }
 
-                //mapProjectionToPrEPType(projection, prepPepType, objectFactory);
-                //mappedAny = true;
             } catch (Exception e) {
                 log.error("Error mapping PrEP projection for client: {}",
                         projection.getUniqueClientId(), e);
@@ -217,19 +221,6 @@ public class PrEPTypeMapper {
 
         return false;
     }
-
-//    private void mapProjectionToPrEPType(
-//            final PrepDTO projection,
-//            final PrEPType prepType,
-//            final ObjectFactory objectFactory) {
-//
-//        mapScreeningAndEligibility(projection, prepType, objectFactory);
-//        mapCardEnrollment(projection, prepType, objectFactory);
-//        mapPrepFollowUpVisits(projection, prepType, objectFactory);
-//        mapPepFollowUpVisits(projection, prepType, objectFactory);
-//        mapDiscontinuation(projection, prepType, objectFactory);
-//    }
-
     private void mapScreeningAndEligibility(
             final PrepDTO p,
             final PrEPType prepType,
@@ -345,40 +336,26 @@ public class PrEPTypeMapper {
 
         final PrepPepCardEnrollmentType e = factory.createPrepPepCardEnrollmentType();
 
-//        if (p.getHospitalNumber() != null) e.setHospitalNumber(p.getHospitalNumber());
         validateAndSet(p.getHospitalNumber(), e::setHospitalNumber, "HospitalNumber");
         if (p.getEnrollmentType() != null) e.setEnrollmentType(p.getEnrollmentType());
         setIfPresent(p.getEnrollmentType(), e::setEnrollmentType, this::mapEnrollmentType);
-//        if (p.getUniqueId() != null) e.setUniqueId(p.getUniqueId());
-//        if (p.getDateEnrolled() != null) e.setDateEnrolled(toXMLGregorianCalendar(p.getDateEnrolled()));
         validateAndSet(p.getUniqueId(), e::setUniqueId, "UniqueId"); // required
         validateAndSetDate(p.getDateEnrolled(), e::setDateEnrolled, "DateEnrolled");
         if (p.getPartnerAncOrUniqueArtNumber() != null) e.setPartnerAncOrUniqueArtNumber(p.getPartnerAncOrUniqueArtNumber());
-
         if (p.getSex() != null) e.setSex(p.getSex());
         if (p.getAge() != null) e.setAge(p.getAge());
-//        if (p.getMaritalStatus() != null) e.setMaritalStatus(p.getMaritalStatus());
         setIfPresent(p.getMaritalStatus(), e::setMaritalStatus, this::mapMaritalStatus);
         if (p.getOccupation() != null) e.setOccupation(p.getOccupation());
-//        if (p.getEducationLevel() != null) e.setEducationLevel(p.getEducationLevel());
         setIfPresent(p.getEducationLevel(), e::setEducationLevel, this::mapEducationLevel);
-
-//        if (p.getHivTestingPoint() != null) e.setHivTestingPoint(p.getHivTestingPoint());
         setIfPresent(p.getHivTestingPoint(), e::setHivTestingPoint, this::mapHtsEntryPoint);
         if (p.getDateOfLastHivTest() != null) e.setDateOfLastHivTest(toXMLGregorianCalendar(p.getDateOfLastHivTest()));
-//        if (p.getHivTestResult() != null) e.setHivTestResult(p.getHivTestResult());
         setIfPresent(p.getHivTestResult(), e::setHivTestResult, this::mapHtsTestResult);
-
         if (p.getDateReferred() != null) e.setDateReferred(toXMLGregorianCalendar(p.getDateReferred()));
-//        if (p.getPopulationType() != null) e.setPopulationType(p.getPopulationType());
         setIfPresent(p.getPopulationType(), e::setPopulationType, this::mapPopulationType);
         if (p.getOtherPopulationSpecify() != null) e.setOtherPopulationSpecify(p.getOtherPopulationSpecify());
-
         if (p.getDateInitialAdherenceCounseling() != null) e.setDateInitialAdherenceCounseling(toXMLGregorianCalendar(p.getDateInitialAdherenceCounseling()));
         if (p.getDateStarted() != null) e.setDateStarted(toXMLGregorianCalendar(p.getDateStarted()));
-//        if (p.getPrepTypeAtStart() != null) e.setPrepTypeAtStart(p.getPrepTypeAtStart());
         setIfPresent(p.getPrepTypeAtStart(), e::setPrepTypeAtStart, this::mapPrepType);
-//        if (p.getPrepRegimen() != null) e.setPrepRegimen(p.getPrepRegimen());
         setIfPresent(p.getPrepRegimen(), e::setPrepRegimen, this::mapPrepRegimen);
         if (p.getWeight() != null) e.setWeight(p.getWeight());
         if (p.getHeight() != null) e.setHeight(p.getHeight());
@@ -386,20 +363,18 @@ public class PrEPTypeMapper {
         if (p.getIsPregnant() != null) e.setIsPregnant(p.getIsPregnant());
         if (p.getIsBreastfeeding() != null) e.setIsBreastfeeding(p.getIsBreastfeeding());
         if (p.getHistoryOfDrugAllergies() != null) e.setHistoryOfDrugAllergies(p.getHistoryOfDrugAllergies());
-//        if (p.getHistoryOfDrugDrugInteractions() != null) e.setHistoryOfDrugDrugInteractions(p.getHistoryOfDrugDrugInteractions());
         setIfPresent(p.getHistoryOfDrugDrugInteractions(), e::setHistoryOfDrugDrugInteractions, this::mapPrepDrugInteraction);
-        if (p.getUrinalysisResult() != null) e.setUrinalysisResult(p.getUrinalysisResult());
+        setIfPresent(p.getUrinalysisResult(), e::setUrinalysisResult, this::mapUrinalysis);
         if (p.getLiverFunctionTestResult() != null) e.setLiverFunctionTestResult(p.getLiverFunctionTestResult());
-        if (p.getReferredAtInitiation() != null) e.setReferredAtInitiation(p.getReferredAtInitiation());
+        setIfPresent(p.getReferredAtInitiation(), e::setReferredAtInitiation, this::mapYesNoToCode);
         if (p.getDateReferredAtInitiation() != null) e.setDateReferredAtInitiation(toXMLGregorianCalendar(p.getDateReferredAtInitiation()));
-        if (p.getServiceReferredFor() != null) e.setServiceReferredFor(p.getServiceReferredFor());
+        setIfPresent(p.getServiceReferredFor(), e::setServiceReferredFor, this::mapServicesProvided);
+        setIfPresent(p.getPepCompletion(), e::setPepCompletion, this::mapYesNoToCode);
 
-        if (p.getPepCompletion() != null) e.setPepCompletion(p.getPepCompletion());
-
-        List<PepFollowUpEntryType> pepEntries = p.getPepFollowUpEntries();
-        if (pepEntries != null && !pepEntries.isEmpty()) {
-            e.getPepFollowUpEntry().addAll(pepEntries);
-        }
+//        List<PepFollowUpEntryType> pepEntries = p.getPepFollowUpEntries();
+//        if (pepEntries != null && !pepEntries.isEmpty()) {
+//            e.getPepFollowUpEntry().addAll(pepEntries);
+//        }
 
         prepType.setCardEnrollment(e);
     }
@@ -667,6 +642,25 @@ public class PrEPTypeMapper {
         }
         return "1";
     }
+    private String mapUrinalysis(String method) {
+
+        String upperType = method.toUpperCase().trim();
+        String mappedValue = PREP_URINALYSIS_RESULT_MAPPING.get(upperType);
+        if (mappedValue != null) {
+            return mappedValue;
+        }
+        return "1";
+    }
+    private String mapServicesProvided(String method) {
+
+        String upperType = method.toUpperCase().trim();
+        String mappedValue = PREP_SERVICE_PROVIDED_MAPPING.get(upperType);
+        if (mappedValue != null) {
+            return mappedValue;
+        }
+        return "1";
+    }
+
     private String mapPrepDrugInteraction(String method) {
 
         String upperType = method.toUpperCase().trim();
@@ -675,6 +669,33 @@ public class PrEPTypeMapper {
             return mappedValue;
         }
         return "1";
+    }
+    private String mapYesNoToCode(String value) {
+        if (value == null || value.isEmpty()) {
+            return "No";
+        }
+        log.info("value: {}", value);
+        String upperValue = "";
+
+        if (value.contains("false") || value.contains("true")) {
+            upperValue = value.toUpperCase().trim();
+            if (upperValue.equals("TRUE")) {
+                return "Yes";
+            }
+            if (upperValue.equals("FALSE")) {
+                return "No";
+            }
+        } else {
+            upperValue = value.toUpperCase().replace("YES_NO_", "").trim();
+            if (upperValue.equals("YES")) {
+                return "Yes";
+            }
+            if (upperValue.equals("NO")) {
+                return "No";
+            }
+        }
+
+        return "No";
     }
 }
 

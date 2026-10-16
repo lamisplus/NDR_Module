@@ -1,4 +1,5 @@
 package org.lamisplus.modules.ndr.repositories;
+
 import org.lamisplus.modules.ndr.domain.dto.PatientDemographicDTO;
 import org.lamisplus.modules.ndr.domain.dto.PrepDTO;
 import org.lamisplus.modules.ndr.domain.entities.NdrMessageLog;
@@ -10,6 +11,7 @@ import java.util.List;
 import java.util.Optional;
 
 public interface NDRQueryRepository extends JpaRepository<NdrMessageLog, Integer> {
+
     @Query(value = "SELECT \n" +
             "\tp.uuid AS personUuid,\n" +
             "\tp.date_of_registration AS diagnosisDate,\n" +
@@ -40,9 +42,9 @@ public interface NDRQueryRepository extends JpaRepository<NdrMessageLog, Integer
             "INNER JOIN prophylaxis_screening pel ON pel.person_uuid = p.uuid AND pel.archived = false\n" +
             "LEFT JOIN ndr_code_set lgaCode ON TRIM(lgaCode.code_description) = TRIM(facility_lga.name) AND lgaCode.code_set_nm = 'LGA'\n" +
             "LEFT JOIN ndr_code_set stateCode ON TRIM(stateCode.code_description) = TRIM(facility_state.name) AND stateCode.code_set_nm = 'STATES'\n" +
-            "LEFT JOIN ndr_code_set emplCode ON emplCode.code_description = p.employment_status->>'display' AND emplCode.code_set_nm = 'OCCUPATION_STATUS'\n" +
-            "LEFT JOIN ndr_code_set mariCode ON mariCode.code_description = p.marital_status->>'display' AND mariCode.code_set_nm = 'MARITAL_STATUS'\n" +
-            "LEFT JOIN ndr_code_set eduCode ON eduCode.code_description = p.education->>'display' AND eduCode.code_set_nm = 'EDUCATIONAL_LEVEL'\n" +
+            "LEFT JOIN ndr_code_set emplCode ON emplCode.code_description = CAST(p.employment_status->>'display' AS VARCHAR) AND emplCode.code_set_nm = 'OCCUPATION_STATUS'\n" +
+            "LEFT JOIN ndr_code_set mariCode ON mariCode.code_description = CAST(p.marital_status->>'display' AS VARCHAR) AND mariCode.code_set_nm = 'MARITAL_STATUS'\n" +
+            "LEFT JOIN ndr_code_set eduCode ON eduCode.code_description = CAST(p.education->>'display' AS VARCHAR) AND eduCode.code_set_nm = 'EDUCATIONAL_LEVEL'\n" +
             "WHERE p.uuid = ?1\n" +
             "AND pel.facility_id = ?2\n" +
             "AND pel.date_modified >= ?3\n" +
@@ -50,21 +52,21 @@ public interface NDRQueryRepository extends JpaRepository<NdrMessageLog, Integer
     Optional<PatientDemographicDTO> getPrepPatientDemographics(String identifier, Long facilityId, LocalDateTime lastModified);
 
     @Query(value = "SELECT\n" +
-            "    ps.unique_Client_Id AS uniqueClientId, \n" +
+            "    CAST(ps.unique_Client_Id AS VARCHAR) AS uniqueClientId, \n" +
             "    ps.visit_date AS dateOfVisit, \n" +
-            "    ps.referred_from AS referredFrom,\n" +
-            "    ps.setting AS setting,\n" +
+            "    CAST(ps.referred_from AS VARCHAR) AS referredFrom,\n" +
+            "    CAST(ps.setting AS VARCHAR) AS setting,\n" +
             "    p.date_of_birth AS dateOfBirth,\n" +
             "    CASE WHEN INITCAP(p.sex) = 'Female' THEN 'F' ELSE 'M' END AS sex,\n" +
-            "    ps.visit_type AS visitType,\n" +
-            "    ps.population_type AS populationType,\n" +
+            "    CAST(ps.visit_type AS VARCHAR) AS visitType,\n" +
+            "    CAST(ps.population_type AS VARCHAR) AS populationType,\n" +
             "    emplCode.code AS occupation,\n" +
             "    mariCode.code AS maritalStatus,\n" +
             "    eduCode.code AS educationLevel,\n" +
             "    ps.num_children_less_than_five AS numberOfOwnChildrenUnder5,\n" +
-            "    ps.type_of_session AS typOfSession,\n" +
-            "    ps.sex_partner AS sexPartners,\n" +
-            "    hts_en.observation->>'pregnancyStatus' AS pregnancyStatus,\n" +
+            "    CAST(ps.type_of_session AS VARCHAR) AS typOfSession,\n" +
+            "    CAST(ps.sex_partner AS VARCHAR) AS sexPartners,\n" +
+            "    CAST(hts_en.observation->>'pregnancyStatus' AS VARCHAR) AS pregnancyStatus,\n" +
             "    CASE \n" +
             "        WHEN ps.sex_partner_risk->>'haveSexWihHIVPositive' IN ('true', 'YES', 'YES_NO_YES', '1') THEN true\n" +
             "        WHEN ps.sex_partner_risk->>'haveSexWihHIVPositive' IN ('false', 'NO', 'YES_NO_NO', '0') THEN false\n" +
@@ -111,7 +113,7 @@ public interface NDRQueryRepository extends JpaRepository<NdrMessageLog, Integer
             "    CASE WHEN ps.drug_use_history->>'drug' IN ('true', 'YES', 'YES_NO_YES', '1') THEN true WHEN ps.drug_use_history->>'drug' IN ('false', 'NO', 'YES_NO_NO', '0') THEN false END AS usesAmphetamine,\n" +
             "    CASE WHEN ps.drug_use_history->>'drug' IN ('true', 'YES', 'YES_NO_YES', '1') THEN true WHEN ps.drug_use_history->>'drug' IN ('false', 'NO', 'YES_NO_NO', '0') THEN false END AS usesCodeineSyrup,\n" +
             "    CASE WHEN ps.drug_use_history->>'drug' IN ('true', 'YES', 'YES_NO_YES', '1') THEN true WHEN ps.drug_use_history->>'drug' IN ('false', 'NO', 'YES_NO_NO', '0') THEN false END AS usesOtherDrugs,\n" +
-            "    NULLIF(ps.drug_use_history->>'drug', '') AS otherDrugsSpecify,\n" +
+            "    NULLIF(CAST(ps.drug_use_history->>'drug' AS VARCHAR), '') AS otherDrugsSpecify,\n" +
             "    CASE WHEN ps.drug_use_history->>'routesOfAdministration' IN ('true', 'YES', 'YES_NO_YES', '1') THEN true WHEN ps.drug_use_history->>'routesOfAdministration' IN ('false', 'NO', 'YES_NO_NO', '0') THEN false END AS routeInject,\n" +
             "    CASE WHEN ps.drug_use_history->>'routesOfAdministration' IN ('true', 'YES', 'YES_NO_YES', '1') THEN true WHEN ps.drug_use_history->>'routesOfAdministration' IN ('false', 'NO', 'YES_NO_NO', '0') THEN false END AS routeSniff,\n" +
             "    CASE WHEN ps.drug_use_history->>'routesOfAdministration' IN ('true', 'YES', 'YES_NO_YES', '1') THEN true WHEN ps.drug_use_history->>'routesOfAdministration' IN ('false', 'NO', 'YES_NO_NO', '0') THEN false END AS routeSnort,\n" +
@@ -130,10 +132,10 @@ public interface NDRQueryRepository extends JpaRepository<NdrMessageLog, Integer
             "    CASE WHEN ps.sti_screening->>'analpain' IN ('true', 'YES', 'YES_NO_YES', '1') THEN true WHEN ps.sti_screening->>'analpain' IN ('false', 'NO', 'YES_NO_NO', '0') THEN false END AS analPainOnStooling,\n" +
             "    CASE WHEN ps.sti_screening->>'analItching' IN ('true', 'YES', 'YES_NO_YES', '1') THEN true WHEN ps.sti_screening->>'analItching' IN ('false', 'NO', 'YES_NO_NO', '0') THEN false END AS analItching,\n" +
             "    CASE WHEN ps.sti_screening->>'analDischarge' IN ('true', 'YES', 'YES_NO_YES', '1') THEN true WHEN ps.sti_screening->>'analDischarge' IN ('false', 'NO', 'YES_NO_NO', '0') THEN false END AS analDischarge,\n" +
-            "    NULLIF(ps.drug_use_history->>'lastTest', '') AS lastHivTestTimeframe,\n" +
+            "    NULLIF(CAST(ps.drug_use_history->>'lastTest' AS VARCHAR), '') AS lastHivTestTimeframe,\n" +
             "    CASE WHEN ps.drug_use_history->>'recommendHivRetest' IN ('true', 'YES', 'YES_NO_YES', '1') THEN true WHEN ps.drug_use_history->>'recommendHivRetest' IN ('false', 'NO', 'YES_NO_NO', '0') THEN false END AS recommendedForHivRetest,\n" +
             "    CASE WHEN ps.drug_use_history->>'clinicalSetting' IN ('true', 'YES', 'YES_NO_YES', '1') THEN true WHEN ps.drug_use_history->>'clinicalSetting' IN ('false', 'NO', 'YES_NO_NO', '0') THEN false END AS testedInOtherClinicalSettings,\n" +
-            "    NULLIF(ps.drug_use_history->>'hivTestResultAtvisit', '') AS hivTestResult,\n" +
+            "    NULLIF(CAST(ps.drug_use_history->>'hivTestResultAtvisit' AS VARCHAR), '') AS hivTestResult,\n" +
             "    CASE WHEN ps.drug_use_history->>'reportHivRisk' IN ('true', 'YES', 'YES_NO_YES', '1') THEN true WHEN ps.drug_use_history->>'reportHivRisk' IN ('false', 'NO', 'YES_NO_NO', '0') THEN false END AS reportsOngoingHivRiskBehaviors,\n" +
             "    CASE WHEN ps.drug_use_history->>'hivExposure' IN ('true', 'YES', 'YES_NO_YES', '1') THEN true WHEN ps.drug_use_history->>'hivExposure' IN ('false', 'NO', 'YES_NO_NO', '0') THEN false END AS reportsSpecificHivExposureLast3Months,\n" +
             "    CASE WHEN ps.assessment_for_prep_eligibility->>'hivNegative' IN ('true', 'YES', 'YES_NO_YES', '1') THEN true WHEN ps.assessment_for_prep_eligibility->>'hivNegative' IN ('false', 'NO', 'YES_NO_NO', '0') THEN false END AS hivNegative,\n" +
@@ -148,7 +150,7 @@ public interface NDRQueryRepository extends JpaRepository<NdrMessageLog, Integer
             "    CASE WHEN ps.services_received_by_client->>'willingToCommencePrep' IN ('true', 'YES', 'YES_NO_YES', '1') THEN true WHEN ps.services_received_by_client->>'willingToCommencePrep' IN ('false', 'NO', 'YES_NO_NO', '0') THEN false END AS willingToCommencePrep,\n" +
             "    CASE WHEN ps.received_prep_first_time_this_year IN ('true', 'YES', 'YES_NO_YES', '1') THEN true WHEN ps.received_prep_first_time_this_year IN ('false', 'NO', 'YES_NO_NO', '0') THEN false END AS receivedPrepForFirstTimeThisYear,\n" +
             "    CASE WHEN ps.services_received_by_client->>'clientReferredToOtherServices' IN ('true', 'YES', 'YES_NO_YES', '1') THEN true WHEN ps.services_received_by_client->>'clientReferredToOtherServices' IN ('false', 'NO', 'YES_NO_NO', '0') THEN false END AS clientReferredToOtherServices,\n" +
-            "    NULLIF(ps.services_received_by_client->>'othersSpecify', '') AS referralServiceSpecify\n" +
+            "    NULLIF(CAST(ps.services_received_by_client->>'othersSpecify' AS VARCHAR), '') AS referralServiceSpecify\n" +
             "FROM patient_person p\n" +
             "INNER JOIN prophylaxis_screening ps \n" +
             "    ON ps.person_uuid = p.uuid \n" +
@@ -163,71 +165,90 @@ public interface NDRQueryRepository extends JpaRepository<NdrMessageLog, Integer
             ") hts_en ON true\n" +
             "LEFT JOIN ndr_code_set emplCode \n" +
             "    ON emplCode.code_set_nm = 'OCCUPATION_STATUS' \n" +
-            "   AND emplCode.code_description = p.employment_status->>'display'\n" +
+            "   AND emplCode.code_description = CAST(p.employment_status->>'display' AS VARCHAR)\n" +
             "LEFT JOIN ndr_code_set mariCode \n" +
             "    ON mariCode.code_set_nm = 'MARITAL_STATUS' \n" +
-            "   AND mariCode.code_description = p.marital_status->>'display'\n" +
+            "   AND mariCode.code_description = CAST(p.marital_status->>'display' AS VARCHAR)\n" +
             "LEFT JOIN ndr_code_set eduCode \n" +
             "    ON eduCode.code_set_nm = 'EDUCATIONAL_LEVEL' \n" +
-            "   AND eduCode.code_description = p.education->>'display'\n" +
+            "   AND eduCode.code_description = CAST(p.education->>'display' AS VARCHAR)\n" +
             "WHERE p.uuid = ?2\n" +
             "LIMIT 1;", nativeQuery = true)
     List<PrepDTO> getPrepReportByClientCodeAndLastModified(Long facilityId, String patientId, LocalDateTime lastModified);
 
     @Query(value = "SELECT person_uuid from prep_enrollment \n" +
-            "WHERE facility_id=?1 AND date_modified > ?2 archived =1", nativeQuery = true)
-    List<String>getPrepId(Long facilityId, LocalDateTime lastModified);
+            "WHERE facility_id=?1 AND date_modified > ?2 AND archived = false", nativeQuery = true)
+    List<String> getPrepId(Long facilityId, LocalDateTime lastModified);
 
-    @Query(value = "SELECT \n" +
-            "\tp.hospital_number AS hospitalNumber,\n" +
-            "\tpi.enrollment_type AS enrollmentType, \n" +
-            "\tpi.unique_id AS uniqueId,\n" +
-            "\tpi.date_enrolled AS dateEnrolled,\n" +
-            "\tCASE WHEN INITCAP(p.sex) = 'Female' THEN 'F' ELSE 'M' END AS sex,\n" +
-            "\templCode.code AS occupation,\n" +
-            "    mariCode.code AS maritalStatus,\n" +
-            "    eduCode.code AS educationLevel,\n" +
-            "\thts_en.setting AS hivTestingPoint,\n" +
-            "\thts_en.date_of_visit AS dateOfLastHivTest,\n" +
-            "\thts_en.finalHivTestResult AS hivTestResult,\n" +
-            "\tpi.date_referred AS dateReferred,\n" +
-            "\tpi.population_type AS populationType,\n" +
-            "\tpi.date_of_initial_adherence_counseling AS dateInitialAdherenceCounseling,\n" +
-            "\tpi.date_prep_started AS dateStarted,\n" +
-            "\tpi.prep_type_at_start AS prepTypeAtStart,\n" +
-            "\tpi.prep_regimen AS prepRegimen,\n" +
-            "\tpi.weight,\n" +
-            "\tpi.height,\n" +
-            "\t(CASE WHEN hts_en.pregnancyStatus ILIKE '%PREGANACY_STATUS_PREGNANT%' THEN true ELSE false END) AS isPregnant,\n" +
-            "\t(CASE WHEN hts_en.breastfeeding ILIKE '%PREGANACY_STATUS_BREASTFEEDING%' THEN true ELSE false END) AS isBreastfeeding,\n" +
-            "\tpi.history_of_drug_allergies AS historyOfDrugAllergies,\n" +
-            "\tpi.history_of_drug_to_drug_interaction AS historyOfDrugDrugInteractions,\n" +
-            "\tpi.urinalysis_result AS urinalysisResult,\n" +
-            "\tpi.liver_function_test_results AS liverFunctionTestResult\n" +
+    @Query(value = "SELECT\n" +
+            "    p.hospital_number                                           AS hospitalNumber,\n" +
+            "    CAST(pi.enrollment_type AS VARCHAR)                         AS enrollmentType,\n" +
+            "    CAST(pi.unique_id AS VARCHAR)                               AS uniqueId,\n" +
+            "    pi.date_enrolled                                            AS dateEnrolled,\n" +
+            "    CAST('' AS VARCHAR)                                         AS partnerAncOrUniqueArtNumber,\n" +
+            "    CASE WHEN INITCAP(p.sex) = 'Female' THEN 'F' ELSE 'M' END   AS sex,\n" +
+            "    CAST(EXTRACT(YEAR FROM AGE(NOW(), p.date_of_birth)) AS INTEGER) AS age,\n" +
+            "    mariCode.code                                               AS maritalStatus,\n" +
+            "    emplCode.code                                               AS occupation,\n" +
+            "    eduCode.code                                                AS educationLevel,\n" +
+            "    CAST(hts_en.setting AS VARCHAR)                             AS hivTestingPoint,\n" +
+            "    hts_en.date_of_visit                                        AS dateOfLastHivTest,\n" +
+            "    CAST(hts_en.finalHivTestResult AS VARCHAR)                  AS hivTestResult,\n" +
+            "    pi.date_referred                                            AS dateReferred,\n" +
+            "    CAST(pi.population_type AS VARCHAR)                         AS populationType,\n" +
+            "    CAST('' AS VARCHAR)                                         AS otherPopulationSpecify,\n" +
+            "    pi.date_of_initial_adherence_counseling                     AS dateInitialAdherenceCounseling,\n" +
+            "    pi.date_prep_started                                        AS dateStarted,\n" +
+            "    CAST(pi.prep_type_at_start AS VARCHAR)                      AS prepTypeAtStart,\n" +
+            "    CAST(pi.prep_regimen AS VARCHAR)                            AS prepRegimen,\n" +
+            "    CAST(pi.weight AS NUMERIC)                                  AS weight,\n" +
+            "    CAST(pi.height AS NUMERIC)                                  AS height,\n" +
+            "    CAST(\n" +
+            "        CASE\n" +
+            "            WHEN pi.height IS NOT NULL AND pi.height > 0\n" +
+            "            THEN pi.weight / ((pi.height/100.0) * (pi.height/100.0))\n" +
+            "            ELSE NULL\n" +
+            "        END AS NUMERIC\n" +
+            "    )                                                           AS bmi,\n" +
+            "    CAST(CASE WHEN hts_en.pregnancyStatus ILIKE '%PREGANACY_STATUS_PREGNANT%'\n" +
+            "              THEN TRUE ELSE FALSE END AS BOOLEAN)              AS isPregnant,\n" +
+            "    CAST(CASE WHEN hts_en.breastfeeding ILIKE '%PREGANACY_STATUS_BREASTFEEDING%'\n" +
+            "              THEN TRUE ELSE FALSE END AS BOOLEAN)              AS isBreastfeeding,\n" +
+            "    CAST(pi.history_of_drug_allergies AS VARCHAR)               AS historyOfDrugAllergies,\n" +
+            "    CAST(pi.history_of_drug_to_drug_interaction AS VARCHAR)     AS historyOfDrugDrugInteractions,\n" +
+            "    CAST(pi.urinalysis_result AS VARCHAR)                       AS urinalysisResult,\n" +
+            "    CAST(pi.liver_function_test_results AS VARCHAR)             AS liverFunctionTestResult,\n" +
+            "    CAST('' AS VARCHAR)                                         AS referredAtInitiation,\n" +
+            "    CAST(NULL AS DATE)                                          AS dateReferredAtInitiation,\n" +
+            "    CAST('' AS VARCHAR)                                         AS serviceReferredFor,\n" +
+            "    CAST('' AS VARCHAR)                                         AS pepCompletion\n" +
             "FROM patient_person p\n" +
             "INNER JOIN prophylaxis_initiation pi\n" +
-            "ON pi.person_uuid = p.uuid \n" +
-            "   AND pi.facility_id = ?1 \n" +
-            "   AND pi.archived = false\n" +
+            "        ON pi.person_uuid = p.uuid\n" +
+            "       AND pi.facility_id = ?1\n" +
+            "       AND pi.archived = false\n" +
             "LEFT JOIN LATERAL (\n" +
-            "    SELECT setting, date_of_visit, observation->>'finalHivTestResult' AS finalhivtestresult, \n" +
-            "\tobservation->>'pregnancyStatus' AS pregnancyStatus, observation->>'breastfeedingDuration' AS breastfeeding\n" +
-            "    FROM hts_encounter \n" +
-            "    WHERE patient_uuid = pi.person_uuid \n" +
+            "    SELECT setting,\n" +
+            "           date_of_visit,\n" +
+            "           CAST(observation->>'finalHivTestResult' AS VARCHAR)  AS finalHivTestResult,\n" +
+            "           CAST(observation->>'pregnancyStatus' AS VARCHAR)     AS pregnancyStatus,\n" +
+            "           CAST(observation->>'breastfeedingDuration' AS VARCHAR) AS breastfeeding\n" +
+            "    FROM hts_encounter\n" +
+            "    WHERE patient_uuid = pi.person_uuid\n" +
             "    ORDER BY id DESC\n" +
             "    LIMIT 1\n" +
-            ") hts_en ON true\n" +
-            "LEFT JOIN ndr_code_set emplCode \n" +
-            "    ON emplCode.code_set_nm = 'OCCUPATION_STATUS' \n" +
-            "   AND emplCode.code_description = p.employment_status->>'display'\n" +
-            "LEFT JOIN ndr_code_set mariCode \n" +
-            "    ON mariCode.code_set_nm = 'MARITAL_STATUS' \n" +
-            "   AND mariCode.code_description = p.marital_status->>'display'\n" +
-            "LEFT JOIN ndr_code_set eduCode \n" +
-            "    ON eduCode.code_set_nm = 'EDUCATIONAL_LEVEL' \n" +
-            "   AND eduCode.code_description = p.education->>'display'\n" +
-            "WHERE \n" +
-            "p.uuid = ?2\n" +
-            "LIMIT 1", nativeQuery = true)
+            ") hts_en ON TRUE\n" +
+            "LEFT JOIN ndr_code_set emplCode\n" +
+            "      ON emplCode.code_set_nm = 'OCCUPATION_STATUS'\n" +
+            "     AND emplCode.code_description = CAST(p.employment_status->>'display' AS VARCHAR)\n" +
+            "LEFT JOIN ndr_code_set mariCode\n" +
+            "      ON mariCode.code_set_nm = 'MARITAL_STATUS'\n" +
+            "     AND mariCode.code_description = CAST(p.marital_status->>'display' AS VARCHAR)\n" +
+            "LEFT JOIN ndr_code_set eduCode\n" +
+            "      ON eduCode.code_set_nm = 'EDUCATIONAL_LEVEL'\n" +
+            "     AND eduCode.code_description = CAST(p.education->>'display' AS VARCHAR)\n" +
+            "WHERE p.uuid = ?2", nativeQuery = true)
     List<PrepDTO> getCardEnrollment(Long facilityId, String patientId, LocalDateTime lastModified);
 }
+
+

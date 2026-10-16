@@ -40,6 +40,6 @@ public interface PrepPepCardEnrollmentTypeProjection {
     LocalDate getDateReferredAtInitiation();
     String    getServiceReferredFor();
     String getPepCompletion();            // "Yes" | "No"
-    List<PepFollowUpEntryType> getPepFollowUpEntries();
+//    List<PepFollowUpEntryType> getPepFollowUpEntries();
 }
 
