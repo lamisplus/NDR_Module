@@ -30,6 +30,7 @@ public class NDRController {
     private final HtsService htsService;
     private final RedactService redactService;
     private final PrEPService prEPService;
+    private final PMTCTService pmtctService;
     public static class Constants {
         public static final String FILE_GENERATION_TIME = "Total time taken to generate a file: {}";
     }
@@ -140,6 +141,32 @@ public class NDRController {
     public void generateOnePrepPatientXml(@RequestParam("patientId") String patientId, @RequestParam("facility") Long facility) {
         Stopwatch stopwatch = Stopwatch.createStarted();
         prEPService.generateOnePatientHtsNDRXml(facility, true, patientId);
+        log.info(Constants.FILE_GENERATION_TIME.replace("{}", String.valueOf(stopwatch.elapsed().toMillis())));
+    }
+
+    @GetMapping("/pmtct")
+    public ResponseEntity<Void> generatePmtct(@RequestParam List<Long> facilityIds, @RequestParam boolean isInitial) {
+        Stopwatch stopwatch = Stopwatch.createStarted();
+        facilityIds.forEach(facilityId -> pmtctService.generatePatientsPmtctNDRXml(facilityId, isInitial));
+        log.info(Constants.FILE_GENERATION_TIME.replace("{}", String.valueOf(stopwatch.elapsed().toMinutes())));
+        return ResponseEntity.ok().build();
+    }
+
+    @GetMapping("/generate/pmtct")
+    public ResponseEntity<Void> generateSelectedPatientsPmtctNDRXml(
+            @RequestParam List<Long> facilityIds,
+            @RequestParam boolean isInitial,
+            @RequestParam List<String> patientIds) {
+        Stopwatch stopwatch = Stopwatch.createStarted();
+        facilityIds.forEach(facilityId -> pmtctService.generateSelectedPatientsPmtctNDRXml(facilityId, isInitial, patientIds));
+        log.info(Constants.FILE_GENERATION_TIME.replace("{}", String.valueOf(stopwatch.elapsed().toMinutes())));
+        return ResponseEntity.ok().build();
+    }
+
+    @GetMapping("/generate_one_pmtct")
+    public void generateOnePmtctPatientXml(@RequestParam("patientId") String patientId, @RequestParam("facility") Long facility) {
+        Stopwatch stopwatch = Stopwatch.createStarted();
+        pmtctService.generateOnePatientPmtctNDRXml(facility, true, patientId);
         log.info(Constants.FILE_GENERATION_TIME.replace("{}", String.valueOf(stopwatch.elapsed().toMillis())));
     }
 
