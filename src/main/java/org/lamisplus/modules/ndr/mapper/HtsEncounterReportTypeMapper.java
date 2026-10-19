@@ -333,24 +333,23 @@ public class HtsEncounterReportTypeMapper {
         TestResultType testResult = factory.createTestResultType();
 
         // Screening test
-        String screeningResult = mapTestResult(p.getInitialHivTest());
-        if (screeningResult != null) {
+
+        if (p.getInitialHivTest() != null) {
+            String screeningResult = mapTestResult(p.getInitialHivTest());
             testResult.setScreeningTestResult(screeningResult);
+            validateAndSetDate(p.getVisitDate(), testResult::setScreeningTestResultDate, "ScreeningTestResultDate");
         }
 
         // Confirmatory test
-        String confirmatoryResult = mapTestResult(p.getConfirmatoryTestResult());
-        String finalTestResult = mapFinalTestResult(p.getFinalTestResult());
-        if (confirmatoryResult != null) {
+        if (p.getInitialHivTest() != null && p.getConfirmatoryTestResult() != null) {
+            String confirmatoryResult = mapTestResult(p.getConfirmatoryTestResult());
+            String finalTestResult = mapFinalTestResult(p.getFinalTestResult());
+
             testResult.setConfirmatoryTestResult(confirmatoryResult);
             testResult.setFinalTestResult(finalTestResult);
-        }
 
-        // Dates
-        validateAndSetDate(p.getVisitDate(), testResult::setScreeningTestResultDate, "ScreeningTestResultDate");
-        validateAndSetDate(p.getConfirmatoryTestResultDate(), testResult::setConfirmatoryTestResultDate, "ConfirmatoryTestResultDate");
-//        setDateIfPresent(p.getVisitDate(), testResult::setScreeningTestResultDate);
-//        setDateIfPresent(p.getConfirmatoryTestResultDate(), testResult::setConfirmatoryTestResultDate);
+            validateAndSetDate(p.getConfirmatoryTestResultDate(), testResult::setConfirmatoryTestResultDate, "ConfirmatoryTestResultDate");
+        }
 
         // Suspected acute infection
         if (p.getSuspectedAcuteHIVInfection() != null) {
@@ -490,7 +489,6 @@ public class HtsEncounterReportTypeMapper {
         log.warn("Unknown session type: {} {}, defaulting to Individual (1) (2)", relation, mappedValue);
         return "P";
     }
-
     private String mapRelationshipToIndexContact(String relation) {
         if (relation == null || relation.isEmpty()) {
             return "7"; // Default to Individual
@@ -636,7 +634,6 @@ public class HtsEncounterReportTypeMapper {
         log.info("confirmatory result {}", upperType);
         return upperType.equalsIgnoreCase("POSITIVE") ? "R" : "NR";
     }
-
     private String mapFinalTestResult(String result) {
         if (result == null) {
             return null;
@@ -719,7 +716,6 @@ public class HtsEncounterReportTypeMapper {
             throw new IllegalArgumentException(fieldName + " cannot be null");
         }
     }
-
     private void setDateIfPresent(LocalDate date, Consumer<javax.xml.datatype.XMLGregorianCalendar> setter) {
         if (date != null) {
             try {

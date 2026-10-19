@@ -6,10 +6,20 @@ import Tabs from "@material-ui/core/Tabs";
 import Tab from "@material-ui/core/Tab";
 import Typography from "@material-ui/core/Typography";
 import Box from "@material-ui/core/Box";
+import Paper from "@material-ui/core/Paper";
+import Breadcrumbs from "@material-ui/core/Breadcrumbs";
+import Link from "@material-ui/core/Link";
 import { MdDashboard, MdContacts } from "react-icons/md";
 import ErrorIcon from "@mui/icons-material/Error";
+import CloudDownloadIcon from "@mui/icons-material/CloudDownload";
+import SettingsIcon from "@mui/icons-material/Settings";
+import VisibilityOffIcon from "@mui/icons-material/VisibilityOff";
+import FingerprintIcon from "@mui/icons-material/Fingerprint";
+import HomeIcon from "@mui/icons-material/Home";
+import NavigateNextIcon from "@mui/icons-material/NavigateNext";
 import GenerateNdr from "./generate";
 import HTS from "./hts";
+import Prep from "./Prep";
 import DownloadNdr from "./download";
 import Biometrics from "./Biometrics";
 import ErrorPage from "./Errors";
@@ -21,16 +31,15 @@ function TabPanel(props) {
   const { children, value, index, ...other } = props;
 
   return (
-    <Typography
-      component="div"
+    <div
       role="tabpanel"
       hidden={value !== index}
       id={`scrollable-force-tabpanel-${index}`}
       aria-labelledby={`scrollable-force-tab-${index}`}
       {...other}
     >
-      {value === index && <Box p={5}>{children}</Box>}
-    </Typography>
+      {value === index && <Box p={3}>{children}</Box>}
+    </div>
   );
 }
 
@@ -48,213 +57,228 @@ function a11yProps(index) {
 }
 
 const useStyles = makeStyles((theme) => ({
-  root2: {
+  root: {
     flexGrow: 1,
     width: "100%",
-    backgroundColor: theme.palette.background.paper,
-    margin: theme.spacing(7),
-    bullet: {
-      display: "inline-block",
-      margin: "0 2px",
-      transform: "scale(0.8)",
-    },
-    title: {
-      fontSize: 12,
-    },
-    pos: {
-      fontSize: 11,
-    },
-    cardContent: {
-      padding: 2,
-    },
-    cardroot: {
-      margin: theme.spacing(1),
-      height: 250 + "px !important",
-    },
+    backgroundColor: "#f5f7fa",
+    minHeight: "100vh",
   },
-  alertmsge: {
-    marginTop: theme.spacing(2),
-  },
-  rootaccordia: {
-    width: "100%",
-  },
-  accordiaheading: {
-    fontSize: theme.typography.pxToRem(15),
-    fontWeight: theme.typography.fontWeightRegular,
-  },
-  allergiesroot: {
+  breadcrumbBar: {
+    backgroundColor: "#fff",
+    padding: theme.spacing(1.5, 3),
+    borderBottom: "1px solid #e0e0e0",
     display: "flex",
-    justifyContent: "center",
-    flexWrap: "wrap",
-    "& > *": {
-      margin: theme.spacing(0.5),
-    },
-  },
-
-  checkboxroot: {
-    display: "flex",
-  },
-  formControl: {
-    margin: theme.spacing(3),
-  },
-
-  root: {
-    "& .MuiTextField-root": {
-      margin: theme.spacing(1),
-      width: 200,
-    },
-  },
-
-  formroot: {
-    "& .MuiTextField-root": {
-      margin: theme.spacing(1),
-      width: 200,
-    },
-  },
-
-  heading: {
-    fontSize: theme.typography.pxToRem(15),
-  },
-  secondaryHeading: {
-    fontSize: theme.typography.pxToRem(15),
-    color: theme.palette.text.secondary,
-  },
-  icon: {
-    verticalAlign: "bottom",
-    height: 20,
-    width: 20,
-  },
-  details: {
     alignItems: "center",
+    justifyContent: "space-between",
   },
-  column: {
-    flexBasis: "33.33%",
+  breadcrumbTitle: {
+    fontSize: "1.25rem",
+    fontWeight: 600,
+    color: "#014d88",
+    margin: 0,
   },
-  helper: {
-    borderLeft: `2px solid ${theme.palette.divider}`,
-    padding: theme.spacing(1, 2),
-  },
-  link: {
-    color: theme.palette.primary.main,
+  breadcrumbLink: {
+    display: "flex",
+    alignItems: "center",
+    color: "#5c6bc0",
     textDecoration: "none",
+    fontSize: "0.85rem",
     "&:hover": {
       textDecoration: "underline",
+      color: "#014d88",
     },
   },
-  inforoot: {
-    width: "95%",
-    margin: 20,
-    backgroundColor: "#eee",
+  appBar: {
+    backgroundColor: "#fff",
+    boxShadow: "0 1px 4px rgba(0,0,0,0.08)",
+    borderBottom: "1px solid #e8eaf6",
+  },
+  tabs: {
+    "& .MuiTabs-indicator": {
+      backgroundColor: "#014d88",
+      height: 3,
+      borderRadius: "3px 3px 0 0",
+    },
+    "& .MuiTab-root": {
+      textTransform: "none",
+      fontWeight: 500,
+      fontSize: "0.82rem",
+      minWidth: 120,
+      color: "#5f6368",
+      transition: "all 0.2s ease",
+      padding: theme.spacing(1.5, 2),
+      "&:hover": {
+        backgroundColor: "#f0f2ff",
+        color: "#014d88",
+      },
+    },
+    "& .Mui-selected": {
+      color: "#014d88 !important",
+      fontWeight: 600,
+    },
+  },
+  tabIcon: {
+    fontSize: "1.25rem",
+    marginBottom: theme.spacing(0.5),
+  },
+  contentArea: {
+    padding: theme.spacing(2, 3),
+    backgroundColor: "#f5f7fa",
+    minHeight: "calc(100vh - 180px)",
+  },
+  tabContentWrapper: {
+    backgroundColor: "#fff",
+    borderRadius: 8,
+    boxShadow: "0 1px 3px rgba(0,0,0,0.06)",
+    overflow: "hidden",
   },
 }));
 
+const tabsConfig = [
+  { label: "Treatment XML", icon: <MdDashboard />, component: GenerateNdr },
+  { label: "HTS XML", icon: <MdContacts />, component: HTS },
+  { label: "PrEP XML", icon: <MdContacts />, component: Prep },
+  {
+    label: "Biometrics Recapture",
+    icon: <FingerprintIcon />,
+    component: Biometrics,
+  },
+  {
+    label: "Download Files",
+    icon: <CloudDownloadIcon />,
+    component: DownloadNdr,
+  },
+  { label: "NDR File Errors", icon: <ErrorIcon />, component: ErrorPage },
+  {
+    label: "NDR Configuration",
+    icon: <SettingsIcon />,
+    component: NdrConfiguration,
+  },
+  { label: "NDR Redacted", icon: <VisibilityOffIcon />, component: Redact },
+];
+
 const HomePage = (props) => {
   const classes = useStyles();
-  const [value, setValue] = useState(0);
   const urlIndex = getQueryParams("tab", props.location);
+  const initialTab =
+    urlIndex !== null && !isNaN(Number(urlIndex)) ? Number(urlIndex) : 0;
+  const [value, setValue] = useState(initialTab);
   const [errors, setErrors] = useState([]);
-  //const urlTabs = urlIndex !== null ? urlIndex : props.location ;
-  //
+
   useEffect(() => {
-    //using the value to control the tabs
-  }, [value]);
+    if (
+      urlIndex !== null &&
+      !isNaN(Number(urlIndex)) &&
+      Number(urlIndex) !== value
+    ) {
+      setValue(Number(urlIndex));
+    }
+  }, [urlIndex]);
+
   const handleChange = (event, newValue) => {
     setValue(newValue);
   };
 
   return (
     <div className={classes.root}>
-      <div
-        className="row page-titles mx-0"
-        style={{ marginTop: "0px", marginBottom: "-10px" }}
-      >
-        <ol className="breadcrumb">
-          <li className="breadcrumb-item active">
-            <h4>NDR</h4>
-          </li>
-        </ol>
+      <div className={classes.breadcrumbBar}>
+        <div>
+          <Breadcrumbs
+            separator={
+              <NavigateNextIcon fontSize="small" style={{ color: "#9e9e9e" }} />
+            }
+            aria-label="breadcrumb"
+          >
+            <Link className={classes.breadcrumbLink} href="/">
+              <HomeIcon style={{ fontSize: 16, marginRight: 4 }} />
+              Home
+            </Link>
+            <Typography style={{ fontSize: "0.85rem", color: "#757575" }}>
+              NDR
+            </Typography>
+          </Breadcrumbs>
+          <h4 className={classes.breadcrumbTitle}>
+            LAMISPlus NDR Data Exchange Management
+          </h4>
+        </div>
+        <Typography variant="caption" style={{ color: "#9e9e9e" }}>
+          National Data Repository
+        </Typography>
       </div>
-      <br />
 
-      <AppBar position="static" style={{ backgroundColor: "#fff" }}>
+      {/* Tabs */}
+      <AppBar position="static" className={classes.appBar} elevation={0}>
         <Tabs
           value={value}
           onChange={handleChange}
           variant="scrollable"
-          scrollButtons="on"
-          indicatorColor="secondary"
+          scrollButtons="auto"
+          indicatorColor="primary"
           textColor="primary"
-          aria-label="scrollable force tabs example"
+          aria-label="NDR navigation tabs"
+          className={classes.tabs}
         >
-          <Tab
-            className={classes.title}
-            label="Treatment XML"
-            icon={<MdDashboard />}
-            {...a11yProps(0)}
-          />
-
-          <Tab
-            className={classes.title}
-            label="HTS XML"
-            icon={<MdContacts />}
-            {...a11yProps(1)}
-          />
-
-          <Tab
-            className={classes.title}
-            label="Biometrics Recapture XML"
-            icon={<MdContacts />}
-            {...a11yProps(2)}
-          />
-          <Tab
-            className={classes.title}
-            label="Download Files"
-            icon={<MdContacts />}
-            {...a11yProps(3)}
-          />
-          <Tab
-            className={classes.title}
-            label="NDR File Errors"
-            icon={<ErrorIcon />}
-            {...a11yProps(4)}
-          />
-          <Tab
-            className={classes.title}
-            label="NDR COnfiguration"
-            icon={<MdContacts />}
-            {...a11yProps(5)}
-          />
-          <Tab
-            className={classes.title}
-            label="NDR Redacted"
-            icon={<MdContacts />}
-            {...a11yProps(6)}
-          />
+          {tabsConfig.map((tab, index) => (
+            <Tab
+              key={index}
+              label={tab.label}
+              icon={tab.icon}
+              {...a11yProps(index)}
+            />
+          ))}
         </Tabs>
-        <div></div>
       </AppBar>
 
-      <TabPanel value={value} setValue={setValue} index={0}>
-        <GenerateNdr value={value} setValue={setValue} />
-      </TabPanel>
-      <TabPanel value={value} setValue={setValue} index={1}>
-        <HTS value={value} setValue={setValue} />
-      </TabPanel>
-      <TabPanel value={value} setValue={setValue} index={2}>
-        <Biometrics value={value} setValue={setValue} />
-      </TabPanel>
-      <TabPanel value={value} setValue={setValue} index={3}>
-        <DownloadNdr value={value} setValue={setValue} setErrors={setErrors} />
-      </TabPanel>
-      <TabPanel value={value} setValue={setValue} index={4}>
-        <ErrorPage value={value} setValue={setValue} errors={errors} />
-      </TabPanel>
-      <TabPanel value={value} setValue={setValue} index={5}>
-        <NdrConfiguration value={value} setValue={setValue} />
-      </TabPanel>
-      <TabPanel value={value} setValue={setValue} index={6}>
-        <Redact value={value} setValue={setValue} />
-      </TabPanel>
+      {/* Content */}
+      <div className={classes.contentArea}>
+        <Paper className={classes.tabContentWrapper} elevation={0}>
+          {tabsConfig.map((tab, index) => {
+            const Component = tab.component;
+            if (index === 4) {
+              return (
+                <TabPanel
+                  key={index}
+                  value={value}
+                  setValue={setValue}
+                  index={index}
+                >
+                  <Component
+                    value={value}
+                    setValue={setValue}
+                    setErrors={setErrors}
+                  />
+                </TabPanel>
+              );
+            }
+            if (index === 5) {
+              return (
+                <TabPanel
+                  key={index}
+                  value={value}
+                  setValue={setValue}
+                  index={index}
+                >
+                  <Component
+                    value={value}
+                    setValue={setValue}
+                    errors={errors}
+                  />
+                </TabPanel>
+              );
+            }
+            return (
+              <TabPanel
+                key={index}
+                value={value}
+                setValue={setValue}
+                index={index}
+              >
+                <Component value={value} setValue={setValue} />
+              </TabPanel>
+            );
+          })}
+        </Paper>
+      </div>
     </div>
   );
 };

@@ -9,5 +9,4 @@ public interface PrepDTO extends
         PepFollowUpVisitProjection,
         PrepDiscontinuationProjection
 {
-    String getClientCode();
 }

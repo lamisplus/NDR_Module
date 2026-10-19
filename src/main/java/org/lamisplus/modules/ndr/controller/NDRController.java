@@ -29,7 +29,7 @@ public class NDRController {
     private final SimpMessageSendingOperations messagingTemplate;
     private final HtsService htsService;
     private final RedactService redactService;
-//    private final PrEPService prEPService;
+    private final PrEPService prEPService;
     public static class Constants {
         public static final String FILE_GENERATION_TIME = "Total time taken to generate a file: {}";
     }
@@ -117,21 +117,31 @@ public class NDRController {
         log.info(Constants.FILE_GENERATION_TIME.replace("{}", String.valueOf(stopwatch.elapsed().toMillis())));
     }
 
-//    @GetMapping("/prep")
-//    public ResponseEntity<Void> generatePrep(@RequestParam List<Long> facilityIds, @RequestParam boolean isInitial) {
-//        Stopwatch stopwatch = Stopwatch.createStarted();
-//        facilityIds.forEach(facilityId -> prEPService.generatePatientsPrepNDRXml(facilityId, isInitial));
-//        log.info(Constants.FILE_GENERATION_TIME.replace("{}", String.valueOf(stopwatch.elapsed().toMinutes())));
-//        return ResponseEntity.ok().build();
-//    }
+    @GetMapping("/prep")
+    public ResponseEntity<Void> generatePrep(@RequestParam List<Long> facilityIds, @RequestParam boolean isInitial) {
+        Stopwatch stopwatch = Stopwatch.createStarted();
+        facilityIds.forEach(facilityId -> prEPService.generatePatientsPrepNDRXml(facilityId, isInitial));
+        log.info(Constants.FILE_GENERATION_TIME.replace("{}", String.valueOf(stopwatch.elapsed().toMinutes())));
+        return ResponseEntity.ok().build();
+    }
+    @GetMapping("/generate/prep")
+    public ResponseEntity<Void> generateSelectedPatientsPrepNDRXml(
+            @RequestParam List<Long> facilityIds,
+            @RequestParam boolean isInitial,
+            @RequestParam List<String> patientIds){
+        Stopwatch stopwatch = Stopwatch.createStarted();
+        facilityIds.forEach(facilityId -> prEPService.generateSelectedPatientsPrepNDRXml(facilityId, isInitial, patientIds));
+        log.info(Constants.FILE_GENERATION_TIME.replace("{}", String.valueOf(stopwatch.elapsed().toMinutes())));
+        return ResponseEntity.ok().build();
+    }
 
     //testing single prep file
-//    @GetMapping("/generate_one_prep")
-//    public void generateOnePrepPatientXml(@RequestParam("clientCode") String clientCode, @RequestParam("facility") Long facility) {
-//        Stopwatch stopwatch = Stopwatch.createStarted();
-//        prEPService.generateOnePatientHtsNDRXml(facility, true, clientCode);
-//        log.info(Constants.FILE_GENERATION_TIME.replace("{}", String.valueOf(stopwatch.elapsed().toMillis())));
-//    }
+    @GetMapping("/generate_one_prep")
+    public void generateOnePrepPatientXml(@RequestParam("patientId") String patientId, @RequestParam("facility") Long facility) {
+        Stopwatch stopwatch = Stopwatch.createStarted();
+        prEPService.generateOnePatientHtsNDRXml(facility, true, patientId);
+        log.info(Constants.FILE_GENERATION_TIME.replace("{}", String.valueOf(stopwatch.elapsed().toMillis())));
+    }
 
     @GetMapping("/download/{file}")
     public void downloadFile(@PathVariable String file, HttpServletResponse response) throws IOException {
