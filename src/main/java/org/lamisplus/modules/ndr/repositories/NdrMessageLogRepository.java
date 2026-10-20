@@ -996,7 +996,7 @@ public interface NdrMessageLogRepository extends JpaRepository<NdrMessageLog, In
           "    CAST(hts_en.uuid AS VARCHAR) AS visitId,\n" +
           "    hts_en.date_of_visit AS visitDate,\n" +
           "    hts_en.setting,\n" +
-          "    EXTRACT( YEAR FROM AGE(pp.date_of_birth)) AS age,\n" +
+          "    EXTRACT( YEAR FROM AGE(pp.date_of_birth)) AS clientAge,\n" +
           "    pp.sex AS sex,\n" +
           "    pp.marital_status->>'display' maritalStatus,\n" +
           "    hts_en.observation->>'numberOfWives' noOfAllWives,\n" +

@@ -198,7 +198,7 @@ const HomePage = (props) => {
             </Typography>
           </Breadcrumbs>
           <h4 className={classes.breadcrumbTitle}>
-            LAMISPlus NDR Data Exchange Management
+            NDR Data Exchange Management
           </h4>
         </div>
         <Typography variant="caption" style={{ color: "#9e9e9e" }}>
