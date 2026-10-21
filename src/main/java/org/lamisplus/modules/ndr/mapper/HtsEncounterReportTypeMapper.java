@@ -641,7 +641,6 @@ public class HtsEncounterReportTypeMapper {
     }
     private String mapTestResult(String result) {
         String upperType = result.toUpperCase();
-        log.info("confirmatory result {}", upperType);
         if (upperType.contains("STI_HIV_RESULT_")) {
             upperType = upperType.replace("STI_HIV_RESULT_", "").trim();
             return upperType.equalsIgnoreCase("POSITIVE") ? "R" : "NR";
@@ -750,7 +749,6 @@ public class HtsEncounterReportTypeMapper {
         if (value == null) {
             return "No";
         }
-        log.info("value: {}", value);
         String upperValue = "";
 
         if (value.contains("false") || value.contains("true")) {

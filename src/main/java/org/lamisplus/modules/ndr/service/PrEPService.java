@@ -154,6 +154,7 @@ public class PrEPService {
         log.info("fileSize {} bytes ", ZipUtility.getFolderSize(folder));
 
         if (generatedCount.get() > 0 && fallbackDemographic[0] != null) {
+            log.info("storing and zipping... ");
             ndrOptimizationService.zipAndSaveTheFilesforDownload(
                     facilityId,
                     pathname,
@@ -199,7 +200,7 @@ public class PrEPService {
             try {
                 if (getPatientPrepNDRXml(id, facilityId, initial, objectFactory, ndrErrors)) {
                     generatedCount.getAndIncrement();
-                    Optional<PatientDemographicDTO> demo = data.getHtsPatientDemographics(facilityId, id, finalStart);
+                    Optional<PatientDemographicDTO> demo = ndrQueryRepository.getPrepPatientDemographics(id, facilityId, finalStart);
                     demo.ifPresent(d -> fallbackDemographic[0] = d);
                 } else {
                     errorCount.getAndIncrement();

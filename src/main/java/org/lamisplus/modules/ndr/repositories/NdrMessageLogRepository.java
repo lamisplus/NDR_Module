@@ -1051,7 +1051,7 @@ public interface NdrMessageLogRepository extends JpaRepository<NdrMessageLog, In
           "      hts_en.observation->>'hadSexWithHivPositivePartnerInRiskGroup' hadSexWithHivPositivePartnerInRiskGroup,\n" +
           "    CAST(CASE WHEN UPPER(hts_en.observation->>'currentCough') = 'YES_NO_YES' THEN true\n" +
           "    WHEN UPPER(hts_en.observation->>'currentCough') = 'YES_NO_NO' THEN false\n" +
-          "    ELSE NULL END AS boolean) AS currentCough,\n" +
+          "    ELSE NULL END AS boolean) AS currentlyCough,\n" +
           "    CAST(CASE WHEN UPPER(hts_en.observation->>'weightLoss') = 'YES_NO_YES' THEN true\n" +
           "    WHEN UPPER(hts_en.observation->>'weightLoss') = 'YES_NO_NO' THEN false\n" +
           "    ELSE NULL END AS boolean) AS weightLoss,\n" +
