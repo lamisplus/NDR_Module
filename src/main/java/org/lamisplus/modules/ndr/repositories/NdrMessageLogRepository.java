@@ -1080,7 +1080,7 @@ public interface NdrMessageLogRepository extends JpaRepository<NdrMessageLog, In
           "    CAST(hts_en.uuid AS VARCHAR) AS visitId,\n" +
           "    hts_en.date_of_visit AS visitDate,\n" +
           "    hts_en.setting,\n" +
-          "    EXTRACT( YEAR FROM AGE(pp.date_of_birth)) AS age,\n" +
+          "    EXTRACT( YEAR FROM AGE(pp.date_of_birth)) AS clientAge,\n" +
           "    pp.sex AS sex,\n" +
           "    pp.marital_status->>'display' maritalStatus,\n" +
           "    hts_en.observation->>'numberOfWives' noOfAllWives,\n" +
@@ -1135,7 +1135,7 @@ public interface NdrMessageLogRepository extends JpaRepository<NdrMessageLog, In
           "      hts_en.observation->>'hadSexWithHivPositivePartnerInRiskGroup' hadSexWithHivPositivePartnerInRiskGroup,\n" +
           "    CAST(CASE WHEN UPPER(hts_en.observation->>'currentCough') = 'YES_NO_YES' THEN true\n" +
           "    WHEN UPPER(hts_en.observation->>'currentCough') = 'YES_NO_NO' THEN false\n" +
-          "    ELSE NULL END AS boolean) AS currentCough,\n" +
+          "    ELSE NULL END AS boolean) AS currentlyCough,\n" +
           "    CAST(CASE WHEN UPPER(hts_en.observation->>'weightLoss') = 'YES_NO_YES' THEN true\n" +
           "    WHEN UPPER(hts_en.observation->>'weightLoss') = 'YES_NO_NO' THEN false\n" +
           "    ELSE NULL END AS boolean) AS weightLoss,\n" +

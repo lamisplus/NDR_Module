@@ -121,8 +121,9 @@ public class HtsService {
 			}
 		}
 		if (patientDemographic == null) return false;
+
 		List<HtsReportDto> patientHtsDetails = getPatientHtsDetails(facilityId, clientCode, start);
-		//List<PartnerNotificationTypeDto> partners = getPartnerNotifications(facilityId, clientCode);
+
 		String fileName = generatePatientHtsNDRXml(
 				facilityId,
 				obj,
@@ -292,14 +293,28 @@ public class HtsService {
 			long id = messageId.incrementAndGet();
 			Container container = new Container();
 			JAXBContext jaxbContext = JAXBContext.newInstance(Container.class);
+
 			PatientDemographicsType patientDemographics =
 					patientDemographicsMapper.getPatientDemographics(patientDemographic, "HTS");
+
 			if (patientDemographics != null) {
 				log.info("fetching treatment details... ");
 				IndividualReportType individualReportType = new IndividualReportType();
+
 				ConditionType conditionType =
 						conditionTypeMapper.getConditionType(patientDemographic, true);
+
 				individualReportType.setPatientDemographics(patientDemographics);
+
+				if (conditionType != null) {
+					if(htsEncounterReportTypeMapper.getHivTestingReportType(individualReportType,objectFactory,htsReports, ndrErrors)){
+						individualReportType.getCondition().add(conditionType);
+					}
+					if(individualReportType.getHIVTestingReport().isEmpty()){
+						return null;
+					}
+				}
+
 				MessageHeaderType messageHeader = messageHeaderTypeMapper.getMessageHeader(patientDemographic);
 				String messageStatusCode = "INITIAL";
 
@@ -309,9 +324,8 @@ public class HtsService {
 					if (firstByIdentifier.isPresent()) {
 						messageStatusCode = "UPDATED";
 					}
-				}else {
-
 				}
+
 				messageHeader.setMessageStatusCode(messageStatusCode);
 				messageHeader.setMessageUniqueID(Long.toString(id));
 				container.setMessageHeader(messageHeader);
@@ -324,19 +338,7 @@ public class HtsService {
 				SchemaFactory sf = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI);
 				Schema schema = sf.newSchema(getClass().getClassLoader().getResource("NDR_XSD 1.7.2.0.xsd"));
 				jaxbMarshaller.setSchema(schema);
-				if (conditionType != null) {
-//					if(htsTypeMapper.getHivTestingReportType(individualReportType,objectFactory,htsReports, ndrErrors)){
-//						individualReportType.getCondition().add(conditionType);
-//					}
-					if(htsEncounterReportTypeMapper.getHivTestingReportType(individualReportType,objectFactory,htsReports, ndrErrors)){
-						individualReportType.getCondition().add(conditionType);
-					}
-					if(individualReportType.getHIVTestingReport().isEmpty()){
-						return null;
-						//throw new IllegalArgumentException("No HTS test was found for patient with client code "+ patientDemographic.getClientCode());
 
-					}
-				}
 				log.info("converting treatment details to xml... ");
 				String fileName = ndrService.processAndGenerateNDRFile(facilityId, jaxbMarshaller, container, patientDemographic, id, ndrErrors);
 				if (fileName != null) {
@@ -354,6 +356,4 @@ public class HtsService {
 		}
 		return null;
 	}
-
-
 }
