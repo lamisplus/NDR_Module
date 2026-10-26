@@ -186,7 +186,7 @@ const Biometrics = (props) => {
         setModal(false);
         setProcessing(false);
         setChecked([]);
-        props.setValue(4);
+        props.setValue(5);
       }, 3000);
     } catch (error) {
       setModal(false);

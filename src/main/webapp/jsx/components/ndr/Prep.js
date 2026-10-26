@@ -243,7 +243,7 @@ export default function Prep(props) {
         setModal(false);
         setProcessing(false);
         setSelectPatients([]);
-        props.setValue(4);
+        props.setValue(5);
       }, 3000);
     } catch (error) {
       setModal(false);
@@ -381,7 +381,11 @@ export default function Prep(props) {
               title="Eligible Patients"
               columns={[
                 { title: "Patient Id", field: "personId", filtering: false },
-                { title: "Patient Uuid", field: "personUuid", filtering: false },
+                {
+                  title: "Patient Uuid",
+                  field: "personUuid",
+                  filtering: false,
+                },
                 {
                   title: "Hospital No",
                   field: "hospitalNumber",
