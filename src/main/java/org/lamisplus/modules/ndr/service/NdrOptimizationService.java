@@ -60,10 +60,11 @@ public class NdrOptimizationService {
 	private final PatientDemographicsMapper patientDemographicsMapper;
 	private final ConditionTypeMapper conditionTypeMapper;
 	private final MortalityTypeMapper mortalityTypeMapper;
-
 	private final NdrXmlStatusRepository ndrXmlStatusRepository;
 
 	public static final String BASE_DIR = "runtime/ndr/transfer/";
+
+	public static final String USER_DIR = "user.dir";
 
 	public static final String JAXB_ENCODING = "UTF-8";
 	public static final String XML_WAS_GENERATED_FROM_LAMISPLUS_APPLICATION = "\n<!-- This XML was generated from LAMISPlus application -->";
@@ -72,8 +73,8 @@ public class NdrOptimizationService {
 
 	private static final String TEMP = "temp/";
 	public void generatePatientsNDRXml(long facilityId, boolean initial){
-
-		List<String> patientIds;
+		ndrXmlStatusRepository.deleteNdrXmlStatusByErrorIsNotNull();
+		List<String> patientIds = new ArrayList<String>();
 		LocalDateTime start = LocalDateTime.of(1984, 1, 1, 0, 0);
 		if (initial) {
 			patientIds = data.getPatientIdsEligibleForNDR(start, LocalDateTime.now(), facilityId);
@@ -93,6 +94,9 @@ public class NdrOptimizationService {
 				generatePatientsNDRXml_ByLastRecord(facilityId, false, unModifiedPatients);
 				generatePatientsNDRXml(facilityId, false, patientIds,unModifiedPatients.size());
 			}
+			//call a functioin to generate thr last updated records of the other patients
+			//List<String> unModifiedPatients = fetchUnModifiedPatients(patientIds, start, LocalDateTime.now(), facilityId);
+			//generatePatientsNDRXml_ByLastRecord(facilityId, false, unModifiedPatients);
 		}
 	}
 
@@ -111,14 +115,16 @@ public class NdrOptimizationService {
 	}
 
 	public void generatePatientsNDRXmlByDateRange(long facilityId, List<String> patientIds, LocalDateTime startDate, LocalDateTime endDate) {
-		final String pathname = BASE_DIR + TEMP + facilityId + "/";
-		//log.info("folder -> "+ pathname);
+		final String pathname = BASE_DIR + "temp/" + facilityId + "/";
+		log.info("folder -> "+ pathname);
 		ndrService.cleanupFacility(facilityId, pathname);
 		AtomicInteger generatedCount = new AtomicInteger();
 		AtomicInteger errorCount = new AtomicInteger();
-		List<NDRErrorDTO> ndrErrors = new ArrayList<>();
+		List<NDRErrorDTO> ndrErrors = new ArrayList<NDRErrorDTO>();
 
 		PatientDemographicDTO[] patientDemographicDTO = new PatientDemographicDTO[1];
+
+		log.info("patient size -> "+ patientIds.size());
 
 		String pushIdentifier = UUID.randomUUID().toString();
 
@@ -133,10 +139,10 @@ public class NdrOptimizationService {
 				});
 		log.info("generated  {}/{}", generatedCount.get(), patientIds.size());
 		log.info("files not generated  {}/{}", errorCount.get(), patientIds.size());
-		File folder = new File(BASE_DIR + TEMP + facilityId + "/");
+		File folder = new File(BASE_DIR + "temp/" + facilityId + "/");
 		log.info("fileSize {} bytes ", ZipUtility.getFolderSize(folder));
 		if (ZipUtility.getFolderSize(folder) >= 15_000_000) {
-			log.info(BASE_DIR + TEMP + facilityId + "/" + " will be split into two");
+			log.info(BASE_DIR + "temp/" + facilityId + "/" + " will be split into two");
 		}
 
 		if (generatedCount.get() > 0 && ZipUtility.getFolderSize(folder) > 0) {
@@ -154,15 +160,17 @@ public class NdrOptimizationService {
 
 
 	public void generatePatientsNDRXml(long facilityId, boolean initial, List<String> patientIds, long unModfiedCounts) {
-		final String pathname = BASE_DIR + TEMP + facilityId + "/";
-		//log.info("folder -> "+ pathname);
+		final String pathname = BASE_DIR + "temp/" + facilityId + "/";
+		log.info("folder -> "+ pathname);
 		ndrService.cleanupFacility(facilityId, pathname);
 		AtomicInteger generatedCount = new AtomicInteger();
 		generatedCount.set((int) unModfiedCounts);
 		AtomicInteger errorCount = new AtomicInteger();
-		List<NDRErrorDTO> ndrErrors = new ArrayList<>();
+		List<NDRErrorDTO> ndrErrors = new ArrayList<NDRErrorDTO>();
 
 		PatientDemographicDTO[] patientDemographicDTO = new PatientDemographicDTO[1];
+
+		log.info("patient size -> "+ patientIds.size());
 
 		String pushIdentifier = UUID.randomUUID().toString();
 
@@ -177,10 +185,10 @@ public class NdrOptimizationService {
 				});
 		log.info("generated  {}/{}", generatedCount.get(), patientIds.size());
 		log.info("files not generated  {}/{}", errorCount.get(), patientIds.size());
-		File folder = new File(BASE_DIR + TEMP + facilityId + "/");
+		File folder = new File(BASE_DIR + "temp/" + facilityId + "/");
 		log.info("fileSize {} bytes ", ZipUtility.getFolderSize(folder));
 		if (ZipUtility.getFolderSize(folder) >= 15_000_000) {
-			log.info(BASE_DIR + TEMP + facilityId + "/" + " will be split into two");
+			log.info(BASE_DIR + "temp/" + facilityId + "/" + " will be split into two");
 		}
 
 		if (generatedCount.get() > 0 && ZipUtility.getFolderSize(folder) > 0) {
@@ -197,14 +205,16 @@ public class NdrOptimizationService {
 	}
 
 	public void generatePatientsNDRXml_ByLastRecord(long facilityId, boolean initial, List<String> patientIds) {
-		final String pathname = BASE_DIR + TEMP + facilityId + "/";
-		//log.info("folder -> "+ pathname);
+		final String pathname = BASE_DIR + "temp/" + facilityId + "/";
+		log.info("folder -> "+ pathname);
 		ndrService.cleanupFacility(facilityId, pathname);
 		AtomicInteger generatedCount = new AtomicInteger();
 		AtomicInteger errorCount = new AtomicInteger();
-		List<NDRErrorDTO> ndrErrors = new ArrayList<>();
+		List<NDRErrorDTO> ndrErrors = new ArrayList<NDRErrorDTO>();
 
 		PatientDemographicDTO[] patientDemographicDTO = new PatientDemographicDTO[1];
+
+		log.info("patient size -> "+ patientIds.size());
 
 		String pushIdentifier = UUID.randomUUID().toString();
 
@@ -217,6 +227,25 @@ public class NdrOptimizationService {
 						errorCount.getAndIncrement();
 					}
 				});
+//		log.info("generated  {}/{}", generatedCount.get(), patientIds.size());
+//		log.info("files not generated  {}/{}", errorCount.get(), patientIds.size());
+//		File folder = new File(BASE_DIR + "temp/" + facilityId + "/");
+//		log.info("fileSize {} bytes ", ZipUtility.getFolderSize(folder));
+//		if (ZipUtility.getFolderSize(folder) >= 15_000_000) {
+//			log.info(BASE_DIR + "temp/" + facilityId + "/" + " will be split into two");
+//		}
+//
+//		if (generatedCount.get() > 0 && ZipUtility.getFolderSize(folder) > 0) {
+//			zipAndSaveTheFilesforDownload(
+//					facilityId,
+//					pathname,
+//					generatedCount,
+//					patientDemographicDTO[0],
+//					ndrErrors,
+//					"treatment", pushIdentifier
+//			);
+//		}
+//		log.error("error list size {}", ndrErrors.size());
 	}
 
 	public void generateNDRXMLByFacilityAndListOfPatient(Long facilityId, boolean initial, List<String> patientUuidList) {
@@ -227,8 +256,9 @@ public class NdrOptimizationService {
 		ndrService.cleanupFacility(facilityId, pathname);
 		AtomicInteger generatedCount = new AtomicInteger();
 		AtomicInteger errorCount = new AtomicInteger();
-		List<NDRErrorDTO> ndrErrors = new ArrayList<>();
+		List<NDRErrorDTO> ndrErrors = new ArrayList<NDRErrorDTO>();
 		PatientDemographicDTO[] patientDemographicDTO = new PatientDemographicDTO[1];
+		log.info("patient size -> "+ patientUuidList.size());
 
 		String pushIdentifier = UUID.randomUUID().toString();
 
@@ -245,10 +275,10 @@ public class NdrOptimizationService {
 		log.info("generated  {}/{}", generatedCount.get(), patientUuidList.size());
 		log.info("files not generated  {}/{}", errorCount.get(), patientUuidList.size());
 		log.info("patientIds of files not generated: {}", idsNotGenerated);
-		File folder = new File(BASE_DIR + TEMP + facilityId + "/");
+		File folder = new File(BASE_DIR + "temp/" + facilityId + "/");
 		log.info("fileSize {} bytes ", ZipUtility.getFolderSize(folder));
 		if (ZipUtility.getFolderSize(folder) >= 15_000_000) {
-			log.info(BASE_DIR + TEMP + facilityId + "/" + " will be split into two");
+			log.info(BASE_DIR + "temp/" + facilityId + "/" + " will be split into two");
 		}
 		if (generatedCount.get() > 0) {
 			zipAndSaveTheFilesforDownload(
@@ -266,11 +296,14 @@ public class NdrOptimizationService {
 	private boolean getPatientNDRXml(String patientId, long facilityId, boolean initial,
 									 List<NDRErrorDTO> ndrErrors,
 									 String pushIdentifier) {
+		log.info("Got here for deleting*********");
+		ndrXmlStatusRepository.deleteNdrXmlStatusByErrorIsNotNull();
 		PatientDemographicDTO patientDemographic =
 				getPatientDemographic(patientId, facilityId, ndrErrors);
 		if (patientDemographic == null)
 			return false;
 		ObjectMapper objectMapper = new ObjectMapper();
+		log.info("starting process patient xml file information");
 		log.info("facilityId {}, patientId {}", facilityId, patientId);
 		LocalDate start = LocalDate.of(1985, Month.JANUARY, 1);
 		LocalDate end = LocalDate.now().plusDays(1);
@@ -366,6 +399,7 @@ public class NdrOptimizationService {
 			return false;
 
 		ObjectMapper objectMapper = new ObjectMapper();
+		log.info("starting process patient xml file information");
 		log.info("facilityId {}, patientId {}", facilityId, patientId);
 		log.info("start {}, end {}", startDate, endDate);
 
@@ -448,6 +482,7 @@ public class NdrOptimizationService {
 												List<NDRErrorDTO> ndrErrors,
 												String pushIdentifier) {
 		ObjectMapper objectMapper = new ObjectMapper();
+		log.info("starting process patient xml file information");
 		log.info("facilityId {}, patientId {}", facilityId, patientId);
 		LocalDate start = LocalDate.of(1985, Month.JANUARY, 1);
 		LocalDate end = LocalDate.now().plusDays(1);
@@ -456,7 +491,16 @@ public class NdrOptimizationService {
 		PatientDemographicDTO patientDemographic =
 				getPatientDemographic(patientId, facilityId, ndrErrors);
 
+		//og.info("patient demographic.... {}",patientDemographic);
 		log.info("initial patient demographic.... {}{}",initial, patientDemographic);
+
+		/*if (!initial && patientDemographic != null) {
+			Optional<NdrMessageLog> messageLog =
+					data.findFirstByIdentifierAndFileType(patientDemographic.getPatientIdentifier(), "treatment");
+			if (messageLog.isPresent()) {
+				start = messageLog.get().getLastUpdated().toLocalDate();
+			}
+		}*/
 
 		List<EncounterDTO> patientEncounters = getPatientEncounters_lastRecord(patientId, facilityId, objectMapper, ndrErrors);
 
@@ -541,7 +585,7 @@ public class NdrOptimizationService {
 				SchemaFactory sf = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI);
 				Schema schema = sf.newSchema(getClass().getClassLoader().getResource("NDR_XSD 1.7.2.0.xsd"));
 				jaxbMarshaller.setSchema(schema);
-
+				String identifier = patientDemographics.getPatientIdentifier();
 
 				log.info("converting treatment details to xml... ");
 				String fileName = ndrService.processAndGenerateNDRFile(facilityId, jaxbMarshaller, container, patientDemographic, id, ndrErrors);
@@ -555,7 +599,9 @@ public class NdrOptimizationService {
 				return fileName;
 			}
 		} catch (Exception e) {
-			log.error("error: " + e);
+//			log.error("An error occur when generating person with hospital number {}",
+//					patientDemographic.getHospitalNumber());
+			log.error("error: " + e.toString());
 			e.printStackTrace();
 			ndrErrors.add(new NDRErrorDTO(patientDemographic.getPersonUuid(),
 					patientDemographic.getHospitalNumber(), e.toString()));
@@ -804,6 +850,9 @@ public class NdrOptimizationService {
 		return null;
 	}
 
+
+
+
 	public void zipFiles(PatientDemographicDTO demographic,
 						 long facilityId,
 						 String sourceFolder,
@@ -826,7 +875,7 @@ public class NdrOptimizationService {
 			List<File> files = new ArrayList<>();
 			files = ndrService.getFiles(sourceFolder, files);
 			long thirtyMB = (FileUtils.ONE_MB * 15)*2;
-			File folder = new File(BASE_DIR + TEMP + facilityId + "/");
+			File folder = new File(BASE_DIR + "temp/" + facilityId + "/");
 			if (ZipUtility.getFolderSize(folder) > thirtyMB) {
 				List<List<File>> splitFiles = split(files, thirtyMB);
 				for (int i = 0; i < splitFiles.size(); i++) {
@@ -878,6 +927,8 @@ public class NdrOptimizationService {
 					}
 				}
 			}
+		} catch (FileNotFoundException e) {
+			throw new RuntimeException(e);
 		} catch (IOException e) {
 			throw new RuntimeException(e);
 		}
