@@ -300,18 +300,58 @@ class PMTCTEndpointAndUiTest {
         File indexHtml = new File("src/main/resources/views/static/ndr/index.html");
         assertTrue(indexHtml.exists());
         String html = new String(Files.readAllBytes(indexHtml.toPath()), StandardCharsets.UTF_8);
-        assertTrue(html.contains("./static/js/2.5e7e1301.chunk.js"));
-        assertTrue(html.contains("./static/js/main.616e913c.chunk.js"));
 
-        File vendorChunk = new File("src/main/resources/views/static/ndr/static/js/2.5e7e1301.chunk.js");
-        File mainChunk = new File("src/main/resources/views/static/ndr/static/js/main.616e913c.chunk.js");
-        assertTrue(vendorChunk.exists(), "Referenced vendor chunk must exist");
-        assertTrue(mainChunk.exists(), "Referenced main chunk must exist");
+        java.util.regex.Matcher matcher = java.util.regex.Pattern
+                .compile("src=\"\\./(static/js/[^\"]+\\.chunk\\.js)\"")
+                .matcher(html);
+        File mainChunk = null;
+        int chunkCount = 0;
+        while (matcher.find()) {
+            chunkCount++;
+            String relPath = matcher.group(1);
+            File chunkFile = new File("src/main/resources/views/static/ndr/" + relPath);
+            assertTrue(chunkFile.exists(), "Referenced chunk must exist: " + relPath);
+            if (relPath.contains("main.")) {
+                mainChunk = chunkFile;
+            }
+        }
+        assertTrue(chunkCount >= 2, "index.html must reference vendor and main chunks");
+        assertNotNull(mainChunk, "index.html must reference a main.*.chunk.js file");
 
         String mainJs = new String(Files.readAllBytes(mainChunk.toPath()), StandardCharsets.UTF_8);
         assertTrue(mainJs.contains("PMTCT XML"));
         assertTrue(mainJs.contains("ndr/generate/pmtct?"));
         assertTrue(mainJs.contains("ndr/pmtct?"));
         assertTrue(mainJs.contains("ndr/pmtct/patients?"));
+    }
+
+    @Test
+    void shouldHaveTypeSafeCoalesceInPmtctNativeQueries() throws Exception {
+        String[] pmtctMethods = {
+                "getPmtctPatientIds",
+                "getPmtctPatientDemographics",
+                "getPmtctRegisterByPatient",
+                "getMotherInfantPairVisitsByPatient",
+                "getDeliveryChildrenDetailsByPatient",
+                "getInfantCohortRegistrationsByPatient",
+                "getPmtctEligiblePatients",
+                "countPmtctEligiblePatients"
+        };
+        for (java.lang.reflect.Method method : NDRQueryRepository.class.getDeclaredMethods()) {
+            if (Arrays.asList(pmtctMethods).contains(method.getName())) {
+                org.springframework.data.jpa.repository.Query query =
+                        method.getAnnotation(org.springframework.data.jpa.repository.Query.class);
+                assertNotNull(query, "Missing @Query on " + method.getName());
+                String sql = query.value();
+                assertFalse(
+                        sql.contains("archived, false)") || sql.contains("archived, 0)"),
+                        "Query " + method.getName() + " must not mix boolean/integer with archived in COALESCE"
+                );
+                assertFalse(
+                        sql.contains("COALESCE(mv.ga_of_viral_load, mv.ga_weeks, 0)"),
+                        "Query " + method.getName() + " must cast ga_of_viral_load and ga_weeks before COALESCE"
+                );
+            }
+        }
     }
 }
