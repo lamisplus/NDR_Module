@@ -2,12 +2,15 @@ package org.lamisplus.modules.ndr.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.lamisplus.modules.base.domain.entities.User;
+import org.lamisplus.modules.base.service.UserService;
 import org.lamisplus.modules.ndr.domain.dto.NDRErrorDTO;
 import org.lamisplus.modules.ndr.domain.dto.PatientDemographicDTO;
 import org.lamisplus.modules.ndr.domain.dto.PmtctDTO;
 import org.lamisplus.modules.ndr.domain.dto.pmtct.DeliveryChildrenDetailsProjection;
 import org.lamisplus.modules.ndr.domain.dto.pmtct.InfantCohortRegistrationProjection;
 import org.lamisplus.modules.ndr.domain.dto.pmtct.MotherInfantPairVisitProjection;
+import org.lamisplus.modules.ndr.domain.dto.pmtct.PMTCTEligiblePatientProjection;
 import org.lamisplus.modules.ndr.domain.dto.pmtct.PMTCTRegisterProjection;
 import org.lamisplus.modules.ndr.domain.entities.NdrMessageLog;
 import org.lamisplus.modules.ndr.mapper.ConditionTypeMapper;
@@ -48,6 +51,7 @@ public class PMTCTService {
     private final NdrXmlStatusRepository ndrXmlStatusRepository;
     private final PMTCTTypeMapper pmtctTypeMapper;
     private final NdrOptimizationService ndrOptimizationService;
+    private final UserService userService;
 
     public static final String BASE_DIR = "runtime/ndr/transfer/";
     public static final String JAXB_ENCODING = "UTF-8";
@@ -57,6 +61,45 @@ public class PMTCTService {
     private static final String TEMP = "temp/";
 
     public final AtomicLong messageId = new AtomicLong(0);
+
+    public Map<String, Object> getPmtctEligiblePatients(List<Long> facilityIds, String searchValue, int pageNo, int pageSize) {
+        List<Long> targetFacilities = new ArrayList<>();
+        if (facilityIds != null && !facilityIds.isEmpty()) {
+            targetFacilities.addAll(facilityIds);
+        } else {
+            try {
+                userService.getUserWithRoles()
+                        .map(User::getCurrentOrganisationUnitId)
+                        .ifPresent(targetFacilities::add);
+            } catch (Exception e) {
+                log.warn("Could not resolve current user facility: {}", e.getMessage());
+            }
+        }
+
+        String search = searchValue == null ? "" : searchValue.trim();
+        int size = pageSize > 0 ? pageSize : 10;
+        int page = Math.max(pageNo, 0);
+        int offset = page * size;
+
+        List<PMTCTEligiblePatientProjection> records;
+        long totalRecords;
+
+        if (targetFacilities.isEmpty()) {
+            records = Collections.emptyList();
+            totalRecords = 0L;
+        } else {
+            records = ndrQueryRepository.getPmtctEligiblePatients(targetFacilities, search, size, offset);
+            Long count = ndrQueryRepository.countPmtctEligiblePatients(targetFacilities, search);
+            totalRecords = count != null ? count : 0L;
+        }
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("records", records);
+        response.put("totalRecords", totalRecords);
+        response.put("pageNumber", page);
+        response.put("pageSize", size);
+        return response;
+    }
 
     public void generateOnePatientPmtctNDRXml(long facilityId, boolean initial, String patientId) {
         ObjectFactory objectFactory = new ObjectFactory();

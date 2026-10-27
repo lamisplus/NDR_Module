@@ -5,6 +5,7 @@ import org.lamisplus.modules.ndr.domain.dto.PrepDTO;
 import org.lamisplus.modules.ndr.domain.dto.pmtct.DeliveryChildrenDetailsProjection;
 import org.lamisplus.modules.ndr.domain.dto.pmtct.InfantCohortRegistrationProjection;
 import org.lamisplus.modules.ndr.domain.dto.pmtct.MotherInfantPairVisitProjection;
+import org.lamisplus.modules.ndr.domain.dto.pmtct.PMTCTEligiblePatientProjection;
 import org.lamisplus.modules.ndr.domain.dto.pmtct.PMTCTRegisterProjection;
 import org.lamisplus.modules.ndr.domain.entities.NdrMessageLog;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -711,6 +712,61 @@ public interface NDRQueryRepository extends JpaRepository<NdrMessageLog, Integer
             "WHERE p.uuid = ?2\n" +
             "  AND COALESCE(ii.uuid, iv.uuid) IS NOT NULL", nativeQuery = true)
     List<InfantCohortRegistrationProjection> getInfantCohortRegistrationsByPatient(Long facilityId, String patientUuid, LocalDateTime lastModified);
+
+    @Query(value = "SELECT DISTINCT\n" +
+            "    p.id AS personId,\n" +
+            "    CAST(p.uuid AS VARCHAR) AS personUuid,\n" +
+            "    CAST(p.hospital_number AS VARCHAR) AS hospitalNumber\n" +
+            "FROM patient_person p\n" +
+            "INNER JOIN (\n" +
+            "    SELECT patient_uuid, facility_id FROM pmtct_anc WHERE COALESCE(archived, false) = false\n" +
+            "    UNION\n" +
+            "    SELECT patient_uuid, facility_id FROM pmtct_enrollment WHERE COALESCE(archived, false) = false\n" +
+            "    UNION\n" +
+            "    SELECT patient_uuid, facility_id FROM pmtct_mother_visitation WHERE COALESCE(archived, false) = false\n" +
+            "    UNION\n" +
+            "    SELECT patient_uuid, facility_id FROM pmtct_delivery WHERE COALESCE(archived, false) = false\n" +
+            "    UNION\n" +
+            "    SELECT mother_patient_uuid AS patient_uuid, facility_id FROM pmtct_infant_information WHERE COALESCE(archived, false) = false\n" +
+            "    UNION\n" +
+            "    SELECT mother_patient_uuid AS patient_uuid, facility_id FROM pmtct_infant_visit WHERE COALESCE(archived, false) = false\n" +
+            ") pmtct_p ON pmtct_p.patient_uuid = p.uuid\n" +
+            "WHERE COALESCE(p.archived, 0) = 0\n" +
+            "  AND (p.facility_id IN (?1) OR pmtct_p.facility_id IN (?1))\n" +
+            "  AND (\n" +
+            "      ?2 = ''\n" +
+            "      OR LOWER(COALESCE(p.hospital_number, '')) LIKE LOWER(CONCAT('%', ?2, '%'))\n" +
+            "      OR LOWER(COALESCE(p.uuid, '')) LIKE LOWER(CONCAT('%', ?2, '%'))\n" +
+            "      OR CAST(p.id AS VARCHAR) LIKE CONCAT('%', ?2, '%')\n" +
+            "  )\n" +
+            "ORDER BY p.id DESC\n" +
+            "LIMIT ?3 OFFSET ?4", nativeQuery = true)
+    List<PMTCTEligiblePatientProjection> getPmtctEligiblePatients(List<Long> facilityIds, String searchValue, int limit, int offset);
+
+    @Query(value = "SELECT COUNT(DISTINCT p.uuid)\n" +
+            "FROM patient_person p\n" +
+            "INNER JOIN (\n" +
+            "    SELECT patient_uuid, facility_id FROM pmtct_anc WHERE COALESCE(archived, false) = false\n" +
+            "    UNION\n" +
+            "    SELECT patient_uuid, facility_id FROM pmtct_enrollment WHERE COALESCE(archived, false) = false\n" +
+            "    UNION\n" +
+            "    SELECT patient_uuid, facility_id FROM pmtct_mother_visitation WHERE COALESCE(archived, false) = false\n" +
+            "    UNION\n" +
+            "    SELECT patient_uuid, facility_id FROM pmtct_delivery WHERE COALESCE(archived, false) = false\n" +
+            "    UNION\n" +
+            "    SELECT mother_patient_uuid AS patient_uuid, facility_id FROM pmtct_infant_information WHERE COALESCE(archived, false) = false\n" +
+            "    UNION\n" +
+            "    SELECT mother_patient_uuid AS patient_uuid, facility_id FROM pmtct_infant_visit WHERE COALESCE(archived, false) = false\n" +
+            ") pmtct_p ON pmtct_p.patient_uuid = p.uuid\n" +
+            "WHERE COALESCE(p.archived, 0) = 0\n" +
+            "  AND (p.facility_id IN (?1) OR pmtct_p.facility_id IN (?1))\n" +
+            "  AND (\n" +
+            "      ?2 = ''\n" +
+            "      OR LOWER(COALESCE(p.hospital_number, '')) LIKE LOWER(CONCAT('%', ?2, '%'))\n" +
+            "      OR LOWER(COALESCE(p.uuid, '')) LIKE LOWER(CONCAT('%', ?2, '%'))\n" +
+            "      OR CAST(p.id AS VARCHAR) LIKE CONCAT('%', ?2, '%')\n" +
+            "  )", nativeQuery = true)
+    Long countPmtctEligiblePatients(List<Long> facilityIds, String searchValue);
 }
 
 

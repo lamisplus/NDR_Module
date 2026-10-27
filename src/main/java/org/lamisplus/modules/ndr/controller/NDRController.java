@@ -170,6 +170,15 @@ public class NDRController {
         log.info(Constants.FILE_GENERATION_TIME.replace("{}", String.valueOf(stopwatch.elapsed().toMillis())));
     }
 
+    @GetMapping(value = "/pmtct/patients", produces = org.springframework.http.MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<Map<String, Object>> getPmtctEligiblePatients(
+            @RequestParam(required = false) List<Long> facilityIds,
+            @RequestParam(defaultValue = "") String searchValue,
+            @RequestParam(defaultValue = "0") int pageNo,
+            @RequestParam(defaultValue = "10") int pageSize) {
+        return ResponseEntity.ok(pmtctService.getPmtctEligiblePatients(facilityIds, searchValue, pageNo, pageSize));
+    }
+
     @GetMapping("/download/{file}")
     public void downloadFile(@PathVariable String file, HttpServletResponse response) throws IOException {
         ByteArrayOutputStream baos = ndrService.downloadFile (file);
