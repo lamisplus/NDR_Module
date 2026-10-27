@@ -276,7 +276,7 @@ public class PMTCTService {
             }
         }
 
-        PmtctDTO pmtctDetails = getPatientPmtctDetails(facilityId, patientId, start);
+        PmtctDTO pmtctDetails = getPatientPmtctDetails(facilityId, patientId, start, ndrErrors);
         if (pmtctDetails == null || pmtctDetails.isEmpty()) {
             log.info("No PMTCT records found for patient {}", patientId);
             return false;
@@ -313,15 +313,46 @@ public class PMTCTService {
         return null;
     }
 
-    PmtctDTO getPatientPmtctDetails(long facilityId, String patientId, LocalDateTime lastModified) {
-        List<PMTCTRegisterProjection> registers =
-                ndrQueryRepository.getPmtctRegisterByPatient(facilityId, patientId, lastModified);
-        List<MotherInfantPairVisitProjection> pairVisits =
-                ndrQueryRepository.getMotherInfantPairVisitsByPatient(facilityId, patientId, lastModified);
-        List<DeliveryChildrenDetailsProjection> deliveries =
-                ndrQueryRepository.getDeliveryChildrenDetailsByPatient(facilityId, patientId, lastModified);
-        List<InfantCohortRegistrationProjection> cohorts =
-                ndrQueryRepository.getInfantCohortRegistrationsByPatient(facilityId, patientId, lastModified);
+    PmtctDTO getPatientPmtctDetails(long facilityId, String patientId, LocalDateTime lastModified, List<NDRErrorDTO> ndrErrors) {
+        List<PMTCTRegisterProjection> registers = Collections.emptyList();
+        try {
+            registers = ndrQueryRepository.getPmtctRegisterByPatient(facilityId, patientId, lastModified);
+        } catch (Exception e) {
+            log.error("Error fetching PMTCT register for patient {}: {}", patientId, e.getMessage(), e);
+            if (ndrErrors != null) {
+                ndrErrors.add(new NDRErrorDTO(patientId, "", "PMTCTRegister query error: " + e.getMessage()));
+            }
+        }
+
+        List<MotherInfantPairVisitProjection> pairVisits = Collections.emptyList();
+        try {
+            pairVisits = ndrQueryRepository.getMotherInfantPairVisitsByPatient(facilityId, patientId, lastModified);
+        } catch (Exception e) {
+            log.error("Error fetching PMTCT mother-infant pair visits for patient {}: {}", patientId, e.getMessage(), e);
+            if (ndrErrors != null) {
+                ndrErrors.add(new NDRErrorDTO(patientId, "", "MotherInfantPairVisit query error: " + e.getMessage()));
+            }
+        }
+
+        List<DeliveryChildrenDetailsProjection> deliveries = Collections.emptyList();
+        try {
+            deliveries = ndrQueryRepository.getDeliveryChildrenDetailsByPatient(facilityId, patientId, lastModified);
+        } catch (Exception e) {
+            log.error("Error fetching PMTCT delivery children details for patient {}: {}", patientId, e.getMessage(), e);
+            if (ndrErrors != null) {
+                ndrErrors.add(new NDRErrorDTO(patientId, "", "DeliveryChildrenDetails query error: " + e.getMessage()));
+            }
+        }
+
+        List<InfantCohortRegistrationProjection> cohorts = Collections.emptyList();
+        try {
+            cohorts = ndrQueryRepository.getInfantCohortRegistrationsByPatient(facilityId, patientId, lastModified);
+        } catch (Exception e) {
+            log.error("Error fetching PMTCT infant cohort registrations for patient {}: {}", patientId, e.getMessage(), e);
+            if (ndrErrors != null) {
+                ndrErrors.add(new NDRErrorDTO(patientId, "", "InfantCohortRegistration query error: " + e.getMessage()));
+            }
+        }
 
         return new PmtctDTO(registers, pairVisits, deliveries, cohorts);
     }

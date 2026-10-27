@@ -735,9 +735,16 @@ public class PMTCTTypeMapper {
         }
 
         String rawTime = firstNonBlank(getJsonText(arvNode, "infantArvTime"), row.getRelArvTime());
-        Integer ageWks = parseFirstInt(rawTime);
-        if (ageWks == null && rawTime != null && rawTime.toLowerCase().contains("within 72")) {
-            ageWks = 0;
+        Integer ageWks = null;
+        if (rawTime != null) {
+            String lowerTime = rawTime.toLowerCase();
+            if (lowerTime.contains("within 72") || lowerTime.contains("within_72")) {
+                ageWks = 0;
+            } else if (lowerTime.contains("after 72") || lowerTime.contains("after_72")) {
+                ageWks = 1;
+            } else {
+                ageWks = parseFirstInt(rawTime);
+            }
         }
 
         String rawType = firstNonBlank(getJsonText(arvNode, "infantArvType"), row.getRelArvType());
