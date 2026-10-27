@@ -305,7 +305,7 @@ export default function GenerateNdr(props) {
     setSelectedRows([]);
 
     let url = "";
-    let redirectTab = 4;
+    let redirectTab = 5;
 
     if (generationMode === "patients") {
       url = `${api.url}ndr/generate/patients?${facilityQueryString}&initial=${status}&patientIds=${selectPatients}`;
@@ -313,7 +313,7 @@ export default function GenerateNdr(props) {
       url = `${api.url}ndr/optimization/date-range?${facilityQueryString}&startDate=${objValues.startDate}&endDate=${objValues.endDate}`;
     } else {
       url = `${api.url}ndr/optimization?${facilityQueryString}&isInitial=${status}`;
-      redirectTab = 4;
+      redirectTab = 5;
     }
 
     try {

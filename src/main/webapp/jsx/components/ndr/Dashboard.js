@@ -20,6 +20,7 @@ import NavigateNextIcon from "@mui/icons-material/NavigateNext";
 import GenerateNdr from "./generate";
 import HTS from "./hts";
 import Prep from "./Prep";
+import Pmtct from "./Pmtct";
 import DownloadNdr from "./download";
 import Biometrics from "./Biometrics";
 import ErrorPage from "./Errors";
@@ -138,6 +139,7 @@ const tabsConfig = [
   { label: "Treatment XML", icon: <MdDashboard />, component: GenerateNdr },
   { label: "HTS XML", icon: <MdContacts />, component: HTS },
   { label: "PrEP XML", icon: <MdContacts />, component: Prep },
+  { label: "PMTCT XML", icon: <MdContacts />, component: Pmtct },
   {
     label: "Biometrics Recapture",
     icon: <FingerprintIcon />,
@@ -198,7 +200,7 @@ const HomePage = (props) => {
             </Typography>
           </Breadcrumbs>
           <h4 className={classes.breadcrumbTitle}>
-            LAMISPlus NDR Data Exchange Management
+            NDR Data Exchange Management
           </h4>
         </div>
         <Typography variant="caption" style={{ color: "#9e9e9e" }}>
@@ -233,8 +235,9 @@ const HomePage = (props) => {
       <div className={classes.contentArea}>
         <Paper className={classes.tabContentWrapper} elevation={0}>
           {tabsConfig.map((tab, index) => {
+            console.log(tab, index);
             const Component = tab.component;
-            if (index === 4) {
+            if (index === 5) {
               return (
                 <TabPanel
                   key={index}
@@ -250,7 +253,7 @@ const HomePage = (props) => {
                 </TabPanel>
               );
             }
-            if (index === 5) {
+            if (index === 6) {
               return (
                 <TabPanel
                   key={index}

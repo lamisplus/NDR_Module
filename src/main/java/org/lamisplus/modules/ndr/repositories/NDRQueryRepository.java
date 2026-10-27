@@ -180,8 +180,8 @@ public interface NDRQueryRepository extends JpaRepository<NdrMessageLog, Integer
             "LIMIT 1;", nativeQuery = true)
     List<PrepDTO> getPrepReportByClientCodeAndLastModified(Long facilityId, String patientId, LocalDateTime lastModified);
 
-    @Query(value = "SELECT person_uuid from prep_enrollment \n" +
-            "WHERE facility_id=?1 AND date_modified > ?2 AND archived = false", nativeQuery = true)
+    @Query(value = "SELECT person_uuid from prophylaxis_screening \n" +
+            "WHERE facility_id=?1 AND date_modified >= ?2 AND archived = false", nativeQuery = true)
     List<String> getPrepId(Long facilityId, LocalDateTime lastModified);
 
     @Query(value = "SELECT\n" +

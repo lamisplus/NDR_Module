@@ -19,7 +19,7 @@ public interface HtsReportDto extends
     String getSetting();
     String getModality();
     String getOtherModality();
-    String getClientAge();
+    Integer getClientAge();
     String getSex();
     String getMaritalStatus();
     Integer getNoOfAllWives();

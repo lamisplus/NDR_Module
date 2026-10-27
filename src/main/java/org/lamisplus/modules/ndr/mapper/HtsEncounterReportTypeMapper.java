@@ -37,6 +37,7 @@ public class HtsEncounterReportTypeMapper {
     private static final Map<Boolean, String> BOOLEAN_TO_YES_NO = new HashMap<>();
     private static final Map<String, String> RELATIONSHIP_TO_INDEX = new HashMap<>();
     private static final Map<String, String> CLIENT_OF_CATEGORY_MAPPING = new HashMap<>();
+    private static final Map<String, String> PREGNANCY_STATUS_MAPPING = new HashMap<>();
 
 
     static {
@@ -57,6 +58,7 @@ public class HtsEncounterReportTypeMapper {
         // Session Type mappings
         SESSION_TYPE_MAPPING.put("INDIVIDUAL", "1");
         SESSION_TYPE_MAPPING.put("COUPLE", "2");
+        SESSION_TYPE_MAPPING.put("GROUP", "2");
         SESSION_TYPE_MAPPING.put("INDEX_CONTACT_TESTING", "3");
         SESSION_TYPE_MAPPING.put("INDEX", "3");
         SESSION_TYPE_MAPPING.put("PREVIOUSLY_SELF_TESTED", "4");
@@ -93,8 +95,8 @@ public class HtsEncounterReportTypeMapper {
 
         CLIENT_OF_CATEGORY_MAPPING.put("SELF","S");
         CLIENT_OF_CATEGORY_MAPPING.put("PARTNER","P");
-        CLIENT_OF_CATEGORY_MAPPING.put("CAREGIVER","CG");
-        CLIENT_OF_CATEGORY_MAPPING.put("SOCIAL NETWORK","SN");
+        CLIENT_OF_CATEGORY_MAPPING.put("CAREGIVER_ASSISTED","CG");
+        CLIENT_OF_CATEGORY_MAPPING.put("SOCIAL_NETWORK","SN");
 
         // Relationship to Index mappings (NDR numeric codes)
         RELATIONSHIP_TO_INDEX_MAPPING.put("MOTHER", "M");
@@ -128,6 +130,11 @@ public class HtsEncounterReportTypeMapper {
         FOLLOW_UP_LOCATION_MAPPING.put("WORKPLACE", "WRK");
         FOLLOW_UP_LOCATION_MAPPING.put("HOME", "HOM");
         FOLLOW_UP_LOCATION_MAPPING.put("OTHERS", "OTH");
+
+        PREGNANCY_STATUS_MAPPING.put("PREGANACY_STATUS_PREGNANT", "Yes");
+        PREGNANCY_STATUS_MAPPING.put("PREGANACY_STATUS_BREASTFEEDING", "No");
+        PREGNANCY_STATUS_MAPPING.put("PREGANACY_STATUS_NOT_PREGNANT", "No");
+        PREGNANCY_STATUS_MAPPING.put("PREGANACY_STATUS_POST_PARTUM", "No");
     }
 
     public boolean getHivTestingReportType(
@@ -173,7 +180,8 @@ public class HtsEncounterReportTypeMapper {
         setIfPresent(projection.getSetting().contains("HTS_ENTRY_POINT_FACILITY") ? "F" : "C", reportType::setSetting); // required
         setIfPresent(projection.getModality() != null ? "C" : "S", reportType::setModality); // TODO - get the modalities // required
         if (projection.getClientAge() != null) {
-            setIfPresent(Integer.parseInt(projection.getClientAge()), reportType::setClientAge); // required
+            reportType.setClientAge(projection.getClientAge());
+            //setIfPresent(Integer.parseInt(projection.getClientAge()), reportType::setClientAge); // required
         }
         setIfPresent(projection.getSex(), reportType::setSex, this::mapSex); // required
         setIfPresent(projection.getMaritalStatus(), reportType::setMaritalStatus, this::mapMaritalStatus);
@@ -185,9 +193,10 @@ public class HtsEncounterReportTypeMapper {
         setIfPresent(projection.getHivstResult(), reportType::setModality, this::mapTestResult);
         setIfPresent(projection.getIndexClientId(), reportType::setIndexClientId);
         setIfPresent(projection.getRelationshipToIndex(), reportType::setRelationshipToIndex, this::mapRelationshipToIndex);
-        setIfPresent(projection.getClientIsPregnant(), reportType::setClientIsPregnant, this::mapYesNoToCode);
+        setIfPresent(projection.getClientIsPregnant(), reportType::setClientIsPregnant, this::mapPregnancyStatus);
         setIfPresent(!Objects.equals(projection.getBreastfeeding(), "false") ? "Yes" : "No", reportType::setBreastfeeding);
-        if (projection.getBreastfeeding() != null) {
+        if ((projection.getBreastfeeding() != null && Objects.equals(projection.getBreastfeeding(), "true")) &&
+                (projection.getDurationOfBreastfeeding() != null || !projection.getDurationOfBreastfeeding().isEmpty())) {
             setIfPresent(projection.getDurationOfBreastfeeding(), reportType::setDurationOfBreastfeeding, this::mapDurationOfBreastfeeding);
         }
         setIfPresent(projection.getSyphilisTestResult(), reportType::setSyphilisTestResult, this::mapSyphilisResult);
@@ -234,7 +243,7 @@ public class HtsEncounterReportTypeMapper {
         if (p.getInformedConsentForHIVTestingGiven() != null) {
             setBooleanIfPresent(p.getInformedConsentForHIVTestingGiven(), assessment::setInformedConsentForHIVTestingGiven);
         }
-        if (p.getTimeOfLastNegativeTest() != null) {
+        if (p.getTimeOfLastNegativeTest() != null && !p.getTimeOfLastNegativeTest().isEmpty()) {
             setIfPresent(p.getTimeOfLastNegativeTest(), assessment::setTimeOfLastHIVNegativeTest, this::mapTimeOfLastHIVNegative);
         }
         return assessment;
@@ -271,17 +280,21 @@ public class HtsEncounterReportTypeMapper {
 
     private ClinicalTBScreeningType buildClinicalTBScreening(ObjectFactory factory, HtsReportDto p) {
         ClinicalTBScreeningType screening = factory.createClinicalTBScreeningType();
-        if (p.getCurrentlyCough() != null) {
-            setBooleanIfPresent(p.getCurrentlyCough(), screening::setCurrentlyCough);
+        if (p.getCurrentlyCough() != null ) {
+            screening.setCurrentlyCough(p.getCurrentlyCough());
+//            setBooleanIfPresent(p.getCurrentlyCough(), screening::setCurrentlyCough);
         }
         if (p.getWeightLoss() != null) {
-            setBooleanIfPresent(p.getWeightLoss(), screening::setWeightLoss);
+            screening.setWeightLoss(p.getWeightLoss());
+//            setBooleanIfPresent(p.getWeightLoss(), screening::setWeightLoss);
         }
         if (p.getFever() != null) {
-            setBooleanIfPresent(p.getFever(), screening::setFever);
+            screening.setFever(p.getFever());
+//            setBooleanIfPresent(p.getFever(), screening::setFever);
         }
         if (p.getNightSweats() != null) {
-            setBooleanIfPresent(p.getNightSweats(), screening::setNightSweats);
+            screening.setNightSweats(p.getNightSweats());
+//            setBooleanIfPresent(p.getNightSweats(), screening::setNightSweats);
         }
         return screening;
     }
@@ -554,13 +567,16 @@ public class HtsEncounterReportTypeMapper {
         return "OTH";
     }
     private String mapSex(String sex) {
-        if (sex == null) {
-            return null;
-        }
         String upperSex = sex.toUpperCase();
-        if (upperSex.contains("SEX_MALE") || upperSex.contains("MALE")) return "M";
-        if (upperSex.startsWith("SEX_FEMALE") || upperSex.contains("FEMALE")) return "F";
-        return null;
+        if (upperSex.contains("FEMALE")) {
+            return "F";
+        }else if (upperSex.contains("MALE")) {
+            return "M";
+        }else{
+            return "M";
+        }
+//        if (upperSex.contains("SEX_MALE") || upperSex.contains("MALE")) return "M";
+//        return "F";
     }
     private String mapAgeGroup(String ageGroup) {
         if (ageGroup == null) {
@@ -587,9 +603,6 @@ public class HtsEncounterReportTypeMapper {
         return "LT6";
     }
     private String mapTimeOfLastHIVNegative(String duration) {
-        if (duration == null|| duration.isEmpty()) {
-            return "LT3M";
-        }
         String upperGroup = duration.toUpperCase().replace("RECENT_HIV_TEST_", "").trim();
         if (upperGroup.contains("LAST_3_MONTHS") || upperGroup.contains("LAST_6_MONTHS")) {
             return "LT3M";
@@ -627,12 +640,19 @@ public class HtsEncounterReportTypeMapper {
         return status;
     }
     private String mapTestResult(String result) {
-        if (result == null) {
-            return null;
+        String upperType = result.toUpperCase();
+        if (upperType.contains("STI_HIV_RESULT_")) {
+            upperType = upperType.replace("STI_HIV_RESULT_", "").trim();
+            return upperType.equalsIgnoreCase("POSITIVE") ? "R" : "NR";
+        }else if (upperType.contains("HIV_CONFIRMATORY_TEST_RESULT_")) {
+            upperType = upperType.replace("HIV_CONFIRMATORY_TEST_RESULT_", "").trim();
+            return upperType.equalsIgnoreCase("POSITIVE") ? "R" : "NR";
         }
-        String upperType = result.toUpperCase().replace("HIV_CONFIRMATORY_TEST_RESULT_", "").trim();
-        log.info("confirmatory result {}", upperType);
-        return upperType.equalsIgnoreCase("POSITIVE") ? "R" : "NR";
+        else if (upperType.contains("SYPHILIS_RESULT_")) {
+            upperType = upperType.replace("SYPHILIS_RESULT_", "").trim();
+            return upperType.equalsIgnoreCase("POSITIVE") ? "R" : "NR";
+        }
+        return "NR";
     }
     private String mapFinalTestResult(String result) {
         if (result == null) {
@@ -653,7 +673,7 @@ public class HtsEncounterReportTypeMapper {
         if (category == null || category.isEmpty()) {
             return "S";
         }
-        String upperType = category.toUpperCase().replace("TARGET_GROUP_", "").trim();
+        String upperType = category.toUpperCase().replace("HIVST_KIT_USER_", "").trim();
 
         String mappedValue = CLIENT_OF_CATEGORY_MAPPING.get(upperType);
         if (mappedValue != null) {
@@ -729,7 +749,6 @@ public class HtsEncounterReportTypeMapper {
         if (value == null) {
             return "No";
         }
-        log.info("value: {}", value);
         String upperValue = "";
 
         if (value.contains("false") || value.contains("true")) {
@@ -752,7 +771,18 @@ public class HtsEncounterReportTypeMapper {
 
         return "No";
     }
+    private String mapPregnancyStatus(String method) {
+        if (method == null) {
+            return "No";
+        }
+        String upperType = method.toUpperCase().trim();
 
+        String mappedValue = PREGNANCY_STATUS_MAPPING.get(upperType);
+        if (mappedValue != null) {
+            return mappedValue;
+        }
+        return "No";
+    }
     private String mapClientCategory(String category) {
         if (category == null) {
             return "OT";
@@ -766,7 +796,6 @@ public class HtsEncounterReportTypeMapper {
 
         return "OT";
     }
-
     private String mapIndexClientIdType(String type) {
         if (type == null) {
             return "HTS";

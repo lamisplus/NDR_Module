@@ -243,7 +243,7 @@ export default function Prep(props) {
         setModal(false);
         setProcessing(false);
         setSelectPatients([]);
-        props.setValue(4);
+        props.setValue(5);
       }, 3000);
     } catch (error) {
       setModal(false);
