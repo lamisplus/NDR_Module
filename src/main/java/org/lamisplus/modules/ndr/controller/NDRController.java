@@ -30,6 +30,7 @@ public class NDRController {
     private final HtsService htsService;
     private final RedactService redactService;
     private final PrEPService prEPService;
+    private final PMTCTService pmtctService;
     public static class Constants {
         public static final String FILE_GENERATION_TIME = "Total time taken to generate a file: {}";
     }
@@ -141,6 +142,41 @@ public class NDRController {
         Stopwatch stopwatch = Stopwatch.createStarted();
         prEPService.generateOnePatientHtsNDRXml(facility, true, patientId);
         log.info(Constants.FILE_GENERATION_TIME.replace("{}", String.valueOf(stopwatch.elapsed().toMillis())));
+    }
+
+    @GetMapping("/pmtct")
+    public ResponseEntity<Void> generatePmtct(@RequestParam List<Long> facilityIds, @RequestParam boolean isInitial) {
+        Stopwatch stopwatch = Stopwatch.createStarted();
+        facilityIds.forEach(facilityId -> pmtctService.generatePatientsPmtctNDRXml(facilityId, isInitial));
+        log.info(Constants.FILE_GENERATION_TIME.replace("{}", String.valueOf(stopwatch.elapsed().toMinutes())));
+        return ResponseEntity.ok().build();
+    }
+
+    @GetMapping("/generate/pmtct")
+    public ResponseEntity<Void> generateSelectedPatientsPmtctNDRXml(
+            @RequestParam List<Long> facilityIds,
+            @RequestParam boolean isInitial,
+            @RequestParam List<String> patientIds) {
+        Stopwatch stopwatch = Stopwatch.createStarted();
+        facilityIds.forEach(facilityId -> pmtctService.generateSelectedPatientsPmtctNDRXml(facilityId, isInitial, patientIds));
+        log.info(Constants.FILE_GENERATION_TIME.replace("{}", String.valueOf(stopwatch.elapsed().toMinutes())));
+        return ResponseEntity.ok().build();
+    }
+
+    @GetMapping("/generate_one_pmtct")
+    public void generateOnePmtctPatientXml(@RequestParam("patientId") String patientId, @RequestParam("facility") Long facility) {
+        Stopwatch stopwatch = Stopwatch.createStarted();
+        pmtctService.generateOnePatientPmtctNDRXml(facility, true, patientId);
+        log.info(Constants.FILE_GENERATION_TIME.replace("{}", String.valueOf(stopwatch.elapsed().toMillis())));
+    }
+
+    @GetMapping(value = "/pmtct/patients", produces = org.springframework.http.MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<Map<String, Object>> getPmtctEligiblePatients(
+            @RequestParam(required = false) List<Long> facilityIds,
+            @RequestParam(defaultValue = "") String searchValue,
+            @RequestParam(defaultValue = "0") int pageNo,
+            @RequestParam(defaultValue = "10") int pageSize) {
+        return ResponseEntity.ok(pmtctService.getPmtctEligiblePatients(facilityIds, searchValue, pageNo, pageSize));
     }
 
     @GetMapping("/download/{file}")

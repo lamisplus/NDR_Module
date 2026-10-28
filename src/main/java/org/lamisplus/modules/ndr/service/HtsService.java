@@ -47,8 +47,6 @@ public class HtsService {
 	public static final String HEADER_BIND_COMMENT = "com.sun.xml.bind.xmlHeaders";
 	public final AtomicLong messageId = new AtomicLong(0);
 
-	public final HtsTypeMapper htsTypeMapper;
-
 	public final HtsEncounterReportTypeMapper htsEncounterReportTypeMapper;
 
 	private final NdrOptimizationService ndrOptimizationService;

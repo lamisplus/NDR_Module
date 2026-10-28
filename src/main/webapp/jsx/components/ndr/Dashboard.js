@@ -235,7 +235,6 @@ const HomePage = (props) => {
       <div className={classes.contentArea}>
         <Paper className={classes.tabContentWrapper} elevation={0}>
           {tabsConfig.map((tab, index) => {
-            console.log(tab, index);
             const Component = tab.component;
             if (index === 5) {
               return (

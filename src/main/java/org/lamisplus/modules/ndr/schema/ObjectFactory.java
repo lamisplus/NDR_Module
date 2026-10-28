@@ -110,177 +110,177 @@ public class ObjectFactory {
      * Create an instance of {@link InfantHBVProphylaxisType }
      *
      */
-//    public InfantHBVProphylaxisType createInfantHBVProphylaxisType() {
-//        return new InfantHBVProphylaxisType();
-//    }
+    public InfantHBVProphylaxisType createInfantHBVProphylaxisType() {
+        return new InfantHBVProphylaxisType();
+    }
 
     /**
      * Create an instance of {@link PCRTestType }
      *
      */
-//    public PCRTestType createPCRTestType() {
-//        return new PCRTestType();
-//    }
+    public PCRTestType createPCRTestType() {
+        return new PCRTestType();
+    }
 
     /**
      * Create an instance of {@link InfantRapidAntibodyTestType }
      *
      */
-//    public InfantRapidAntibodyTestType createInfantRapidAntibodyTestType() {
-//        return new InfantRapidAntibodyTestType();
-//    }
+    public InfantRapidAntibodyTestType createInfantRapidAntibodyTestType() {
+        return new InfantRapidAntibodyTestType();
+    }
 
     /**
      * Create an instance of {@link InfantARTEnrollmentType }
      *
      */
-//    public InfantARTEnrollmentType createInfantARTEnrollmentType() {
-//        return new InfantARTEnrollmentType();
-//    }
+    public InfantARTEnrollmentType createInfantARTEnrollmentType() {
+        return new InfantARTEnrollmentType();
+    }
 
     /**
      * Create an instance of {@link InfantCohortRegistrationType }
      *
      */
-//    public InfantCohortRegistrationType createInfantCohortRegistrationType() {
-//        return new InfantCohortRegistrationType();
-//    }
+    public InfantCohortRegistrationType createInfantCohortRegistrationType() {
+        return new InfantCohortRegistrationType();
+    }
 
     /**
      * Create an instance of {@link PairCardSyphilisType }
      *
      */
-//    public PairCardSyphilisType createPairCardSyphilisType() {
-//        return new PairCardSyphilisType();
-//    }
+    public PairCardSyphilisType createPairCardSyphilisType() {
+        return new PairCardSyphilisType();
+    }
 
     /**
      * Create an instance of {@link PairCardHBVType }
      *
      */
-//    public PairCardHBVType createPairCardHBVType() {
-//        return new PairCardHBVType();
-//    }
+    public PairCardHBVType createPairCardHBVType() {
+        return new PairCardHBVType();
+    }
 
     /**
      * Create an instance of {@link InfantHIVProphylaxisType }
      *
      */
-//    public InfantHIVProphylaxisType createInfantHIVProphylaxisType() {
-//        return new InfantHIVProphylaxisType();
-//    }
+    public InfantHIVProphylaxisType createInfantHIVProphylaxisType() {
+        return new InfantHIVProphylaxisType();
+    }
 
     /**
      * Create an instance of {@link InfantSyphilisProphylaxisType }
      *
      */
-//    public InfantSyphilisProphylaxisType createInfantSyphilisProphylaxisType() {
-//        return new InfantSyphilisProphylaxisType();
-//    }
+    public InfantSyphilisProphylaxisType createInfantSyphilisProphylaxisType() {
+        return new InfantSyphilisProphylaxisType();
+    }
 
     /**
      * Create an instance of {@link InfantCTXType }
      *
      */
-//    public InfantCTXType createInfantCTXType() {
-//        return new InfantCTXType();
-//    }
+    public InfantCTXType createInfantCTXType() {
+        return new InfantCTXType();
+    }
 
     /**
      * Create an instance of {@link InfantHBVVaccinationType }
      *
      */
-//    public InfantHBVVaccinationType createInfantHBVVaccinationType() {
-//        return new InfantHBVVaccinationType();
-//    }
+    public InfantHBVVaccinationType createInfantHBVVaccinationType() {
+        return new InfantHBVVaccinationType();
+    }
 
     /**
      * Create an instance of {@link DPCRTestType }
      *
      */
-//    public DPCRTestType createDPCRTestType() {
-//        return new DPCRTestType();
-//    }
+    public DPCRTestType createDPCRTestType() {
+        return new DPCRTestType();
+    }
 
     /**
      * Create an instance of {@link ConfirmatoryPCRType }
      *
      */
-//    public ConfirmatoryPCRType createConfirmatoryPCRType() {
-//        return new ConfirmatoryPCRType();
-//    }
+    public ConfirmatoryPCRType createConfirmatoryPCRType() {
+        return new ConfirmatoryPCRType();
+    }
 
     /**
      * Create an instance of {@link DeliveryChildrenDetailsType }
      *
      */
-//    public DeliveryChildrenDetailsType createDeliveryChildrenDetailsType() {
-//        return new DeliveryChildrenDetailsType();
-//    }
+    public DeliveryChildrenDetailsType createDeliveryChildrenDetailsType() {
+        return new DeliveryChildrenDetailsType();
+    }
 
     /**
      * Create an instance of {@link MotherCurrentARTRegimenType }
      *
      */
-//    public MotherCurrentARTRegimenType createMotherCurrentARTRegimenType() {
-//        return new MotherCurrentARTRegimenType();
-//    }
+    public MotherCurrentARTRegimenType createMotherCurrentARTRegimenType() {
+        return new MotherCurrentARTRegimenType();
+    }
 
     /**
      * Create an instance of {@link PairCardVisitVLType }
      *
      */
-//    public PairCardVisitVLType createPairCardVisitVLType() {
-//        return new PairCardVisitVLType();
-//    }
+    public PairCardVisitVLType createPairCardVisitVLType() {
+        return new PairCardVisitVLType();
+    }
 
     /**
      * Create an instance of {@link MotherInfantPairVisitType }
      *
      */
-//    public MotherInfantPairVisitType createMotherInfantPairVisitType() {
-//        return new MotherInfantPairVisitType();
-//    }
+    public MotherInfantPairVisitType createMotherInfantPairVisitType() {
+        return new MotherInfantPairVisitType();
+    }
 
     /**
      * Create an instance of {@link RegisterSyphilisType }
      *
      */
-//    public RegisterSyphilisType createRegisterSyphilisType() {
-//        return new RegisterSyphilisType();
-//    }
+    public RegisterSyphilisType createRegisterSyphilisType() {
+        return new RegisterSyphilisType();
+    }
 
     /**
      * Create an instance of {@link RegisterHBVType }
      *
      */
-//    public RegisterHBVType createRegisterHBVType() {
-//        return new RegisterHBVType();
-//    }
+    public RegisterHBVType createRegisterHBVType() {
+        return new RegisterHBVType();
+    }
 
     /**
      * Create an instance of {@link RegisterTBScreeningType }
      *
      */
-//    public RegisterTBScreeningType createRegisterTBScreeningType() {
-//        return new RegisterTBScreeningType();
-//    }
+    public RegisterTBScreeningType createRegisterTBScreeningType() {
+        return new RegisterTBScreeningType();
+    }
 
     /**
      * Create an instance of {@link VLMeasurementType }
      *
      */
-//    public VLMeasurementType createVLMeasurementType() {
-//        return new VLMeasurementType();
-//    }
+    public VLMeasurementType createVLMeasurementType() {
+        return new VLMeasurementType();
+    }
 
     /**
      * Create an instance of {@link RegisterVLType }
      *
      */
-//    public RegisterVLType createRegisterVLType() {
-//        return new RegisterVLType();
-//    }
+    public RegisterVLType createRegisterVLType() {
+        return new RegisterVLType();
+    }
 
     /**
      * Create an instance of {@link PartnerNotificationType }
@@ -294,9 +294,9 @@ public class ObjectFactory {
      * Create an instance of {@link PMTCTRegisterType }
      *
      */
-//    public PMTCTRegisterType createPMTCTRegisterType() {
-//        return new PMTCTRegisterType();
-//    }
+    public PMTCTRegisterType createPMTCTRegisterType() {
+        return new PMTCTRegisterType();
+    }
 
     /**
      * Create an instance of {@link TBType }
