@@ -47,8 +47,6 @@ public class HtsService {
 	public static final String HEADER_BIND_COMMENT = "com.sun.xml.bind.xmlHeaders";
 	public final AtomicLong messageId = new AtomicLong(0);
 
-	public final HtsTypeMapper htsTypeMapper;
-
 	public final HtsEncounterReportTypeMapper htsEncounterReportTypeMapper;
 
 	private final NdrOptimizationService ndrOptimizationService;
@@ -102,6 +100,8 @@ public class HtsService {
     }
 
 	private boolean getPatientHtsNDRXml(String clientCode, long facilityId, boolean initial, ObjectFactory obj, List<NDRErrorDTO> ndrErrors) {
+		log.info("Got here for deleting*********");
+		ndrXmlStatusRepository.deleteNdrXmlStatusByErrorIsNotNull();
 		log.info("starting process patient xml file information");
 		log.info("facilityId {}, patientId {}", facilityId, clientCode);
 		LocalDateTime start = LocalDateTime.of(1985, Month.JANUARY, 1,0,0);

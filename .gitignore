@@ -36,6 +36,8 @@ build/
 !**/src/test/**/build/
 /build/*
 src/main/resources/views/static/patient/*
+src/main/resources/views/static/ndr/*
+.eslintcache
 classes/
 ### VS Code ###
 .vscode/

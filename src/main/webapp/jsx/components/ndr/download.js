@@ -110,7 +110,7 @@ export default function DownloadNdr(props) {
         //console.log(response.data);
       })
       .catch((error) => {});
-    props.setValue(4);
+    props.setValue(6);
   };
 
   const downloadFile = (fileName) => {

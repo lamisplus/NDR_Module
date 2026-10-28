@@ -4,11 +4,12 @@ import React, {
   forwardRef,
   useCallback,
   useMemo,
+  useRef,
 } from "react";
 import { makeStyles } from "@material-ui/core/styles";
 import axios from "axios";
 import * as api from "./../../../api";
-import { token as token, url as baseUrl } from "./../../../api";
+import { token, url as baseUrl } from "./../../../api";
 import { CardBody, Card } from "reactstrap";
 import { Alert, AlertTitle } from "@material-ui/lab";
 import { GiFiles } from "react-icons/gi";
@@ -170,6 +171,7 @@ const useStyles = makeStyles((theme) => ({
 
 export default function Pmtct(props) {
   const classes = useStyles();
+  const tableRef = useRef(null);
   const [facilities, setFacilities] = useState([]);
   const [processing, setProcessing] = useState(false);
   const [status, setStatus] = useState(false); // false = Updated, true = Initial
@@ -222,6 +224,12 @@ export default function Pmtct(props) {
       .join("&");
   }, [checked]);
 
+  useEffect(() => {
+    if (tableRef.current) {
+      tableRef.current.onQueryChange();
+    }
+  }, [facilityQueryString]);
+
   const generateAction = useCallback(async () => {
     if (!facilityQueryString) return;
 
@@ -230,8 +238,8 @@ export default function Pmtct(props) {
 
     const usePatients = selectPatients.length > 0;
     const url = usePatients
-      ? `${api.url}ndr/generate/Pmtct?${facilityQueryString}&isInitial=${status}&patientIds=${selectPatients}`
-      : `${api.url}ndr/Pmtct?${facilityQueryString}&isInitial=${status}`;
+      ? `${api.url}ndr/generate/pmtct?${facilityQueryString}&isInitial=${status}&patientIds=${selectPatients}`
+      : `${api.url}ndr/pmtct?${facilityQueryString}&isInitial=${status}`;
 
     try {
       await axios.get(url, {
@@ -239,7 +247,7 @@ export default function Pmtct(props) {
       });
 
       window.setTimeout(() => {
-        toast.success("Generating Pmtct XML Successful!");
+        toast.success("Generating PMTCT XML Successful!");
         setModal(false);
         setProcessing(false);
         setSelectPatients([]);
@@ -268,10 +276,10 @@ export default function Pmtct(props) {
         <CardBody>
           {/* Info alert */}
           <Alert severity="info">
-            <AlertTitle>Generate Pmtct XML</AlertTitle>
+            <AlertTitle>Generate PMTCT XML</AlertTitle>
             Select one or more facilities below, choose the data type, then
             click
-            <strong> Generate Pmtct XML</strong>. You may optionally select
+            <strong> Generate PMTCT XML</strong>. You may optionally select
             specific patients from the table to limit the export.
           </Alert>
 
@@ -309,38 +317,35 @@ export default function Pmtct(props) {
               </div>
               <div className={classes.facilityPanel}>
                 {hasFacilities ? (
-                  facilities.map((value) => {
-                    const labelId = `facility-${value.id}`;
-                    return (
-                      <div
-                        key={value.id}
-                        className={classes.facilityItem}
-                        onClick={handleToggle(value)}
-                        role="button"
-                        tabIndex={0}
-                        onKeyDown={(e) =>
-                          e.key === "Enter" && handleToggle(value)()
-                        }
-                        style={{
-                          display: "flex",
-                          alignItems: "center",
-                          padding: "6px 10px",
-                          cursor: "pointer",
-                        }}
-                      >
-                        <input
-                          type="checkbox"
-                          checked={checked.indexOf(value) !== -1}
-                          onChange={handleToggle(value)}
-                          onClick={(e) => e.stopPropagation()}
-                          style={{ marginRight: 10, cursor: "pointer" }}
-                        />
-                        <span style={{ fontSize: "0.85rem", color: "#333" }}>
-                          {value.organisationUnitName}
-                        </span>
-                      </div>
-                    );
-                  })
+                  facilities.map((value) => (
+                    <div
+                      key={value.id}
+                      className={classes.facilityItem}
+                      onClick={handleToggle(value)}
+                      role="button"
+                      tabIndex={0}
+                      onKeyDown={(e) =>
+                        e.key === "Enter" && handleToggle(value)()
+                      }
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        padding: "6px 10px",
+                        cursor: "pointer",
+                      }}
+                    >
+                      <input
+                        type="checkbox"
+                        checked={checked.indexOf(value) !== -1}
+                        onChange={handleToggle(value)}
+                        onClick={(e) => e.stopPropagation()}
+                        style={{ marginRight: 10, cursor: "pointer" }}
+                      />
+                      <span style={{ fontSize: "0.85rem", color: "#333" }}>
+                        {value.organisationUnitName}
+                      </span>
+                    </div>
+                  ))
                 ) : (
                   <div className={classes.emptyState}>
                     No facilities available
@@ -359,7 +364,7 @@ export default function Pmtct(props) {
                 onClick={generateAction}
                 startIcon={<GiFiles />}
               >
-                {processing ? "Generating..." : "Generate Pmtct XML"}
+                {processing ? "Generating..." : "Generate PMTCT XML"}
               </Button>
               {selectPatients.length > 0 && (
                 <div
@@ -377,6 +382,7 @@ export default function Pmtct(props) {
 
           <div className="mt-4">
             <MaterialTable
+              tableRef={tableRef}
               icons={tableIcons}
               title="Eligible Patients"
               columns={[
@@ -393,30 +399,33 @@ export default function Pmtct(props) {
                 },
               ]}
               data={(query) =>
-                new Promise((resolve, reject) =>
+                new Promise((resolve) => {
+                  const facilityParams = facilityQueryString
+                    ? `&${facilityQueryString}`
+                    : "";
                   axios
                     .get(
-                      `${baseUrl}Pmtct/persons/enrolled?pageSize=${query.pageSize}&pageNo=${query.page}&searchValue=${query.search}`,
+                      `${baseUrl}ndr/pmtct/patients?pageSize=${query.pageSize}&pageNo=${query.page}&searchValue=${query.search}${facilityParams}`,
                       { headers: { Authorization: `Bearer ${token}` } },
                     )
-                    .then((response) => response)
                     .then((result) => {
+                      const records = result?.data?.records || [];
                       resolve({
-                        data: result.data.records.map((row) => ({
+                        data: records.map((row) => ({
                           personId: row.personId,
                           personUuid: row.personUuid,
                           hospitalNumber: row.hospitalNumber,
                         })),
                         page: query.page,
-                        totalCount: result.data.totalRecords,
+                        totalCount: result?.data?.totalRecords || 0,
                       });
                     })
                     .catch(() => {
                       resolve({ data: [], page: 0, totalCount: 0 });
                       toast.error("Failed to load patients.");
                     })
-                    .finally(() => setSelectedRows([])),
-                )
+                    .finally(() => setSelectedRows([]));
+                })
               }
               options={{
                 search: true,
@@ -463,7 +472,7 @@ export default function Pmtct(props) {
       >
         <ModalBody className={classes.modalBody}>
           <div className={classes.spinner} />
-          <div className={classes.modalTitle}>Generating Pmtct XML Files</div>
+          <div className={classes.modalTitle}>Generating PMTCT XML Files</div>
           <div style={{ color: "#666", fontSize: "0.85rem" }}>
             Please wait while we process your request. This may take a few
             moments.
