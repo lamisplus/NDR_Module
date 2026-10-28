@@ -175,6 +175,7 @@ class PMTCTEndpointAndUiTest {
         when(reg.getGestationalAgeAtBooking()).thenReturn(20);
         when(reg.getPreviouslyKnownHivStatus()).thenReturn("Known HIV+");
         when(reg.getCurrentlyOnArt()).thenReturn("Yes");
+        when(reg.getHivEarlyAcute()).thenReturn("YES_NO_NO");
         when(reg.getDateOfInitiation()).thenReturn(LocalDate.of(2025, 6, 1));
         when(reg.getTimingOfArtInitiation()).thenReturn("1");
         when(reg.getSyphilisTestResult()).thenReturn("NR");
@@ -184,6 +185,23 @@ class PMTCTEndpointAndUiTest {
         when(reg.getVlLessThan32WeeksResult()).thenReturn(new BigDecimal("20"));
         when(reg.getPartnerAgreedToNotification()).thenReturn("Yes");
         when(reg.getPartnerTestedHiv()).thenReturn("NR");
+
+        PMTCTRegisterProjection negAncReg = Mockito.mock(PMTCTRegisterProjection.class);
+        when(negAncReg.getVisitId()).thenReturn("8fbe2cdf-6f51-4107-9522-aa84671b30b6");
+        when(negAncReg.getVisitDate()).thenReturn(LocalDate.of(2026, 10, 12));
+        when(negAncReg.getHospitalNo()).thenReturn("FC13a2601012b1412cUyoo7");
+        when(negAncReg.getAncNumber()).thenReturn("FC13a2601012b1412cUyoo7");
+        when(negAncReg.getPregnancyBreastfeedingStatus()).thenReturn("Pregnant");
+        when(negAncReg.getGestationalAgeAtBooking()).thenReturn(25);
+        when(negAncReg.getPreviouslyKnownHivStatus()).thenReturn("No");
+        when(negAncReg.getHivEarlyAcute()).thenReturn("YES_NO_NO");
+        when(negAncReg.getHivTrAnc()).thenReturn("Negative");
+        when(negAncReg.getSyphilisTestResult()).thenReturn("SYPHILIS_RESULT_NEGATIVE");
+
+        String combinedPcrArrayJson = "["
+                + "{\"testType\":\"INFANT_TESTING_PCR_1ST_PCR_4-6_WEEKS_OF_AGE_OR_1ST_CONTACT\",\"ageAtTest\":\"2ND_PCR_CHILD_TEST_AGE_>_12_MONTHS\",\"dateSampleCollected\":\"2026-08-12\",\"dateResultReceivedByCaregiver\":[2026,8,13],\"results\":\"INFANT_PCR_RESULT_NEGATIVE\"},"
+                + "{\"testType\":\"INFANT_TESTING_PCR_2ND_PCR_12_WEEKS_AFTER_CESSATION_OF_BREASTFEEDING_OR_AS_INDICATED\",\"ageAtTest\":\"CHILD_TEST_AGE_>72_HRS_-_<_2_MONTHS\",\"dateSampleCollected\":[2026,9,18],\"results\":\"INFANT_PCR_RESULT_NEGATIVE\"}"
+                + "]";
 
         MotherInfantPairVisitProjection visit = Mockito.mock(MotherInfantPairVisitProjection.class);
         when(visit.getVisitId()).thenReturn("pair-visit-001");
@@ -207,6 +225,7 @@ class PMTCTEndpointAndUiTest {
         when(delivery.getChildEntryPoint()).thenReturn("1");
         when(delivery.getSex()).thenReturn("Female");
         when(delivery.getChildGivenArvWithin72()).thenReturn("Yes");
+        when(delivery.getInfantPcrDataJson()).thenReturn(combinedPcrArrayJson);
 
         InfantCohortRegistrationProjection cohort = Mockito.mock(InfantCohortRegistrationProjection.class);
         when(cohort.getInfantUuid()).thenReturn("inf-001");
@@ -222,9 +241,10 @@ class PMTCTEndpointAndUiTest {
         when(cohort.getMotherArtInitiationTiming()).thenReturn("1");
         when(cohort.getMotherRegimenCode()).thenReturn("1a");
         when(cohort.getMotherRegimenDescription()).thenReturn("TDF+3TC+DTG");
+        when(cohort.getInfantPcrDataJson()).thenReturn(combinedPcrArrayJson);
 
         PmtctDTO pmtctDTO = new PmtctDTO(
-                Collections.singletonList(reg),
+                Arrays.asList(reg, negAncReg),
                 Collections.singletonList(visit),
                 Collections.singletonList(delivery),
                 Collections.singletonList(cohort)
@@ -255,6 +275,14 @@ class PMTCTEndpointAndUiTest {
         assertTrue(mapped, "PMTCTTypeMapper should map PMTCT records successfully");
         assertTrue(errors.isEmpty(), "PMTCTTypeMapper should not record any errors");
         assertEquals(1, individualReport.getPMTCT().size());
+        assertEquals(KnownHIVPositiveStatusType.ON_ART, individualReport.getPMTCT().get(0).getPMTCTRegister().get(0).getKnownHIVPositive(),
+                "Known HIV+ mother on ART must have KnownHIVPositive=OnART");
+        assertNull(individualReport.getPMTCT().get(0).getPMTCTRegister().get(1).getKnownHIVPositive(),
+                "HIV-negative ANC client with previouslyKnownHivStatus=No must not have KnownHIVPositive set");
+        assertEquals("NotSuspected", individualReport.getPMTCT().get(0).getPMTCTRegister().get(1).getHIVEarlyAcute());
+        assertEquals(2, individualReport.getPMTCT().get(0).getDeliveryChildrenDetails().get(0).getDNAPCR().size());
+        assertNotNull(individualReport.getPMTCT().get(0).getInfantCohortRegistration().get(0).getFirstPCR());
+        assertNotNull(individualReport.getPMTCT().get(0).getInfantCohortRegistration().get(0).getSecondPCR());
 
         Container container = new Container();
         MessageHeaderType header = new MessageHeaderType();
@@ -280,11 +308,17 @@ class PMTCTEndpointAndUiTest {
         StringWriter sw = new StringWriter();
         marshaller.marshal(container, sw);
         String xml = sw.toString();
+        File sampleXmlFile = new File("target/sample-pmtct-ndr.xml");
+        Files.write(sampleXmlFile.toPath(), xml.getBytes(StandardCharsets.UTF_8));
+        assertTrue(sampleXmlFile.exists());
         assertTrue(xml.contains("<PMTCT>"));
         assertTrue(xml.contains("<PMTCTRegister>"));
+        assertTrue(xml.contains("<HIVEarlyAcute>NotSuspected</HIVEarlyAcute>"));
         assertTrue(xml.contains("<MotherInfantPairVisit>"));
         assertTrue(xml.contains("<DeliveryChildrenDetails>"));
         assertTrue(xml.contains("<InfantCohortRegistration>"));
+        assertTrue(xml.contains("<FirstPCR>"));
+        assertTrue(xml.contains("<SecondPCR>"));
     }
 
     @Test
