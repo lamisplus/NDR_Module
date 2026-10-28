@@ -102,7 +102,7 @@ export default function Redact(props) {
         window.setTimeout(() => {
           toast.success(" Generating Redacted files Successfully!");
           setModal(false);
-          props.setValue(3);
+          props.setValue(5);
         }, 5000);
 
         //props.history.push("/generate", { state: 'download'});

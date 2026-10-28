@@ -7,10 +7,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.lamisplus.modules.ndr.domain.dto.NDREligibleClient;
 import org.lamisplus.modules.ndr.domain.dto.NDRErrorDTO;
 import org.lamisplus.modules.ndr.domain.dto.NdrXmlStatusDto;
-import org.lamisplus.modules.ndr.service.HtsService;
-import org.lamisplus.modules.ndr.service.NDRService;
-import org.lamisplus.modules.ndr.service.NdrOptimizationService;
-import org.lamisplus.modules.ndr.service.RedactService;
+import org.lamisplus.modules.ndr.service.*;
 import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.simp.SimpMessageSendingOperations;
 import org.springframework.web.bind.annotation.*;
@@ -29,10 +26,11 @@ import java.util.*;
 public class NDRController {
     private final NDRService ndrService;
     private final NdrOptimizationService ndrOptmizationService;
-
     private final SimpMessageSendingOperations messagingTemplate;
     private final HtsService htsService;
     private final RedactService redactService;
+    private final PrEPService prEPService;
+    private final PMTCTService pmtctService;
     public static class Constants {
         public static final String FILE_GENERATION_TIME = "Total time taken to generate a file: {}";
     }
@@ -45,13 +43,6 @@ public class NDRController {
         log.info(Constants.FILE_GENERATION_TIME.replace("{}", String.valueOf(stopwatch.elapsed().toMillis())));
     }
 
-    //testing single file
-    @GetMapping("/generate_one/{personId}")
-    public void generateOnePatientXml(@PathVariable("personId") String personId, @RequestParam("facility") Long facility) {
-        Stopwatch stopwatch = Stopwatch.createStarted();
-        ndrOptmizationService.generatePatientOneNDRXml(facility, true, personId);
-        log.info(Constants.FILE_GENERATION_TIME.replace("{}", String.valueOf(stopwatch.elapsed().toMillis())));
-    }
     @GetMapping("/generate")
     public boolean generateFacilityPatientXmls(@RequestParam List<Long> facilityIds, @RequestParam boolean isInitial ){
         messagingTemplate.convertAndSend("/topic/ndr-status", "start");
@@ -120,14 +111,73 @@ public class NDRController {
         return ResponseEntity.ok().build();
     }
 
-    //testing single HTS file
     @GetMapping("/generate_one_hts")
     public void generateOneHTSPatientXml(@RequestParam("clientCode") String clientCode, @RequestParam("facility") Long facility) {
         Stopwatch stopwatch = Stopwatch.createStarted();
         htsService.generateOnePatientHtsNDRXml(facility, true, clientCode);
         log.info(Constants.FILE_GENERATION_TIME.replace("{}", String.valueOf(stopwatch.elapsed().toMillis())));
     }
-    
+
+    @GetMapping("/prep")
+    public ResponseEntity<Void> generatePrep(@RequestParam List<Long> facilityIds, @RequestParam boolean isInitial) {
+        Stopwatch stopwatch = Stopwatch.createStarted();
+        facilityIds.forEach(facilityId -> prEPService.generatePatientsPrepNDRXml(facilityId, isInitial));
+        log.info(Constants.FILE_GENERATION_TIME.replace("{}", String.valueOf(stopwatch.elapsed().toMinutes())));
+        return ResponseEntity.ok().build();
+    }
+    @GetMapping("/generate/prep")
+    public ResponseEntity<Void> generateSelectedPatientsPrepNDRXml(
+            @RequestParam List<Long> facilityIds,
+            @RequestParam boolean isInitial,
+            @RequestParam List<String> patientIds){
+        Stopwatch stopwatch = Stopwatch.createStarted();
+        facilityIds.forEach(facilityId -> prEPService.generateSelectedPatientsPrepNDRXml(facilityId, isInitial, patientIds));
+        log.info(Constants.FILE_GENERATION_TIME.replace("{}", String.valueOf(stopwatch.elapsed().toMinutes())));
+        return ResponseEntity.ok().build();
+    }
+
+    //testing single prep file
+    @GetMapping("/generate_one_prep")
+    public void generateOnePrepPatientXml(@RequestParam("patientId") String patientId, @RequestParam("facility") Long facility) {
+        Stopwatch stopwatch = Stopwatch.createStarted();
+        prEPService.generateOnePatientHtsNDRXml(facility, true, patientId);
+        log.info(Constants.FILE_GENERATION_TIME.replace("{}", String.valueOf(stopwatch.elapsed().toMillis())));
+    }
+
+    @GetMapping("/pmtct")
+    public ResponseEntity<Void> generatePmtct(@RequestParam List<Long> facilityIds, @RequestParam boolean isInitial) {
+        Stopwatch stopwatch = Stopwatch.createStarted();
+        facilityIds.forEach(facilityId -> pmtctService.generatePatientsPmtctNDRXml(facilityId, isInitial));
+        log.info(Constants.FILE_GENERATION_TIME.replace("{}", String.valueOf(stopwatch.elapsed().toMinutes())));
+        return ResponseEntity.ok().build();
+    }
+
+    @GetMapping("/generate/pmtct")
+    public ResponseEntity<Void> generateSelectedPatientsPmtctNDRXml(
+            @RequestParam List<Long> facilityIds,
+            @RequestParam boolean isInitial,
+            @RequestParam List<String> patientIds) {
+        Stopwatch stopwatch = Stopwatch.createStarted();
+        facilityIds.forEach(facilityId -> pmtctService.generateSelectedPatientsPmtctNDRXml(facilityId, isInitial, patientIds));
+        log.info(Constants.FILE_GENERATION_TIME.replace("{}", String.valueOf(stopwatch.elapsed().toMinutes())));
+        return ResponseEntity.ok().build();
+    }
+
+    @GetMapping("/generate_one_pmtct")
+    public void generateOnePmtctPatientXml(@RequestParam("patientId") String patientId, @RequestParam("facility") Long facility) {
+        Stopwatch stopwatch = Stopwatch.createStarted();
+        pmtctService.generateOnePatientPmtctNDRXml(facility, true, patientId);
+        log.info(Constants.FILE_GENERATION_TIME.replace("{}", String.valueOf(stopwatch.elapsed().toMillis())));
+    }
+
+    @GetMapping(value = "/pmtct/patients", produces = org.springframework.http.MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<Map<String, Object>> getPmtctEligiblePatients(
+            @RequestParam(required = false) List<Long> facilityIds,
+            @RequestParam(defaultValue = "") String searchValue,
+            @RequestParam(defaultValue = "0") int pageNo,
+            @RequestParam(defaultValue = "10") int pageSize) {
+        return ResponseEntity.ok(pmtctService.getPmtctEligiblePatients(facilityIds, searchValue, pageNo, pageSize));
+    }
 
     @GetMapping("/download/{file}")
     public void downloadFile(@PathVariable String file, HttpServletResponse response) throws IOException {

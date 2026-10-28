@@ -1,4 +1,3 @@
-
 package org.lamisplus.modules.ndr.schema;
 
 import javax.xml.bind.annotation.XmlAccessType;
@@ -9,34 +8,36 @@ import javax.xml.bind.annotation.XmlType;
 
 /**
  * <p>Java class for SyndromicSTIScreeningType complex type.
- * 
+ *
  * <p>The following schema fragment specifies the expected content contained within this class.
- * 
+ *
  * <pre>
- * &lt;complexType name="SyndromicSTIScreeningType">
- *   &lt;complexContent>
- *     &lt;restriction base="{http://www.w3.org/2001/XMLSchema}anyType">
- *       &lt;sequence>
- *         &lt;element name="VaginalDischargeOrBurningWhenUrinating" type="{http://www.w3.org/2001/XMLSchema}boolean" minOccurs="0"/>
- *         &lt;element name="LowerAbdominalPainsWithOrWithoutVaginalDischarge" type="{http://www.w3.org/2001/XMLSchema}boolean" minOccurs="0"/>
- *         &lt;element name="UrethralDischargeOrBurningWhenUrinating" type="{http://www.w3.org/2001/XMLSchema}boolean" minOccurs="0"/>
- *         &lt;element name="ScrotalSwellingAndPain" type="{http://www.w3.org/2001/XMLSchema}boolean" minOccurs="0"/>
- *         &lt;element name="GenitalSoreOrSwollenInguinalLymphNodes" type="{http://www.w3.org/2001/XMLSchema}boolean" minOccurs="0"/>
- *       &lt;/sequence>
- *     &lt;/restriction>
- *   &lt;/complexContent>
- * &lt;/complexType>
+ * &lt;complexType name="SyndromicSTIScreeningType"&gt;
+ *   &lt;complexContent&gt;
+ *     &lt;restriction base="{http://www.w3.org/2001/XMLSchema}anyType"&gt;
+ *       &lt;sequence&gt;
+ *         &lt;element name="VaginalDischargeOrBurningWhenUrinating" type="{http://www.w3.org/2001/XMLSchema}boolean" minOccurs="0"/&gt;
+ *         &lt;element name="LowerAbdominalPainsWithOrWithoutVaginalDischarge" type="{http://www.w3.org/2001/XMLSchema}boolean" minOccurs="0"/&gt;
+ *         &lt;element name="UrethralDischargeOrBurningWhenUrinating" type="{http://www.w3.org/2001/XMLSchema}boolean" minOccurs="0"/&gt;
+ *         &lt;element name="ScrotalSwellingAndPain" type="{http://www.w3.org/2001/XMLSchema}boolean" minOccurs="0"/&gt;
+ *         &lt;element name="GenitalSore" type="{http://www.w3.org/2001/XMLSchema}boolean" minOccurs="0"/&gt;
+ *         &lt;element name="GenitalSoreOrSwollenInguinalLymphNodes" type="{http://www.w3.org/2001/XMLSchema}boolean" minOccurs="0"/&gt;
+ *       &lt;/sequence&gt;
+ *     &lt;/restriction&gt;
+ *   &lt;/complexContent&gt;
+ * &lt;/complexType&gt;
  * </pre>
- * 
- * 
+ *
+ *
  */
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "SyndromicSTIScreeningType", propOrder = {
-    "vaginalDischargeOrBurningWhenUrinating",
-    "lowerAbdominalPainsWithOrWithoutVaginalDischarge",
-    "urethralDischargeOrBurningWhenUrinating",
-    "scrotalSwellingAndPain",
-    "genitalSoreOrSwollenInguinalLymphNodes"
+        "vaginalDischargeOrBurningWhenUrinating",
+        "lowerAbdominalPainsWithOrWithoutVaginalDischarge",
+        "urethralDischargeOrBurningWhenUrinating",
+        "scrotalSwellingAndPain",
+        "genitalSore",
+        "genitalSoreOrSwollenInguinalLymphNodes"
 })
 public class SyndromicSTIScreeningType {
 
@@ -48,16 +49,18 @@ public class SyndromicSTIScreeningType {
     protected Boolean urethralDischargeOrBurningWhenUrinating;
     @XmlElement(name = "ScrotalSwellingAndPain")
     protected Boolean scrotalSwellingAndPain;
+    @XmlElement(name = "GenitalSore")
+    protected Boolean genitalSore;
     @XmlElement(name = "GenitalSoreOrSwollenInguinalLymphNodes")
     protected Boolean genitalSoreOrSwollenInguinalLymphNodes;
 
     /**
      * Gets the value of the vaginalDischargeOrBurningWhenUrinating property.
-     * 
+     *
      * @return
      *     possible object is
      *     {@link Boolean }
-     *     
+     *
      */
     public Boolean isVaginalDischargeOrBurningWhenUrinating() {
         return vaginalDischargeOrBurningWhenUrinating;
@@ -65,11 +68,11 @@ public class SyndromicSTIScreeningType {
 
     /**
      * Sets the value of the vaginalDischargeOrBurningWhenUrinating property.
-     * 
+     *
      * @param value
      *     allowed object is
      *     {@link Boolean }
-     *     
+     *
      */
     public void setVaginalDischargeOrBurningWhenUrinating(Boolean value) {
         this.vaginalDischargeOrBurningWhenUrinating = value;
@@ -77,11 +80,11 @@ public class SyndromicSTIScreeningType {
 
     /**
      * Gets the value of the lowerAbdominalPainsWithOrWithoutVaginalDischarge property.
-     * 
+     *
      * @return
      *     possible object is
      *     {@link Boolean }
-     *     
+     *
      */
     public Boolean isLowerAbdominalPainsWithOrWithoutVaginalDischarge() {
         return lowerAbdominalPainsWithOrWithoutVaginalDischarge;
@@ -89,11 +92,11 @@ public class SyndromicSTIScreeningType {
 
     /**
      * Sets the value of the lowerAbdominalPainsWithOrWithoutVaginalDischarge property.
-     * 
+     *
      * @param value
      *     allowed object is
      *     {@link Boolean }
-     *     
+     *
      */
     public void setLowerAbdominalPainsWithOrWithoutVaginalDischarge(Boolean value) {
         this.lowerAbdominalPainsWithOrWithoutVaginalDischarge = value;
@@ -101,11 +104,11 @@ public class SyndromicSTIScreeningType {
 
     /**
      * Gets the value of the urethralDischargeOrBurningWhenUrinating property.
-     * 
+     *
      * @return
      *     possible object is
      *     {@link Boolean }
-     *     
+     *
      */
     public Boolean isUrethralDischargeOrBurningWhenUrinating() {
         return urethralDischargeOrBurningWhenUrinating;
@@ -113,11 +116,11 @@ public class SyndromicSTIScreeningType {
 
     /**
      * Sets the value of the urethralDischargeOrBurningWhenUrinating property.
-     * 
+     *
      * @param value
      *     allowed object is
      *     {@link Boolean }
-     *     
+     *
      */
     public void setUrethralDischargeOrBurningWhenUrinating(Boolean value) {
         this.urethralDischargeOrBurningWhenUrinating = value;
@@ -125,11 +128,11 @@ public class SyndromicSTIScreeningType {
 
     /**
      * Gets the value of the scrotalSwellingAndPain property.
-     * 
+     *
      * @return
      *     possible object is
      *     {@link Boolean }
-     *     
+     *
      */
     public Boolean isScrotalSwellingAndPain() {
         return scrotalSwellingAndPain;
@@ -137,23 +140,47 @@ public class SyndromicSTIScreeningType {
 
     /**
      * Sets the value of the scrotalSwellingAndPain property.
-     * 
+     *
      * @param value
      *     allowed object is
      *     {@link Boolean }
-     *     
+     *
      */
     public void setScrotalSwellingAndPain(Boolean value) {
         this.scrotalSwellingAndPain = value;
     }
 
     /**
-     * Gets the value of the genitalSoreOrSwollenInguinalLymphNodes property.
-     * 
+     * Gets the value of the genitalSore property.
+     *
      * @return
      *     possible object is
      *     {@link Boolean }
-     *     
+     *
+     */
+    public Boolean isGenitalSore() {
+        return genitalSore;
+    }
+
+    /**
+     * Sets the value of the genitalSore property.
+     *
+     * @param value
+     *     allowed object is
+     *     {@link Boolean }
+     *
+     */
+    public void setGenitalSore(Boolean value) {
+        this.genitalSore = value;
+    }
+
+    /**
+     * Gets the value of the genitalSoreOrSwollenInguinalLymphNodes property.
+     *
+     * @return
+     *     possible object is
+     *     {@link Boolean }
+     *
      */
     public Boolean isGenitalSoreOrSwollenInguinalLymphNodes() {
         return genitalSoreOrSwollenInguinalLymphNodes;
@@ -161,11 +188,11 @@ public class SyndromicSTIScreeningType {
 
     /**
      * Sets the value of the genitalSoreOrSwollenInguinalLymphNodes property.
-     * 
+     *
      * @param value
      *     allowed object is
      *     {@link Boolean }
-     *     
+     *
      */
     public void setGenitalSoreOrSwollenInguinalLymphNodes(Boolean value) {
         this.genitalSoreOrSwollenInguinalLymphNodes = value;

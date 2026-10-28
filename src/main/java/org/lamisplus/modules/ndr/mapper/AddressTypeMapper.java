@@ -38,7 +38,7 @@ public class AddressTypeMapper {
 	
 	
 	private void processAndSetPatientCurrentAddress(AddressType addressType, PatientDemographics patientDemographics) {
-		log.info("Processing address...");
+		//log.info("Processing address...");
 		try {
 			if (patientDemographics.getTown() != null) {
 				addressType.setTown(patientDemographics.getTown());

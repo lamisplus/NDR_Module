@@ -1,7 +1,6 @@
 package org.lamisplus.modules.ndr.domain.dto;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 
 public interface ARTClinicalInfo {
 	Long getClinicId();

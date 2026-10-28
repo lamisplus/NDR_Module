@@ -1,187 +1,152 @@
-
 package org.lamisplus.modules.ndr.schema;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlTransient;
 import javax.xml.bind.annotation.XmlType;
 
-
-/**
- * <p>Java class for PartnerNotificationType complex type.
- * 
- * <p>The following schema fragment specifies the expected content contained within this class.
- * 
- * <pre>
- * &lt;complexType name="PartnerNotificationType">
- *   &lt;complexContent>
- *     &lt;restriction base="{http://www.w3.org/2001/XMLSchema}anyType">
- *       &lt;sequence>
- *         &lt;element name="Partnername" type="{http://www.w3.org/2001/XMLSchema}string"/>
- *         &lt;element name="PartnerGender">
- *           &lt;simpleType>
- *             &lt;restriction base="{}CodeType">
- *               &lt;enumeration value="M"/>
- *               &lt;enumeration value="F"/>
- *             &lt;/restriction>
- *           &lt;/simpleType>
- *         &lt;/element>
- *         &lt;element name="IndexRelation">
- *           &lt;simpleType>
- *             &lt;restriction base="{}CodeType">
- *               &lt;enumeration value="1"/>
- *               &lt;enumeration value="2"/>
- *               &lt;enumeration value="3"/>
- *             &lt;/restriction>
- *           &lt;/simpleType>
- *         &lt;/element>
- *         &lt;element name="DescriptiveAddress" type="{http://www.w3.org/2001/XMLSchema}string"/>
- *         &lt;element name="PhoneNumber" type="{http://www.w3.org/2001/XMLSchema}string"/>
- *       &lt;/sequence>
- *     &lt;/restriction>
- *   &lt;/complexContent>
- * &lt;/complexType>
- * </pre>
- * 
- * 
- */
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "PartnerNotificationType", propOrder = {
-    "partnername",
-    "partnerGender",
-    "indexRelation",
-    "descriptiveAddress",
-    "phoneNumber"
+    "agreedToNotification",
+    "partnerTestedHIV",
+    "partnerTestedSyphilis",
+    "partnerTestedHepatitiB",
+    "referredToART",
+    "referredToFamilyPlanning",
+    "referredToPrEP",
+    "referredToOther"
 })
 public class PartnerNotificationType {
 
-    @XmlElement(name = "Partnername", required = true)
+    @XmlElement(name = "AgreedToNotification")
+    protected Boolean agreedToNotification;
+    @XmlElement(name = "PartnerTestedHIV")
+    protected String partnerTestedHIV;
+    @XmlElement(name = "PartnerTestedSyphilis")
+    protected String partnerTestedSyphilis;
+    @XmlElement(name = "PartnerTestedHepatitiB")
+    protected String partnerTestedHepatitiB;
+    @XmlElement(name = "ReferredToART")
+    protected Boolean referredToART;
+    @XmlElement(name = "ReferredToFamilyPlanning")
+    protected Boolean referredToFamilyPlanning;
+    @XmlElement(name = "ReferredToPrEP")
+    protected Boolean referredToPrEP;
+    @XmlElement(name = "ReferredToOther")
+    protected Boolean referredToOther;
+
+    @XmlTransient
     protected String partnername;
-    @XmlElement(name = "PartnerGender", required = true)
+    @XmlTransient
     protected String partnerGender;
-    @XmlElement(name = "IndexRelation", required = true)
+    @XmlTransient
     protected String indexRelation;
-    @XmlElement(name = "DescriptiveAddress", required = true)
+    @XmlTransient
     protected String descriptiveAddress;
-    @XmlElement(name = "PhoneNumber", required = true)
+    @XmlTransient
     protected String phoneNumber;
 
-    /**
-     * Gets the value of the partnername property.
-     * 
-     * @return
-     *     possible object is
-     *     {@link String }
-     *     
-     */
+    public Boolean isAgreedToNotification() {
+        return agreedToNotification;
+    }
+
+    public void setAgreedToNotification(Boolean value) {
+        this.agreedToNotification = value;
+    }
+
+    public String getPartnerTestedHIV() {
+        return partnerTestedHIV;
+    }
+
+    public void setPartnerTestedHIV(String value) {
+        this.partnerTestedHIV = value;
+    }
+
+    public String getPartnerTestedSyphilis() {
+        return partnerTestedSyphilis;
+    }
+
+    public void setPartnerTestedSyphilis(String value) {
+        this.partnerTestedSyphilis = value;
+    }
+
+    public String getPartnerTestedHepatitiB() {
+        return partnerTestedHepatitiB;
+    }
+
+    public void setPartnerTestedHepatitiB(String value) {
+        this.partnerTestedHepatitiB = value;
+    }
+
+    public Boolean isReferredToART() {
+        return referredToART;
+    }
+
+    public void setReferredToART(Boolean value) {
+        this.referredToART = value;
+    }
+
+    public Boolean isReferredToFamilyPlanning() {
+        return referredToFamilyPlanning;
+    }
+
+    public void setReferredToFamilyPlanning(Boolean value) {
+        this.referredToFamilyPlanning = value;
+    }
+
+    public Boolean isReferredToPrEP() {
+        return referredToPrEP;
+    }
+
+    public void setReferredToPrEP(Boolean value) {
+        this.referredToPrEP = value;
+    }
+
+    public Boolean isReferredToOther() {
+        return referredToOther;
+    }
+
+    public void setReferredToOther(Boolean value) {
+        this.referredToOther = value;
+    }
+
     public String getPartnername() {
         return partnername;
     }
 
-    /**
-     * Sets the value of the partnername property.
-     * 
-     * @param value
-     *     allowed object is
-     *     {@link String }
-     *     
-     */
     public void setPartnername(String value) {
         this.partnername = value;
     }
 
-    /**
-     * Gets the value of the partnerGender property.
-     * 
-     * @return
-     *     possible object is
-     *     {@link String }
-     *     
-     */
     public String getPartnerGender() {
         return partnerGender;
     }
 
-    /**
-     * Sets the value of the partnerGender property.
-     * 
-     * @param value
-     *     allowed object is
-     *     {@link String }
-     *     
-     */
     public void setPartnerGender(String value) {
         this.partnerGender = value;
     }
 
-    /**
-     * Gets the value of the indexRelation property.
-     * 
-     * @return
-     *     possible object is
-     *     {@link String }
-     *     
-     */
     public String getIndexRelation() {
         return indexRelation;
     }
 
-    /**
-     * Sets the value of the indexRelation property.
-     * 
-     * @param value
-     *     allowed object is
-     *     {@link String }
-     *     
-     */
     public void setIndexRelation(String value) {
         this.indexRelation = value;
     }
 
-    /**
-     * Gets the value of the descriptiveAddress property.
-     * 
-     * @return
-     *     possible object is
-     *     {@link String }
-     *     
-     */
     public String getDescriptiveAddress() {
         return descriptiveAddress;
     }
 
-    /**
-     * Sets the value of the descriptiveAddress property.
-     * 
-     * @param value
-     *     allowed object is
-     *     {@link String }
-     *     
-     */
     public void setDescriptiveAddress(String value) {
         this.descriptiveAddress = value;
     }
 
-    /**
-     * Gets the value of the phoneNumber property.
-     * 
-     * @return
-     *     possible object is
-     *     {@link String }
-     *     
-     */
     public String getPhoneNumber() {
         return phoneNumber;
     }
 
-    /**
-     * Sets the value of the phoneNumber property.
-     * 
-     * @param value
-     *     allowed object is
-     *     {@link String }
-     *     
-     */
     public void setPhoneNumber(String value) {
         this.phoneNumber = value;
     }

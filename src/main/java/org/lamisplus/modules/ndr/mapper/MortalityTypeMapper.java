@@ -25,19 +25,16 @@ public class MortalityTypeMapper {
     private static final String OTHERSPECIFY = "OthersSpecify";
     private static final String OTHER= "Other";
     public MortalityType getMortalityType(String patientId, long facilityId, LocalDate start, LocalDate end, List<NDRErrorDTO> ndrErrors) {
+//        log.info("start {}, end {}", start, end);
         MortalityType mortalityType = new MortalityType();
         try {
             ClientVerificationType clientVerification = clientVerificationTypeMapper.getClientVerifications(patientId, facilityId, start, end, ndrErrors);
             List<MortalityDTO> mortalityVariables = ndrMessageLogRepository.getPatientMortalities(patientId, facilityId, start, end);
-
-            if (mortalityVariables != null && !mortalityVariables.isEmpty()) {
-
+            if (mortalityVariables.size() > 0) {
                 mortalityVariables.forEach(mortality -> {
-
                     if (clientVerification != null) {
                         mortalityType.setClientVerification(clientVerification);
                     }
-
                     if(mortality.getVisitID() != null) {
                         mortalityType.setVisitID(mortality.getVisitID());
                     }else {

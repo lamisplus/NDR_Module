@@ -51,9 +51,6 @@ public class PatientDemographicsMapper {
             }
         return null;
     }
-    
-    
-   
     public PatientDemographicsType getPatientDemographics(PatientDemographicDTO demographicDTO) {
 
         PatientDemographicsType patientDemographicsType = new PatientDemographicsType ();
@@ -77,7 +74,7 @@ public class PatientDemographicsMapper {
             processAndSetDateOFBirth (patientDemographicsType, demographicDTO.getDateOfBirth ());
             
             if(demographicDTO.getPatientSexCode()  != null) {
-                log.info("state code {}", demographicDTO.getStateCode());
+                //log.info("state code {}", demographicDTO.getStateCode());
                 patientDemographicsType.setPatientSexCode(demographicDTO.getPatientSexCode());
             }else {
                 throw new IllegalArgumentException("Sex code cannot be null");
@@ -95,7 +92,7 @@ public class PatientDemographicsMapper {
             }
 
             if(demographicDTO.getStateCode() != null){
-               log.info("state code {}", demographicDTO.getStateCode());
+               //log.info("state code {}", demographicDTO.getStateCode());
                 patientDemographicsType.setStateOfNigeriaOriginCode(demographicDTO.getStateCode());
             }
 
@@ -112,7 +109,7 @@ public class PatientDemographicsMapper {
         }
     }
     
-    public PatientDemographicsType getPatientDemographics(PatientDemographicDTO demographicDTO, boolean isHts) {
+    public PatientDemographicsType getPatientDemographics(PatientDemographicDTO demographicDTO, String ndrType) {
 
         PatientDemographicsType patientDemographicsType = new PatientDemographicsType ();
 
@@ -134,7 +131,7 @@ public class PatientDemographicsMapper {
             //GET IDENTIFIERS
             IdentifiersType identifiers = new IdentifiersType();
 
-            IdentifierType identifierType = identifiersTypeMapper.getIdentifiers(demographicDTO);
+            IdentifierType identifierType = identifiersTypeMapper.getIdentifiers(demographicDTO, ndrType);
 
             identifiers.getIdentifier().add(identifierType);
 

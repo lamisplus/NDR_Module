@@ -10,11 +10,12 @@ import org.springframework.stereotype.Service;
 @Slf4j
 @Service
 public class IdentifiersTypeMapper {
-    public IdentifierType getIdentifiers(PatientDemographicDTO demographicDTO) {
+    public IdentifierType getIdentifiers(PatientDemographicDTO demographicDTO, String ndrType) {
         IdentifierType identifierType = new IdentifierType();
 
         identifierType.setIDNumber(demographicDTO.getPatientIdentifier());
-        identifierType.setIDTypeCode("HTS");
+        identifierType.setIDTypeCode(ndrType);
+
         return identifierType;
     }
 

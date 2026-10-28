@@ -5,5 +5,6 @@ public interface SyndromicSTIScreeningTypeDto {
 	Boolean getLowerAbdominalPainsWithOrWithoutVaginalDischarge();
 	Boolean getUrethralDischargeOrBurningWhenUrinating();
 	Boolean getScrotalSwellingAndPain();
+	Boolean getGenitalSore();
 	Boolean getGenitalSoreOrSwollenInguinalLymphNodes();
 }

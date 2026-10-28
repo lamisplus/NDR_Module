@@ -1,49 +1,250 @@
 
 package org.lamisplus.modules.ndr.schema;
 
-import javax.xml.bind.annotation.*;
+import java.math.BigDecimal;
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlSchemaType;
+import javax.xml.bind.annotation.XmlType;
 import javax.xml.datatype.XMLGregorianCalendar;
 
 
 /**
  * <p>Java class for LaboratoryOrderAndResult complex type.
- * 
+ *
  * <p>The following schema fragment specifies the expected content contained within this class.
- * 
+ *
  * <pre>
- * &lt;complexType name="LaboratoryOrderAndResult">
- *   &lt;complexContent>
- *     &lt;restriction base="{http://www.w3.org/2001/XMLSchema}anyType">
- *       &lt;sequence>
- *         &lt;element name="LaboratoryTestTypeCode" type="{}CodeType" minOccurs="0"/>
- *         &lt;element name="OrderedTestDate" type="{http://www.w3.org/2001/XMLSchema}date"/>
- *         &lt;element name="LaboratoryOrderedTest" type="{}CodedSimpleType" minOccurs="0"/>
- *         &lt;element name="LaboratoryResultedTest" type="{}CodedSimpleType"/>
- *         &lt;element name="LaboratoryResult" type="{}AnswerType"/>
- *         &lt;element name="ResultedTestDate" type="{http://www.w3.org/2001/XMLSchema}date"/>
- *         &lt;element name="OtherLaboratoryInformation" type="{}StringType" minOccurs="0"/>
- *       &lt;/sequence>
- *     &lt;/restriction>
- *   &lt;/complexContent>
- * &lt;/complexType>
+ * &lt;complexType name="LaboratoryOrderAndResult"&gt;
+ *   &lt;complexContent&gt;
+ *     &lt;restriction base="{http://www.w3.org/2001/XMLSchema}anyType"&gt;
+ *       &lt;sequence&gt;
+ *         &lt;element name="OrderedTestDate" type="{http://www.w3.org/2001/XMLSchema}date"/&gt;
+ *         &lt;element name="LaboratoryOrderedTest" type="{}CodedSimpleType" minOccurs="0"/&gt;
+ *         &lt;element name="LaboratoryResultedTest" type="{}CodedSimpleType"/&gt;
+ *         &lt;element name="LaboratoryResult" type="{}AnswerType"/&gt;
+ *         &lt;element name="ResultedTestDate" type="{http://www.w3.org/2001/XMLSchema}date"/&gt;
+ *         &lt;element name="OtherLaboratoryInformation" type="{}StringType" minOccurs="0"/&gt;
+ *         &lt;element name="LaboratoryTestTypeCode" minOccurs="0"&gt;
+ *           &lt;simpleType&gt;
+ *             &lt;restriction base="{}CodeType"&gt;
+ *               &lt;enumeration value="HIV"/&gt;
+ *               &lt;enumeration value="HBV"/&gt;
+ *               &lt;enumeration value="CV"/&gt;
+ *               &lt;enumeration value="EID"/&gt;
+ *               &lt;enumeration value="CD4"/&gt;
+ *               &lt;enumeration value="OtherTest"/&gt;
+ *             &lt;/restriction&gt;
+ *           &lt;/simpleType&gt;
+ *         &lt;/element&gt;
+ *         &lt;element name="SpecimenCollectionDate" type="{http://www.w3.org/2001/XMLSchema}date" minOccurs="0"/&gt;
+ *         &lt;element name="SpecimenTypeCode" minOccurs="0"&gt;
+ *           &lt;simpleType&gt;
+ *             &lt;restriction base="{}CodeType"&gt;
+ *               &lt;enumeration value="WholeBlood"/&gt;
+ *               &lt;enumeration value="Plasma"/&gt;
+ *               &lt;enumeration value="DBS"/&gt;
+ *               &lt;enumeration value="PBS"/&gt;
+ *             &lt;/restriction&gt;
+ *           &lt;/simpleType&gt;
+ *         &lt;/element&gt;
+ *         &lt;element name="SampleReceivedAtLabDate" type="{http://www.w3.org/2001/XMLSchema}date" minOccurs="0"/&gt;
+ *         &lt;element name="SampleLoggedRemotely" type="{}YNCodeType" minOccurs="0"/&gt;
+ *         &lt;element name="LabRegistrationNumber" type="{}StringType" minOccurs="0"/&gt;
+ *         &lt;element name="PCRPOCLabName" type="{}StringType" minOccurs="0"/&gt;
+ *         &lt;element name="PCRPOCLabSampleNumber" type="{}StringType" minOccurs="0"/&gt;
+ *         &lt;element name="ViralLoadIndicationCode" minOccurs="0"&gt;
+ *           &lt;simpleType&gt;
+ *             &lt;restriction base="{}CodeType"&gt;
+ *               &lt;enumeration value="Baseline"/&gt;
+ *               &lt;enumeration value="Routine"/&gt;
+ *               &lt;enumeration value="ClinicalFailure"/&gt;
+ *               &lt;enumeration value="ImmunologicFailure"/&gt;
+ *               &lt;enumeration value="Confirmation"/&gt;
+ *               &lt;enumeration value="RecentInfection"/&gt;
+ *               &lt;enumeration value="Gestation3236Weeks"/&gt;
+ *               &lt;enumeration value="EarlyHIVDetection"/&gt;
+ *             &lt;/restriction&gt;
+ *           &lt;/simpleType&gt;
+ *         &lt;/element&gt;
+ *         &lt;element name="ViralLoadResult" type="{http://www.w3.org/2001/XMLSchema}decimal" minOccurs="0"/&gt;
+ *         &lt;element name="ViralLoadResultDate" type="{http://www.w3.org/2001/XMLSchema}date" minOccurs="0"/&gt;
+ *         &lt;element name="EIDIndicationCode" minOccurs="0"&gt;
+ *           &lt;simpleType&gt;
+ *             &lt;restriction base="{}CodeType"&gt;
+ *               &lt;enumeration value="EIDAtBirth"/&gt;
+ *               &lt;enumeration value="EIDAt6To8Weeks"/&gt;
+ *               &lt;enumeration value="EIDAt2To12Months"/&gt;
+ *               &lt;enumeration value="RepeatInvalidTest"/&gt;
+ *               &lt;enumeration value="RepeatAfterBreastfeedingCessation"/&gt;
+ *             &lt;/restriction&gt;
+ *           &lt;/simpleType&gt;
+ *         &lt;/element&gt;
+ *         &lt;element name="EIDEntryPointCode" type="{http://www.w3.org/2001/XMLSchema}string" minOccurs="0"/&gt;
+ *         &lt;element name="EIDResultCode" minOccurs="0"&gt;
+ *           &lt;simpleType&gt;
+ *             &lt;restriction base="{}CodeType"&gt;
+ *               &lt;enumeration value="Negative"/&gt;
+ *               &lt;enumeration value="Positive"/&gt;
+ *               &lt;enumeration value="Invalid"/&gt;
+ *             &lt;/restriction&gt;
+ *           &lt;/simpleType&gt;
+ *         &lt;/element&gt;
+ *         &lt;element name="EIDAgeCode" minOccurs="0"&gt;
+ *           &lt;simpleType&gt;
+ *             &lt;restriction base="{}CodeType"&gt;
+ *               &lt;enumeration value="LessThanOrEqual72hrs"/&gt;
+ *               &lt;enumeration value="GreaterThan72hrsLessThan2Months"/&gt;
+ *               &lt;enumeration value="GreaterThanOrEqual2MonthsTo12Months"/&gt;
+ *               &lt;enumeration value="GreaterThan12Months"/&gt;
+ *             &lt;/restriction&gt;
+ *           &lt;/simpleType&gt;
+ *         &lt;/element&gt;
+ *         &lt;element name="CD4CellCount" type="{http://www.w3.org/2001/XMLSchema}decimal" minOccurs="0"/&gt;
+ *         &lt;element name="CD4Percentage" type="{http://www.w3.org/2001/XMLSchema}decimal" minOccurs="0"/&gt;
+ *         &lt;element name="CD4LFAResultCode" minOccurs="0"&gt;
+ *           &lt;simpleType&gt;
+ *             &lt;restriction base="{}CodeType"&gt;
+ *               &lt;enumeration value="LessThan200"/&gt;
+ *               &lt;enumeration value="GTEqual200"/&gt;
+ *             &lt;/restriction&gt;
+ *           &lt;/simpleType&gt;
+ *         &lt;/element&gt;
+ *         &lt;element name="RandomGlucose" type="{http://www.w3.org/2001/XMLSchema}decimal" minOccurs="0"/&gt;
+ *         &lt;element name="HBsAGResultCode" minOccurs="0"&gt;
+ *           &lt;simpleType&gt;
+ *             &lt;restriction base="{}CodeType"&gt;
+ *               &lt;enumeration value="Negative"/&gt;
+ *               &lt;enumeration value="Positive"/&gt;
+ *             &lt;/restriction&gt;
+ *           &lt;/simpleType&gt;
+ *         &lt;/element&gt;
+ *         &lt;element name="HCVAntibodyResultCode" minOccurs="0"&gt;
+ *           &lt;simpleType&gt;
+ *             &lt;restriction base="{}CodeType"&gt;
+ *               &lt;enumeration value="Negative"/&gt;
+ *               &lt;enumeration value="Positive"/&gt;
+ *             &lt;/restriction&gt;
+ *           &lt;/simpleType&gt;
+ *         &lt;/element&gt;
+ *         &lt;element name="HBVViralLoad" type="{http://www.w3.org/2001/XMLSchema}decimal" minOccurs="0"/&gt;
+ *         &lt;element name="HCVViralLoad" type="{http://www.w3.org/2001/XMLSchema}decimal" minOccurs="0"/&gt;
+ *         &lt;element name="VDRLSyphilisResultCode" minOccurs="0"&gt;
+ *           &lt;simpleType&gt;
+ *             &lt;restriction base="{}CodeType"&gt;
+ *               &lt;enumeration value="NonReactive"/&gt;
+ *               &lt;enumeration value="Reactive"/&gt;
+ *             &lt;/restriction&gt;
+ *           &lt;/simpleType&gt;
+ *         &lt;/element&gt;
+ *         &lt;element name="SerologyForCrAgResultCode" minOccurs="0"&gt;
+ *           &lt;simpleType&gt;
+ *             &lt;restriction base="{}CodeType"&gt;
+ *               &lt;enumeration value="Negative"/&gt;
+ *               &lt;enumeration value="Positive"/&gt;
+ *             &lt;/restriction&gt;
+ *           &lt;/simpleType&gt;
+ *         &lt;/element&gt;
+ *         &lt;element name="CSFForCrAgResultCode" minOccurs="0"&gt;
+ *           &lt;simpleType&gt;
+ *             &lt;restriction base="{}CodeType"&gt;
+ *               &lt;enumeration value="Negative"/&gt;
+ *               &lt;enumeration value="Positive"/&gt;
+ *             &lt;/restriction&gt;
+ *           &lt;/simpleType&gt;
+ *         &lt;/element&gt;
+ *         &lt;element name="TBLFLAMResultCode" minOccurs="0"&gt;
+ *           &lt;simpleType&gt;
+ *             &lt;restriction base="{}CodeType"&gt;
+ *               &lt;enumeration value="Negative"/&gt;
+ *               &lt;enumeration value="Positive"/&gt;
+ *             &lt;/restriction&gt;
+ *           &lt;/simpleType&gt;
+ *         &lt;/element&gt;
+ *         &lt;element name="HPVResultCode" minOccurs="0"&gt;
+ *           &lt;simpleType&gt;
+ *             &lt;restriction base="{}CodeType"&gt;
+ *               &lt;enumeration value="Negative"/&gt;
+ *               &lt;enumeration value="Positive"/&gt;
+ *             &lt;/restriction&gt;
+ *           &lt;/simpleType&gt;
+ *         &lt;/element&gt;
+ *         &lt;element name="CytologyVIAPapSmearResult" type="{}StringType" minOccurs="0"/&gt;
+ *         &lt;element name="Urinalysis" type="{}StringType" minOccurs="0"/&gt;
+ *         &lt;element name="ARTStartDate" type="{http://www.w3.org/2001/XMLSchema}date" minOccurs="0"/&gt;
+ *         &lt;element name="DrugRegimenLineCode" minOccurs="0"&gt;
+ *           &lt;simpleType&gt;
+ *             &lt;restriction base="{}CodeType"&gt;
+ *               &lt;enumeration value="FirstLine"/&gt;
+ *               &lt;enumeration value="SecondLine"/&gt;
+ *               &lt;enumeration value="ThirdLine"/&gt;
+ *             &lt;/restriction&gt;
+ *           &lt;/simpleType&gt;
+ *         &lt;/element&gt;
+ *         &lt;element name="ARVProphylaxisReceivedCode" minOccurs="0"&gt;
+ *           &lt;simpleType&gt;
+ *             &lt;restriction base="{}CodeType"&gt;
+ *               &lt;enumeration value="AZT_NVP"/&gt;
+ *               &lt;enumeration value="NVP"/&gt;
+ *               &lt;enumeration value="AZT_3TC_NVP_RAL"/&gt;
+ *               &lt;enumeration value="Others"/&gt;
+ *               &lt;enumeration value="No"/&gt;
+ *             &lt;/restriction&gt;
+ *           &lt;/simpleType&gt;
+ *         &lt;/element&gt;
+ *       &lt;/sequence&gt;
+ *     &lt;/restriction&gt;
+ *   &lt;/complexContent&gt;
+ * &lt;/complexType&gt;
  * </pre>
- * 
- * 
+ *
+ *
  */
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "LaboratoryOrderAndResult", propOrder = {
-    "laboratoryTestTypeCode",
-    "orderedTestDate",
-    "laboratoryOrderedTest",
-    "laboratoryResultedTest",
-    "laboratoryResult",
-    "resultedTestDate",
-    "otherLaboratoryInformation"
+        "orderedTestDate",
+        "laboratoryOrderedTest",
+        "laboratoryResultedTest",
+        "laboratoryResult",
+        "resultedTestDate",
+        "otherLaboratoryInformation",
+        "laboratoryTestTypeCode",
+        "specimenCollectionDate",
+        "specimenTypeCode",
+        "sampleReceivedAtLabDate",
+        "sampleLoggedRemotely",
+        "labRegistrationNumber",
+        "pcrpocLabName",
+        "pcrpocLabSampleNumber",
+        "viralLoadIndicationCode",
+        "viralLoadResult",
+        "viralLoadResultDate",
+        "eidIndicationCode",
+        "eidEntryPointCode",
+        "eidResultCode",
+        "eidAgeCode",
+        "cd4CellCount",
+        "cd4Percentage",
+        "cd4LFAResultCode",
+        "randomGlucose",
+        "hBsAGResultCode",
+        "hcvAntibodyResultCode",
+        "hbvViralLoad",
+        "hcvViralLoad",
+        "vdrlSyphilisResultCode",
+        "serologyForCrAgResultCode",
+        "csfForCrAgResultCode",
+        "tblflamResultCode",
+        "hpvResultCode",
+        "cytologyVIAPapSmearResult",
+        "urinalysis",
+        "artStartDate",
+        "drugRegimenLineCode",
+        "arvProphylaxisReceivedCode"
 })
 public class LaboratoryOrderAndResult {
 
-    @XmlElement(name = "LaboratoryTestTypeCode")
-    protected String laboratoryTestTypeCode;
     @XmlElement(name = "OrderedTestDate", required = true)
     @XmlSchemaType(name = "date")
     protected XMLGregorianCalendar orderedTestDate;
@@ -58,38 +259,85 @@ public class LaboratoryOrderAndResult {
     protected XMLGregorianCalendar resultedTestDate;
     @XmlElement(name = "OtherLaboratoryInformation")
     protected String otherLaboratoryInformation;
-
-    /**
-     * Gets the value of the laboratoryTestTypeCode property.
-     * 
-     * @return
-     *     possible object is
-     *     {@link String }
-     *     
-     */
-    public String getLaboratoryTestTypeCode() {
-        return laboratoryTestTypeCode;
-    }
-
-    /**
-     * Sets the value of the laboratoryTestTypeCode property.
-     * 
-     * @param value
-     *     allowed object is
-     *     {@link String }
-     *     
-     */
-    public void setLaboratoryTestTypeCode(String value) {
-        this.laboratoryTestTypeCode = value;
-    }
+    @XmlElement(name = "LaboratoryTestTypeCode")
+    protected String laboratoryTestTypeCode;
+    @XmlElement(name = "SpecimenCollectionDate")
+    @XmlSchemaType(name = "date")
+    protected XMLGregorianCalendar specimenCollectionDate;
+    @XmlElement(name = "SpecimenTypeCode")
+    protected String specimenTypeCode;
+    @XmlElement(name = "SampleReceivedAtLabDate")
+    @XmlSchemaType(name = "date")
+    protected XMLGregorianCalendar sampleReceivedAtLabDate;
+    @XmlElement(name = "SampleLoggedRemotely")
+    @XmlSchemaType(name = "string")
+    protected YNCodeType sampleLoggedRemotely;
+    @XmlElement(name = "LabRegistrationNumber")
+    protected String labRegistrationNumber;
+    @XmlElement(name = "PCRPOCLabName")
+    protected String pcrpocLabName;
+    @XmlElement(name = "PCRPOCLabSampleNumber")
+    protected String pcrpocLabSampleNumber;
+    @XmlElement(name = "ViralLoadIndicationCode")
+    protected String viralLoadIndicationCode;
+    @XmlElement(name = "ViralLoadResult")
+    protected BigDecimal viralLoadResult;
+    @XmlElement(name = "ViralLoadResultDate")
+    @XmlSchemaType(name = "date")
+    protected XMLGregorianCalendar viralLoadResultDate;
+    @XmlElement(name = "EIDIndicationCode")
+    protected String eidIndicationCode;
+    @XmlElement(name = "EIDEntryPointCode")
+    protected String eidEntryPointCode;
+    @XmlElement(name = "EIDResultCode")
+    protected String eidResultCode;
+    @XmlElement(name = "EIDAgeCode")
+    protected String eidAgeCode;
+    @XmlElement(name = "CD4CellCount")
+    protected BigDecimal cd4CellCount;
+    @XmlElement(name = "CD4Percentage")
+    protected BigDecimal cd4Percentage;
+    @XmlElement(name = "CD4LFAResultCode")
+    protected String cd4LFAResultCode;
+    @XmlElement(name = "RandomGlucose")
+    protected BigDecimal randomGlucose;
+    @XmlElement(name = "HBsAGResultCode")
+    protected String hBsAGResultCode;
+    @XmlElement(name = "HCVAntibodyResultCode")
+    protected String hcvAntibodyResultCode;
+    @XmlElement(name = "HBVViralLoad")
+    protected BigDecimal hbvViralLoad;
+    @XmlElement(name = "HCVViralLoad")
+    protected BigDecimal hcvViralLoad;
+    @XmlElement(name = "VDRLSyphilisResultCode")
+    protected String vdrlSyphilisResultCode;
+    @XmlElement(name = "SerologyForCrAgResultCode")
+    protected String serologyForCrAgResultCode;
+    @XmlElement(name = "CSFForCrAgResultCode")
+    protected String csfForCrAgResultCode;
+    @XmlElement(name = "TBLFLAMResultCode")
+    protected String tblflamResultCode;
+    @XmlElement(name = "HPVResultCode")
+    protected String hpvResultCode;
+    @XmlElement(name = "CytologyVIAPapSmearResult")
+    protected String cytologyVIAPapSmearResult;
+    @XmlElement(name = "Urinalysis")
+    protected String urinalysis;
+    @XmlElement(name = "ARTStartDate")
+    @XmlSchemaType(name = "date")
+    protected XMLGregorianCalendar artStartDate;
+    @XmlElement(name = "DrugRegimenLineCode")
+    protected String drugRegimenLineCode;
+    @XmlElement(name = "ARVProphylaxisReceivedCode")
+    protected String arvProphylaxisReceivedCode;
 
     /**
      * Gets the value of the orderedTestDate property.
-     * 
+     *
      * @return
      *     possible object is
      *     {@link XMLGregorianCalendar }
-     *     
+     *
      */
     public XMLGregorianCalendar getOrderedTestDate() {
         return orderedTestDate;
@@ -97,11 +345,11 @@ public class LaboratoryOrderAndResult {
 
     /**
      * Sets the value of the orderedTestDate property.
-     * 
+     *
      * @param value
      *     allowed object is
      *     {@link XMLGregorianCalendar }
-     *     
+     *
      */
     public void setOrderedTestDate(XMLGregorianCalendar value) {
         this.orderedTestDate = value;
@@ -109,11 +357,11 @@ public class LaboratoryOrderAndResult {
 
     /**
      * Gets the value of the laboratoryOrderedTest property.
-     * 
+     *
      * @return
      *     possible object is
      *     {@link CodedSimpleType }
-     *     
+     *
      */
     public CodedSimpleType getLaboratoryOrderedTest() {
         return laboratoryOrderedTest;
@@ -121,11 +369,11 @@ public class LaboratoryOrderAndResult {
 
     /**
      * Sets the value of the laboratoryOrderedTest property.
-     * 
+     *
      * @param value
      *     allowed object is
      *     {@link CodedSimpleType }
-     *     
+     *
      */
     public void setLaboratoryOrderedTest(CodedSimpleType value) {
         this.laboratoryOrderedTest = value;
@@ -133,11 +381,11 @@ public class LaboratoryOrderAndResult {
 
     /**
      * Gets the value of the laboratoryResultedTest property.
-     * 
+     *
      * @return
      *     possible object is
      *     {@link CodedSimpleType }
-     *     
+     *
      */
     public CodedSimpleType getLaboratoryResultedTest() {
         return laboratoryResultedTest;
@@ -145,11 +393,11 @@ public class LaboratoryOrderAndResult {
 
     /**
      * Sets the value of the laboratoryResultedTest property.
-     * 
+     *
      * @param value
      *     allowed object is
      *     {@link CodedSimpleType }
-     *     
+     *
      */
     public void setLaboratoryResultedTest(CodedSimpleType value) {
         this.laboratoryResultedTest = value;
@@ -157,11 +405,11 @@ public class LaboratoryOrderAndResult {
 
     /**
      * Gets the value of the laboratoryResult property.
-     * 
+     *
      * @return
      *     possible object is
      *     {@link AnswerType }
-     *     
+     *
      */
     public AnswerType getLaboratoryResult() {
         return laboratoryResult;
@@ -169,11 +417,11 @@ public class LaboratoryOrderAndResult {
 
     /**
      * Sets the value of the laboratoryResult property.
-     * 
+     *
      * @param value
      *     allowed object is
      *     {@link AnswerType }
-     *     
+     *
      */
     public void setLaboratoryResult(AnswerType value) {
         this.laboratoryResult = value;
@@ -181,11 +429,11 @@ public class LaboratoryOrderAndResult {
 
     /**
      * Gets the value of the resultedTestDate property.
-     * 
+     *
      * @return
      *     possible object is
      *     {@link XMLGregorianCalendar }
-     *     
+     *
      */
     public XMLGregorianCalendar getResultedTestDate() {
         return resultedTestDate;
@@ -193,11 +441,11 @@ public class LaboratoryOrderAndResult {
 
     /**
      * Sets the value of the resultedTestDate property.
-     * 
+     *
      * @param value
      *     allowed object is
      *     {@link XMLGregorianCalendar }
-     *     
+     *
      */
     public void setResultedTestDate(XMLGregorianCalendar value) {
         this.resultedTestDate = value;
@@ -205,11 +453,11 @@ public class LaboratoryOrderAndResult {
 
     /**
      * Gets the value of the otherLaboratoryInformation property.
-     * 
+     *
      * @return
      *     possible object is
      *     {@link String }
-     *     
+     *
      */
     public String getOtherLaboratoryInformation() {
         return otherLaboratoryInformation;
@@ -217,14 +465,806 @@ public class LaboratoryOrderAndResult {
 
     /**
      * Sets the value of the otherLaboratoryInformation property.
-     * 
+     *
      * @param value
      *     allowed object is
      *     {@link String }
-     *     
+     *
      */
     public void setOtherLaboratoryInformation(String value) {
         this.otherLaboratoryInformation = value;
+    }
+
+    /**
+     * Gets the value of the laboratoryTestTypeCode property.
+     *
+     * @return
+     *     possible object is
+     *     {@link String }
+     *
+     */
+    public String getLaboratoryTestTypeCode() {
+        return laboratoryTestTypeCode;
+    }
+
+    /**
+     * Sets the value of the laboratoryTestTypeCode property.
+     *
+     * @param value
+     *     allowed object is
+     *     {@link String }
+     *
+     */
+    public void setLaboratoryTestTypeCode(String value) {
+        this.laboratoryTestTypeCode = value;
+    }
+
+    /**
+     * Gets the value of the specimenCollectionDate property.
+     *
+     * @return
+     *     possible object is
+     *     {@link XMLGregorianCalendar }
+     *
+     */
+    public XMLGregorianCalendar getSpecimenCollectionDate() {
+        return specimenCollectionDate;
+    }
+
+    /**
+     * Sets the value of the specimenCollectionDate property.
+     *
+     * @param value
+     *     allowed object is
+     *     {@link XMLGregorianCalendar }
+     *
+     */
+    public void setSpecimenCollectionDate(XMLGregorianCalendar value) {
+        this.specimenCollectionDate = value;
+    }
+
+    /**
+     * Gets the value of the specimenTypeCode property.
+     *
+     * @return
+     *     possible object is
+     *     {@link String }
+     *
+     */
+    public String getSpecimenTypeCode() {
+        return specimenTypeCode;
+    }
+
+    /**
+     * Sets the value of the specimenTypeCode property.
+     *
+     * @param value
+     *     allowed object is
+     *     {@link String }
+     *
+     */
+    public void setSpecimenTypeCode(String value) {
+        this.specimenTypeCode = value;
+    }
+
+    /**
+     * Gets the value of the sampleReceivedAtLabDate property.
+     *
+     * @return
+     *     possible object is
+     *     {@link XMLGregorianCalendar }
+     *
+     */
+    public XMLGregorianCalendar getSampleReceivedAtLabDate() {
+        return sampleReceivedAtLabDate;
+    }
+
+    /**
+     * Sets the value of the sampleReceivedAtLabDate property.
+     *
+     * @param value
+     *     allowed object is
+     *     {@link XMLGregorianCalendar }
+     *
+     */
+    public void setSampleReceivedAtLabDate(XMLGregorianCalendar value) {
+        this.sampleReceivedAtLabDate = value;
+    }
+
+    /**
+     * Gets the value of the sampleLoggedRemotely property.
+     *
+     * @return
+     *     possible object is
+     *     {@link YNCodeType }
+     *
+     */
+    public YNCodeType getSampleLoggedRemotely() {
+        return sampleLoggedRemotely;
+    }
+
+    /**
+     * Sets the value of the sampleLoggedRemotely property.
+     *
+     * @param value
+     *     allowed object is
+     *     {@link YNCodeType }
+     *
+     */
+    public void setSampleLoggedRemotely(YNCodeType value) {
+        this.sampleLoggedRemotely = value;
+    }
+
+    /**
+     * Gets the value of the labRegistrationNumber property.
+     *
+     * @return
+     *     possible object is
+     *     {@link String }
+     *
+     */
+    public String getLabRegistrationNumber() {
+        return labRegistrationNumber;
+    }
+
+    /**
+     * Sets the value of the labRegistrationNumber property.
+     *
+     * @param value
+     *     allowed object is
+     *     {@link String }
+     *
+     */
+    public void setLabRegistrationNumber(String value) {
+        this.labRegistrationNumber = value;
+    }
+
+    /**
+     * Gets the value of the pcrpocLabName property.
+     *
+     * @return
+     *     possible object is
+     *     {@link String }
+     *
+     */
+    public String getPCRPOCLabName() {
+        return pcrpocLabName;
+    }
+
+    /**
+     * Sets the value of the pcrpocLabName property.
+     *
+     * @param value
+     *     allowed object is
+     *     {@link String }
+     *
+     */
+    public void setPCRPOCLabName(String value) {
+        this.pcrpocLabName = value;
+    }
+
+    /**
+     * Gets the value of the pcrpocLabSampleNumber property.
+     *
+     * @return
+     *     possible object is
+     *     {@link String }
+     *
+     */
+    public String getPCRPOCLabSampleNumber() {
+        return pcrpocLabSampleNumber;
+    }
+
+    /**
+     * Sets the value of the pcrpocLabSampleNumber property.
+     *
+     * @param value
+     *     allowed object is
+     *     {@link String }
+     *
+     */
+    public void setPCRPOCLabSampleNumber(String value) {
+        this.pcrpocLabSampleNumber = value;
+    }
+
+    /**
+     * Gets the value of the viralLoadIndicationCode property.
+     *
+     * @return
+     *     possible object is
+     *     {@link String }
+     *
+     */
+    public String getViralLoadIndicationCode() {
+        return viralLoadIndicationCode;
+    }
+
+    /**
+     * Sets the value of the viralLoadIndicationCode property.
+     *
+     * @param value
+     *     allowed object is
+     *     {@link String }
+     *
+     */
+    public void setViralLoadIndicationCode(String value) {
+        this.viralLoadIndicationCode = value;
+    }
+
+    /**
+     * Gets the value of the viralLoadResult property.
+     *
+     * @return
+     *     possible object is
+     *     {@link BigDecimal }
+     *
+     */
+    public BigDecimal getViralLoadResult() {
+        return viralLoadResult;
+    }
+
+    /**
+     * Sets the value of the viralLoadResult property.
+     *
+     * @param value
+     *     allowed object is
+     *     {@link BigDecimal }
+     *
+     */
+    public void setViralLoadResult(BigDecimal value) {
+        this.viralLoadResult = value;
+    }
+
+    /**
+     * Gets the value of the viralLoadResultDate property.
+     *
+     * @return
+     *     possible object is
+     *     {@link XMLGregorianCalendar }
+     *
+     */
+    public XMLGregorianCalendar getViralLoadResultDate() {
+        return viralLoadResultDate;
+    }
+
+    /**
+     * Sets the value of the viralLoadResultDate property.
+     *
+     * @param value
+     *     allowed object is
+     *     {@link XMLGregorianCalendar }
+     *
+     */
+    public void setViralLoadResultDate(XMLGregorianCalendar value) {
+        this.viralLoadResultDate = value;
+    }
+
+    /**
+     * Gets the value of the eidIndicationCode property.
+     *
+     * @return
+     *     possible object is
+     *     {@link String }
+     *
+     */
+    public String getEIDIndicationCode() {
+        return eidIndicationCode;
+    }
+
+    /**
+     * Sets the value of the eidIndicationCode property.
+     *
+     * @param value
+     *     allowed object is
+     *     {@link String }
+     *
+     */
+    public void setEIDIndicationCode(String value) {
+        this.eidIndicationCode = value;
+    }
+
+    /**
+     * Gets the value of the eidEntryPointCode property.
+     *
+     * @return
+     *     possible object is
+     *     {@link String }
+     *
+     */
+    public String getEIDEntryPointCode() {
+        return eidEntryPointCode;
+    }
+
+    /**
+     * Sets the value of the eidEntryPointCode property.
+     *
+     * @param value
+     *     allowed object is
+     *     {@link String }
+     *
+     */
+    public void setEIDEntryPointCode(String value) {
+        this.eidEntryPointCode = value;
+    }
+
+    /**
+     * Gets the value of the eidResultCode property.
+     *
+     * @return
+     *     possible object is
+     *     {@link String }
+     *
+     */
+    public String getEIDResultCode() {
+        return eidResultCode;
+    }
+
+    /**
+     * Sets the value of the eidResultCode property.
+     *
+     * @param value
+     *     allowed object is
+     *     {@link String }
+     *
+     */
+    public void setEIDResultCode(String value) {
+        this.eidResultCode = value;
+    }
+
+    /**
+     * Gets the value of the eidAgeCode property.
+     *
+     * @return
+     *     possible object is
+     *     {@link String }
+     *
+     */
+    public String getEIDAgeCode() {
+        return eidAgeCode;
+    }
+
+    /**
+     * Sets the value of the eidAgeCode property.
+     *
+     * @param value
+     *     allowed object is
+     *     {@link String }
+     *
+     */
+    public void setEIDAgeCode(String value) {
+        this.eidAgeCode = value;
+    }
+
+    /**
+     * Gets the value of the cd4CellCount property.
+     *
+     * @return
+     *     possible object is
+     *     {@link BigDecimal }
+     *
+     */
+    public BigDecimal getCD4CellCount() {
+        return cd4CellCount;
+    }
+
+    /**
+     * Sets the value of the cd4CellCount property.
+     *
+     * @param value
+     *     allowed object is
+     *     {@link BigDecimal }
+     *
+     */
+    public void setCD4CellCount(BigDecimal value) {
+        this.cd4CellCount = value;
+    }
+
+    /**
+     * Gets the value of the cd4Percentage property.
+     *
+     * @return
+     *     possible object is
+     *     {@link BigDecimal }
+     *
+     */
+    public BigDecimal getCD4Percentage() {
+        return cd4Percentage;
+    }
+
+    /**
+     * Sets the value of the cd4Percentage property.
+     *
+     * @param value
+     *     allowed object is
+     *     {@link BigDecimal }
+     *
+     */
+    public void setCD4Percentage(BigDecimal value) {
+        this.cd4Percentage = value;
+    }
+
+    /**
+     * Gets the value of the cd4LFAResultCode property.
+     *
+     * @return
+     *     possible object is
+     *     {@link String }
+     *
+     */
+    public String getCD4LFAResultCode() {
+        return cd4LFAResultCode;
+    }
+
+    /**
+     * Sets the value of the cd4LFAResultCode property.
+     *
+     * @param value
+     *     allowed object is
+     *     {@link String }
+     *
+     */
+    public void setCD4LFAResultCode(String value) {
+        this.cd4LFAResultCode = value;
+    }
+
+    /**
+     * Gets the value of the randomGlucose property.
+     *
+     * @return
+     *     possible object is
+     *     {@link BigDecimal }
+     *
+     */
+    public BigDecimal getRandomGlucose() {
+        return randomGlucose;
+    }
+
+    /**
+     * Sets the value of the randomGlucose property.
+     *
+     * @param value
+     *     allowed object is
+     *     {@link BigDecimal }
+     *
+     */
+    public void setRandomGlucose(BigDecimal value) {
+        this.randomGlucose = value;
+    }
+
+    /**
+     * Gets the value of the hBsAGResultCode property.
+     *
+     * @return
+     *     possible object is
+     *     {@link String }
+     *
+     */
+    public String getHBsAGResultCode() {
+        return hBsAGResultCode;
+    }
+
+    /**
+     * Sets the value of the hBsAGResultCode property.
+     *
+     * @param value
+     *     allowed object is
+     *     {@link String }
+     *
+     */
+    public void setHBsAGResultCode(String value) {
+        this.hBsAGResultCode = value;
+    }
+
+    /**
+     * Gets the value of the hcvAntibodyResultCode property.
+     *
+     * @return
+     *     possible object is
+     *     {@link String }
+     *
+     */
+    public String getHCVAntibodyResultCode() {
+        return hcvAntibodyResultCode;
+    }
+
+    /**
+     * Sets the value of the hcvAntibodyResultCode property.
+     *
+     * @param value
+     *     allowed object is
+     *     {@link String }
+     *
+     */
+    public void setHCVAntibodyResultCode(String value) {
+        this.hcvAntibodyResultCode = value;
+    }
+
+    /**
+     * Gets the value of the hbvViralLoad property.
+     *
+     * @return
+     *     possible object is
+     *     {@link BigDecimal }
+     *
+     */
+    public BigDecimal getHBVViralLoad() {
+        return hbvViralLoad;
+    }
+
+    /**
+     * Sets the value of the hbvViralLoad property.
+     *
+     * @param value
+     *     allowed object is
+     *     {@link BigDecimal }
+     *
+     */
+    public void setHBVViralLoad(BigDecimal value) {
+        this.hbvViralLoad = value;
+    }
+
+    /**
+     * Gets the value of the hcvViralLoad property.
+     *
+     * @return
+     *     possible object is
+     *     {@link BigDecimal }
+     *
+     */
+    public BigDecimal getHCVViralLoad() {
+        return hcvViralLoad;
+    }
+
+    /**
+     * Sets the value of the hcvViralLoad property.
+     *
+     * @param value
+     *     allowed object is
+     *     {@link BigDecimal }
+     *
+     */
+    public void setHCVViralLoad(BigDecimal value) {
+        this.hcvViralLoad = value;
+    }
+
+    /**
+     * Gets the value of the vdrlSyphilisResultCode property.
+     *
+     * @return
+     *     possible object is
+     *     {@link String }
+     *
+     */
+    public String getVDRLSyphilisResultCode() {
+        return vdrlSyphilisResultCode;
+    }
+
+    /**
+     * Sets the value of the vdrlSyphilisResultCode property.
+     *
+     * @param value
+     *     allowed object is
+     *     {@link String }
+     *
+     */
+    public void setVDRLSyphilisResultCode(String value) {
+        this.vdrlSyphilisResultCode = value;
+    }
+
+    /**
+     * Gets the value of the serologyForCrAgResultCode property.
+     *
+     * @return
+     *     possible object is
+     *     {@link String }
+     *
+     */
+    public String getSerologyForCrAgResultCode() {
+        return serologyForCrAgResultCode;
+    }
+
+    /**
+     * Sets the value of the serologyForCrAgResultCode property.
+     *
+     * @param value
+     *     allowed object is
+     *     {@link String }
+     *
+     */
+    public void setSerologyForCrAgResultCode(String value) {
+        this.serologyForCrAgResultCode = value;
+    }
+
+    /**
+     * Gets the value of the csfForCrAgResultCode property.
+     *
+     * @return
+     *     possible object is
+     *     {@link String }
+     *
+     */
+    public String getCSFForCrAgResultCode() {
+        return csfForCrAgResultCode;
+    }
+
+    /**
+     * Sets the value of the csfForCrAgResultCode property.
+     *
+     * @param value
+     *     allowed object is
+     *     {@link String }
+     *
+     */
+    public void setCSFForCrAgResultCode(String value) {
+        this.csfForCrAgResultCode = value;
+    }
+
+    /**
+     * Gets the value of the tblflamResultCode property.
+     *
+     * @return
+     *     possible object is
+     *     {@link String }
+     *
+     */
+    public String getTBLFLAMResultCode() {
+        return tblflamResultCode;
+    }
+
+    /**
+     * Sets the value of the tblflamResultCode property.
+     *
+     * @param value
+     *     allowed object is
+     *     {@link String }
+     *
+     */
+    public void setTBLFLAMResultCode(String value) {
+        this.tblflamResultCode = value;
+    }
+
+    /**
+     * Gets the value of the hpvResultCode property.
+     *
+     * @return
+     *     possible object is
+     *     {@link String }
+     *
+     */
+    public String getHPVResultCode() {
+        return hpvResultCode;
+    }
+
+    /**
+     * Sets the value of the hpvResultCode property.
+     *
+     * @param value
+     *     allowed object is
+     *     {@link String }
+     *
+     */
+    public void setHPVResultCode(String value) {
+        this.hpvResultCode = value;
+    }
+
+    /**
+     * Gets the value of the cytologyVIAPapSmearResult property.
+     *
+     * @return
+     *     possible object is
+     *     {@link String }
+     *
+     */
+    public String getCytologyVIAPapSmearResult() {
+        return cytologyVIAPapSmearResult;
+    }
+
+    /**
+     * Sets the value of the cytologyVIAPapSmearResult property.
+     *
+     * @param value
+     *     allowed object is
+     *     {@link String }
+     *
+     */
+    public void setCytologyVIAPapSmearResult(String value) {
+        this.cytologyVIAPapSmearResult = value;
+    }
+
+    /**
+     * Gets the value of the urinalysis property.
+     *
+     * @return
+     *     possible object is
+     *     {@link String }
+     *
+     */
+    public String getUrinalysis() {
+        return urinalysis;
+    }
+
+    /**
+     * Sets the value of the urinalysis property.
+     *
+     * @param value
+     *     allowed object is
+     *     {@link String }
+     *
+     */
+    public void setUrinalysis(String value) {
+        this.urinalysis = value;
+    }
+
+    /**
+     * Gets the value of the artStartDate property.
+     *
+     * @return
+     *     possible object is
+     *     {@link XMLGregorianCalendar }
+     *
+     */
+    public XMLGregorianCalendar getARTStartDate() {
+        return artStartDate;
+    }
+
+    /**
+     * Sets the value of the artStartDate property.
+     *
+     * @param value
+     *     allowed object is
+     *     {@link XMLGregorianCalendar }
+     *
+     */
+    public void setARTStartDate(XMLGregorianCalendar value) {
+        this.artStartDate = value;
+    }
+
+    /**
+     * Gets the value of the drugRegimenLineCode property.
+     *
+     * @return
+     *     possible object is
+     *     {@link String }
+     *
+     */
+    public String getDrugRegimenLineCode() {
+        return drugRegimenLineCode;
+    }
+
+    /**
+     * Sets the value of the drugRegimenLineCode property.
+     *
+     * @param value
+     *     allowed object is
+     *     {@link String }
+     *
+     */
+    public void setDrugRegimenLineCode(String value) {
+        this.drugRegimenLineCode = value;
+    }
+
+    /**
+     * Gets the value of the arvProphylaxisReceivedCode property.
+     *
+     * @return
+     *     possible object is
+     *     {@link String }
+     *
+     */
+    public String getARVProphylaxisReceivedCode() {
+        return arvProphylaxisReceivedCode;
+    }
+
+    /**
+     * Sets the value of the arvProphylaxisReceivedCode property.
+     *
+     * @param value
+     *     allowed object is
+     *     {@link String }
+     *
+     */
+    public void setARVProphylaxisReceivedCode(String value) {
+        this.arvProphylaxisReceivedCode = value;
     }
 
 }

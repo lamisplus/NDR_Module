@@ -18,6 +18,7 @@ import org.lamisplus.modules.ndr.repositories.NdrXmlStatusRepository;
 import org.lamisplus.modules.ndr.schema.CodedSimpleType;
 import org.lamisplus.modules.ndr.schema.EncountersType;
 import org.lamisplus.modules.ndr.schema.HIVEncounterType;
+import org.lamisplus.modules.ndr.schema.RegimenCodedSimpleType;
 import org.lamisplus.modules.ndr.service.NDRCodeSetResolverService;
 import org.lamisplus.modules.ndr.utility.DateUtil;
 import org.lamisplus.modules.patient.domain.entity.Person;
@@ -55,6 +56,7 @@ public class EncountersTypeMapper {
 	}
 	
 	public EncountersType encounterType(PatientDemographics demographics) {
+		log.info("encounters 1");
 		EncountersType encountersType = new EncountersType();
 		if (demographics != null) {
 			Optional<Person> person = personRepository.findById(demographics.getId());
@@ -75,7 +77,7 @@ public class EncountersTypeMapper {
 						person.ifPresent(value -> processClinicalEncounterRegimens(value, artClinical, hivEncounterType));
 						processAndSetTBStatus(demographics.getPersonUuid(), hivEncounterType);
 						Map<String, Object> status =
-								pregnancyStatus.getPregnancyStatus(demographics.getPersonUuid());
+								pregnancyStatus.getEDDandPMTCTLinkStatus(demographics.getPersonUuid());
 						if (demographics.getSex() != null && demographics.getSex().contains("F")) {
 							hivEncounterType.setEDDandPMTCTLink((String) status.get("status"));
 						}
@@ -88,103 +90,80 @@ public class EncountersTypeMapper {
 	
 	
 	public EncountersType encounterType(List<EncounterDTO> encounterDTOList, PatientDemographicDTO demographicDTO) {
+		log.info("encounters 2");
 		    EncountersType encountersType = new EncountersType();
 		   List<HIVEncounterType> hivEncounters = encountersType.getHIVEncounter();
 			log.info(LogMessages.GENERATING_COMMON_QUESTIONS, encounterDTOList.size());
 			try {
 				encounterDTOList.parallelStream()
 						.forEach( encounterDTO -> {
-									HIVEncounterType hivEncounterType = new HIVEncounterType();
-									if (StringUtils.isNotBlank(encounterDTO.getVisitID())) {
-										hivEncounterType.setVisitID(encounterDTO.getVisitID());
+								HIVEncounterType hivEncounterType = new HIVEncounterType();
+								if (StringUtils.isNotBlank(encounterDTO.getVisitID())) {
+									hivEncounterType.setVisitID(encounterDTO.getVisitID());
+								} else {
+									throw new IllegalArgumentException("visit id cannot be null");
+								}
+								String visitDate = encounterDTO.getVisitDate();
+								if (StringUtils.isNotBlank(visitDate)) {
+									LocalDate localDate = LocalDate.parse(visitDate);
+									try {
+										hivEncounterType.setVisitDate(DateUtil.getXmlDate(Date.valueOf(localDate)));
+									} catch (DatatypeConfigurationException e) {
+										throw new IllegalArgumentException(e);
+									}
+								} else {
+									throw new IllegalArgumentException("Visit Date cannot be null");
+								}
+								if(StringUtils.isNotBlank(encounterDTO.getNextAppointmentDate())) {
+									LocalDate localDate = LocalDate.parse(encounterDTO.getNextAppointmentDate());
+									try {
+										hivEncounterType.setNextAppointmentDate(DateUtil.getXmlDate(Date.valueOf(localDate)));
+									} catch (DatatypeConfigurationException e) {
+										throw new IllegalArgumentException(e);
+									}
+								}
+
+								if (encounterDTO.getWeight() != null) {
+									Integer weight = encounterDTO.getWeight();
+									if (weight > 200) {
+										hivEncounterType.setWeight(200);
+									} else if (weight < 0) {
+										hivEncounterType.setWeight(0);
 									} else {
-										throw new IllegalArgumentException("visit id cannot be null");
+										hivEncounterType.setWeight(weight);
 									}
-									String visitDate = encounterDTO.getVisitDate();
-									if (StringUtils.isNotBlank(visitDate)) {
-										LocalDate localDate = LocalDate.parse(visitDate);
-										try {
-											hivEncounterType.setVisitDate(DateUtil.getXmlDate(Date.valueOf(localDate)));
-										} catch (DatatypeConfigurationException e) {
-											throw new IllegalArgumentException(e);
-										}
-									} else {
-										throw new IllegalArgumentException("Visit Date cannot be null");
-									}
-									if(StringUtils.isNotBlank(encounterDTO.getNextAppointmentDate())) {
-										LocalDate localDate = LocalDate.parse(encounterDTO.getNextAppointmentDate());
-										try {
-											hivEncounterType.setNextAppointmentDate(DateUtil.getXmlDate(Date.valueOf(localDate)));
-										} catch (DatatypeConfigurationException e) {
-											throw new IllegalArgumentException(e);
-										}
-									}
-									if(encounterDTO.getWeight() != null) {
-										//demographicDTO.getAge();
-										// we can check for weight not be greater than 200 for children
-										hivEncounterType.setWeight(encounterDTO.getWeight());
-									}
-								   if(encounterDTO.getChildHeight()!= null) {
-									hivEncounterType.setChildHeight(encounterDTO.getChildHeight());
-									}
-								    if(encounterDTO.getBloodPressure() != null) {
-										hivEncounterType.setBloodPressure(encounterDTO.getBloodPressure());
-								    }
-									if(StringUtils.isNotBlank(encounterDTO.getTbStatus())){
-								     hivEncounterType.setTBStatus(encounterDTO.getTbStatus());
-									}
-									Map<String, Object> status =
-											pregnancyStatus.getPregnancyStatus(demographicDTO.getPersonUuid());
-									if (demographicDTO.getPatientSexCode() != null && demographicDTO.getPatientSexCode().contains("F")) {
-										hivEncounterType.setEDDandPMTCTLink((String) status.get("status"));
-									}
-									hivEncounters.add(hivEncounterType);
-								});
+								}
+							   if(encounterDTO.getChildHeight()!= null) {
+								   Integer height = encounterDTO.getChildHeight();
+								   if (height > 200) {
+									   hivEncounterType.setChildHeight(200);
+								   } else if (height < 0) {
+									   hivEncounterType.setChildHeight(0);
+								   } else {
+									   hivEncounterType.setChildHeight(height);
+								   }
+								}
+								if(encounterDTO.getBloodPressure() != null) {
+									hivEncounterType.setBloodPressure(encounterDTO.getBloodPressure());
+								}
+								if(StringUtils.isNotBlank(encounterDTO.getTbStatus())){
+								 hivEncounterType.setTBStatus(encounterDTO.getTbStatus());
+								}
+								Map<String, Object> status =
+										pregnancyStatus.getEDDandPMTCTLinkStatus(demographicDTO.getPersonUuid());
+								if (demographicDTO.getPatientSexCode() != null && demographicDTO.getPatientSexCode().contains("F")) {
+									hivEncounterType.setEDDandPMTCTLink((String) status.get("status"));
+								}
+								hivEncounters.add(hivEncounterType);
+							});
 			}catch (Exception e) {
 			 log.error("An exception occurred while processing  the patient encounters error {}", e.getMessage());
 			}
 
 		return encountersType;
 	}
-	
-	
-	public EncountersType encounterType(
-			PatientDemographics demographics,
-			List<ARTClinicalInfo> clinicalInfoList,
-			List<ArtPharmacy> pharmacyList
-			) {
-		EncountersType encountersType = new EncountersType();
-		if (demographics != null) {
-			// Optional<Person> person = personRepository.findById(demographics.getId());
-			List<HIVEncounterType> hivEncounter = encountersType.getHIVEncounter();
-			log.info(LogMessages.GENERATING_COMMON_QUESTIONS, clinicalInfoList.size());
-			
-			clinicalInfoList.forEach(
-					artClinical -> {
-						HIVEncounterType hivEncounterType = new HIVEncounterType();
-						hivEncounterType.setVisitID(artClinical.getclinicalUuid());
-						processAndSetVisitDate(artClinical, hivEncounterType);
-						processAndSetNextAppointment(artClinical, hivEncounterType);
-						processAndSetWeightAndHeight(hivEncounterType, artClinical);
-						processAndSetBloodPressure(hivEncounterType, artClinical);
-						processAndSetWhoStageAndFunctionalStatus(artClinical, hivEncounterType);
-						processClinicalEncounterRegimens(artClinical, hivEncounterType, pharmacyList);
-						processAndSetTBStatus(demographics.getPersonUuid(), hivEncounterType);
-						Map<String, Object> status =
-								pregnancyStatus.getPregnancyStatus(demographics.getPersonUuid());
-						if (demographics.getSex() != null && demographics.getSex().contains("F")) {
-							hivEncounterType.setEDDandPMTCTLink((String) status.get("status"));
-						}
-						hivEncounter.add(hivEncounterType);
-					});
-			if (hivEncounter.isEmpty()) return null;
-			
-		}
-		return encountersType;
-	}
-	
-	
 	public EncountersType encounterType(PatientDemographics demographics, LocalDateTime lastDateTime) {
+		log.info("encounters 3");
 		EncountersType encountersType = new EncountersType();
 		if (demographics != null) {
 			Optional<Person> person = personRepository.findById(demographics.getId());
@@ -204,7 +183,7 @@ public class EncountersTypeMapper {
 						person.ifPresent(value -> processClinicalEncounterRegimens(value, artClinical, hivEncounterType));
 						processAndSetTBStatus(demographics.getPersonUuid(), hivEncounterType);
 						Map<String, Object> status =
-								pregnancyStatus.getPregnancyStatus(demographics.getPersonUuid());
+								pregnancyStatus.getEDDandPMTCTLinkStatus(demographics.getPersonUuid());
 						if (demographics.getSex() != null && demographics.getSex().contains("F")) {
 							hivEncounterType.setEDDandPMTCTLink((String) status.get("status"));
 						}
@@ -230,6 +209,7 @@ public class EncountersTypeMapper {
 	
 	private void processClinicalEncounterRegimens(Person person, ARTClinicalInfo artClinical, HIVEncounterType hivEncounterType) {
 		Optional<Visit> visitOptional = visitRepository.findById(artClinical.getClinicId());
+		log.info("visit Optional {}, artClinical {}", visitOptional.isPresent(), artClinical.getClinicId());
 		if (visitOptional.isPresent()) {
 			List<ArtPharmacy> pharmacies =
 					pharmacyRepository.getArtPharmaciesByVisitAndPerson(visitOptional.get(), person);
@@ -275,7 +255,7 @@ public class EncountersTypeMapper {
 				.forEach(regimen -> {
 					log.info("ndrRegimenSystemDescription {}", regimen.getDescription());
 					
-					Optional<CodedSimpleType> ndrCodeSet = ndrCodeSetResolverService.getRegimen(regimen.getDescription());
+					Optional<RegimenCodedSimpleType> ndrCodeSet = ndrCodeSetResolverService.getRegimen(regimen.getDescription());
 					if (ndrCodeSet.isPresent()) {
 						System.out.println("ndr " + ndrCodeSet.get().getCodeDescTxt());
 						ndrCodeSet.ifPresent(hivEncounterType::setARVDrugRegimen);
@@ -284,9 +264,8 @@ public class EncountersTypeMapper {
 						if (regimenType != null) {
 							String others = "Others" + "_" + regimenType.getId();
 							log.info("others {}", others);
-							Optional<CodedSimpleType> ndrCodeSet2 = ndrCodeSetResolverService.getSimpleCodeSet(others);
+							Optional<RegimenCodedSimpleType> ndrCodeSet2 = ndrCodeSetResolverService.getSimpleCodeSet(others);
 							ndrCodeSet2.ifPresent(hivEncounterType::setARVDrugRegimen);
-							
 						}
 					}
 					
@@ -303,13 +282,12 @@ public class EncountersTypeMapper {
 						String description = regimenType.getDescription();
 						log.info("cotrimoxazole {}", description);
 						Optional<CodedSimpleType> codedSimpleType =
-								ndrCodeSetResolverService.getNDRCodeSet("REGIMEN_TYPE", description);
+								ndrCodeSetResolverService.getCodeSet("REGIMEN_TYPE", description);
 						codedSimpleType.ifPresent(hivEncounterType::setCotrimoxazoleDose);
 					}
 				});
 	}
-	
-	
+
 	private void processAndSetVisitDate(ARTClinicalInfo artClinical, HIVEncounterType hivEncounterType) {
 		LocalDate visitDate = artClinical.getVisitDate();
 		if (visitDate != null) {
@@ -320,8 +298,7 @@ public class EncountersTypeMapper {
 			}
 		}
 	}
-	
-	
+
 	private void processAndSetBloodPressure(HIVEncounterType hivEncounterType, ARTClinicalInfo vitalSign) {
 		//resolving null pointer on blood pressure
 		double bloodPressure = 0.0;
@@ -351,7 +328,8 @@ public class EncountersTypeMapper {
 		}
 	}
 	
-	private void processAndSetWeightAndHeight(HIVEncounterType hivEncounterType, ARTClinicalInfo vitalSign) {
+	private void  processAndSetWeightAndHeight(HIVEncounterType hivEncounterType, ARTClinicalInfo vitalSign) {
+		log.info("weight -- 2");
 		int bodyWeight = vitalSign.getBodyWeight() == null ? 0 : vitalSign.getBodyWeight().intValue();
 		int height = vitalSign.getHeight() == null ? 0 : vitalSign.getHeight().intValue();
 		if (bodyWeight > 0) {
@@ -367,8 +345,7 @@ public class EncountersTypeMapper {
 			hivEncounterType.setChildHeight(height);
 		}
 	}
-	
-	
+
 	private void processAndSetWhoStageAndFunctionalStatus(ARTClinicalInfo artClinical, HIVEncounterType hivEncounterType) {
 		if (artClinical.getFunctionalStatusId() != null && artClinical.getFunctionalStatusId() > 0) {
 			ApplicationCodesetDTO functionalStatus = applicationCodesetService.getApplicationCodeset(artClinical.getFunctionalStatusId());
