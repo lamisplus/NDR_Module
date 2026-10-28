@@ -965,13 +965,22 @@ public class PMTCTTypeMapper {
         }
         String ca = StringUtils.defaultString(currentlyOnArt).trim().toUpperCase();
         String pk = StringUtils.defaultString(previouslyKnown).trim().toUpperCase();
-        if (ca.equals("ONART") || ca.equals("YES") || ca.equals("TRUE") || pk.contains("ON_ART") || pk.contains("CARE_ART")) {
+        if (pk.equals("NO") || pk.endsWith("_NO") || pk.equals("FALSE") || pk.contains("NEG") || pk.contains("NEVER")) {
+            return null;
+        }
+        if (StringUtils.isNotBlank(pk) && !pk.contains("PREVIOUSLY") && !pk.contains("KNOWN")
+                && !pk.contains("POS") && !pk.contains("HIV+")
+                && !pk.equals("YES") && !pk.endsWith("_YES") && !pk.equals("TRUE")
+                && !pk.contains("ON_ART") && !pk.contains("ONART") && !pk.contains("CARE_ART")) {
+            return null;
+        }
+        if (ca.equals("ONART") || ca.equals("YES") || ca.endsWith("_YES") || ca.equals("TRUE") || pk.contains("ON_ART") || pk.contains("CARE_ART")) {
             return KnownHIVPositiveStatusType.ON_ART;
         }
-        if (ca.equals("NOTONART") || ca.equals("NO") || ca.equals("FALSE")) {
+        if (ca.equals("NOTONART") || ca.equals("NO") || ca.endsWith("_NO") || ca.equals("FALSE")) {
             return KnownHIVPositiveStatusType.NOT_ON_ART;
         }
-        if (pk.contains("POS") || pk.equals("YES") || pk.equals("TRUE")) {
+        if (pk.contains("POS") || pk.contains("KNOWN") || pk.contains("HIV+") || pk.equals("YES") || pk.endsWith("_YES") || pk.equals("TRUE")) {
             return KnownHIVPositiveStatusType.ON_ART;
         }
         return null;
@@ -982,10 +991,10 @@ public class PMTCTTypeMapper {
             return null;
         }
         String u = raw.trim().toUpperCase();
-        if (u.contains("NOT") || u.equals("NO") || u.equals("FALSE")) {
+        if (u.contains("NOT") || u.equals("NO") || u.endsWith("_NO") || u.equals("FALSE")) {
             return "NotSuspected";
         }
-        if (u.contains("SUSPECT") || u.equals("YES") || u.equals("TRUE")) {
+        if (u.contains("SUSPECT") || u.equals("YES") || u.endsWith("_YES") || u.equals("TRUE")) {
             return "Suspected";
         }
         return null;
@@ -1399,7 +1408,7 @@ public class PMTCTTypeMapper {
         if (u.equals("GT72HRS_LT2MONTHS") || u.contains(">72") || u.contains("<_2_MONTHS") || u.contains("< 2 MONTHS")) {
             return PCRAgeAtTestType.GT_72_HRS_LT_2_MONTHS;
         }
-        if (u.equals("TWOTO12MONTHS") || u.contains("2-12") || u.contains("2_12")) {
+        if (u.equals("TWOTO12MONTHS") || u.contains("2-12") || u.contains("2_12") || u.contains("12_MONTHS") || u.contains("12 MONTHS")) {
             return PCRAgeAtTestType.TWO_TO_12_MONTHS;
         }
         return null;
@@ -1592,16 +1601,26 @@ public class PMTCTTypeMapper {
         JsonNode primary = parseJson(pcrJson);
         if (primary != null && !primary.isNull()) {
             if (primary.isArray()) {
-                primary.forEach(list::add);
+                primary.forEach(item -> {
+                    if (item != null && !item.isNull()) {
+                        if (item.isArray()) {
+                            item.forEach(list::add);
+                        } else if (item.isObject()) {
+                            list.add(item);
+                        }
+                    }
+                });
             } else if (primary.isObject()) {
                 list.add(primary);
             }
         }
-        if (list.isEmpty()) {
-            JsonNode rel = parseJson(relPcrListJson);
-            if (rel != null && rel.isArray()) {
-                rel.forEach(list::add);
-            }
+        JsonNode rel = parseJson(relPcrListJson);
+        if (rel != null && rel.isArray()) {
+            rel.forEach(item -> {
+                if (item != null && !item.isNull() && item.isObject()) {
+                    list.add(item);
+                }
+            });
         }
         return list;
     }

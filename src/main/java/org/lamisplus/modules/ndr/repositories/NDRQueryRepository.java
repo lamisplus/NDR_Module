@@ -324,30 +324,30 @@ public interface NDRQueryRepository extends JpaRepository<NdrMessageLog, Integer
             "    COALESCE(anc.date_of_enrollment, pe.pmtct_enrollment_date) AS visitDate,\n" +
             "    CAST(p.hospital_number AS VARCHAR) AS hospitalNo,\n" +
             "    CAST(anc.anc_no AS VARCHAR) AS ancNumber,\n" +
-            "    CAST(COALESCE(NULLIF(CAST(mv_latest.current_status AS VARCHAR), ''), NULLIF(CAST(phts.pregnancy_status_at_entry AS VARCHAR), ''), NULLIF(CAST(pe.entry_point AS VARCHAR), ''), 'P') AS VARCHAR) AS pregnancyBreastfeedingStatus,\n" +
+            "    CAST(COALESCE(NULLIF(CAST(mv_latest.current_status AS VARCHAR), ''), NULLIF(CAST(phts.pregnancy_status_at_entry AS VARCHAR), ''), NULLIF(CAST(hts_en.pregnancy_status AS VARCHAR), ''), NULLIF(CAST(pe.entry_point AS VARCHAR), ''), 'P') AS VARCHAR) AS pregnancyBreastfeedingStatus,\n" +
             "    CAST(NULLIF(REGEXP_REPLACE(COALESCE(NULLIF(CAST(anc.gaweeks AS VARCHAR), ''), NULLIF(CAST(pe.gaweeks AS VARCHAR), ''), ''), '[^0-9]', '', 'g'), '') AS INTEGER) AS gestationalAgeAtBooking,\n" +
-            "    CAST(COALESCE(NULLIF(CAST(anc.previously_known_hiv_status AS VARCHAR), ''), NULLIF(CAST(phts.previously_known_hiv_positive AS VARCHAR), ''), NULLIF(CAST(pe.time_of_hiv_diagnosis AS VARCHAR), '')) AS VARCHAR) AS previouslyKnownHivStatus,\n" +
-            "    CAST(COALESCE(NULLIF(CAST(anc.currently_on_art AS VARCHAR), ''), NULLIF(CAST(phts.enrolled_on_art AS VARCHAR), ''), CASE WHEN pe.art_start_date IS NOT NULL THEN 'Yes' END) AS VARCHAR) AS currentlyOnArt,\n" +
+            "    CAST(COALESCE(NULLIF(CAST(anc.previously_known_hiv_status AS VARCHAR), ''), NULLIF(CAST(phts.previously_known_hiv_positive AS VARCHAR), ''), NULLIF(CAST(hts_en.previously_known_hiv AS VARCHAR), ''), NULLIF(CAST(pe.time_of_hiv_diagnosis AS VARCHAR), '')) AS VARCHAR) AS previouslyKnownHivStatus,\n" +
+            "    CAST(COALESCE(NULLIF(CAST(anc.currently_on_art AS VARCHAR), ''), NULLIF(CAST(phts.enrolled_on_art AS VARCHAR), ''), NULLIF(CAST(hts_en.enrolled_on_art AS VARCHAR), ''), CASE WHEN pe.art_start_date IS NOT NULL THEN 'Yes' END) AS VARCHAR) AS currentlyOnArt,\n" +
             "    CAST(COALESCE(NULLIF(CAST(hts_en.hiv_early_acute AS VARCHAR), ''), NULLIF(CAST(phts.hiv_early_detect AS VARCHAR), '')) AS VARCHAR) AS hivEarlyAcute,\n" +
             "    CAST(COALESCE(NULLIF(CAST(hts_en.hiv_early_vl AS VARCHAR), ''), NULLIF(CAST(phts.hiv_early_detect_viral_load AS VARCHAR), '')) AS VARCHAR) AS hivEarlyViralLoad,\n" +
             "    CAST(COALESCE(NULLIF(CAST(phts.final_result AS VARCHAR), ''), CASE WHEN CAST(pe.time_of_hiv_diagnosis AS VARCHAR) ILIKE '%ANC%' THEN NULLIF(CAST(pe.hiv_status AS VARCHAR), '') END, NULLIF(CAST(anc.static_hiv_status AS VARCHAR), ''), NULLIF(CAST(hts_en.final_result AS VARCHAR), '')) AS VARCHAR) AS hivTrAnc,\n" +
-            "    CAST(CASE WHEN CAST(pe.time_of_hiv_diagnosis AS VARCHAR) ILIKE '%LABOUR%' OR CAST(pe.entry_point AS VARCHAR) ILIKE '%LABOUR%' OR CAST(phts.pmtct_test_entry_point AS VARCHAR) ILIKE '%LABOUR%' THEN COALESCE(NULLIF(CAST(pe.hiv_status AS VARCHAR), ''), NULLIF(CAST(phts.final_result AS VARCHAR), '')) END AS VARCHAR) AS hivTrLd,\n" +
-            "    CAST(CASE WHEN CAST(pe.entry_point AS VARCHAR) ILIKE '%POST-PARTUM%' OR CAST(pe.entry_point AS VARCHAR) ILIKE '%BREASTFEEDING%' OR CAST(phts.pmtct_test_entry_point AS VARCHAR) ILIKE '%BREASTFEEDING%' THEN COALESCE(NULLIF(CAST(pe.hiv_status AS VARCHAR), ''), NULLIF(CAST(phts.final_result AS VARCHAR), '')) END AS VARCHAR) AS hivTrBf,\n" +
+            "    CAST(CASE WHEN CAST(pe.time_of_hiv_diagnosis AS VARCHAR) ILIKE '%LABOUR%' OR CAST(pe.entry_point AS VARCHAR) ILIKE '%LABOUR%' OR CAST(phts.pmtct_test_entry_point AS VARCHAR) ILIKE '%LABOUR%' OR CAST(hts_en.pmtct_entry_point AS VARCHAR) ILIKE '%LD%' OR CAST(hts_en.pmtct_entry_point AS VARCHAR) ILIKE '%LABOUR%' THEN COALESCE(NULLIF(CAST(pe.hiv_status AS VARCHAR), ''), NULLIF(CAST(phts.final_result AS VARCHAR), ''), NULLIF(CAST(hts_en.final_result AS VARCHAR), '')) END AS VARCHAR) AS hivTrLd,\n" +
+            "    CAST(CASE WHEN CAST(pe.entry_point AS VARCHAR) ILIKE '%POST-PARTUM%' OR CAST(pe.entry_point AS VARCHAR) ILIKE '%BREASTFEEDING%' OR CAST(phts.pmtct_test_entry_point AS VARCHAR) ILIKE '%BREASTFEEDING%' OR CAST(hts_en.pmtct_entry_point AS VARCHAR) ILIKE '%BF%' OR CAST(hts_en.pmtct_entry_point AS VARCHAR) ILIKE '%BREASTFEEDING%' THEN COALESCE(NULLIF(CAST(pe.hiv_status AS VARCHAR), ''), NULLIF(CAST(phts.final_result AS VARCHAR), ''), NULLIF(CAST(hts_en.final_result AS VARCHAR), '')) END AS VARCHAR) AS hivTrBf,\n" +
             "    CAST(NULLIF(phts.retesting->>'result', '') AS VARCHAR) AS hivRtAnc,\n" +
             "    CAST(CASE WHEN CAST(phts.pmtct_test_entry_point AS VARCHAR) ILIKE '%LD%' OR CAST(phts.pmtct_test_entry_point AS VARCHAR) ILIKE '%LABOUR%' THEN NULLIF(phts.retesting->>'result', '') END AS VARCHAR) AS hivRtLd,\n" +
             "    CAST(CASE WHEN CAST(phts.pmtct_test_entry_point AS VARCHAR) ILIKE '%BF%' OR CAST(phts.pmtct_test_entry_point AS VARCHAR) ILIKE '%BREASTFEEDING%' THEN NULLIF(phts.retesting->>'result', '') END AS VARCHAR) AS hivRtBf,\n" +
             "    pe.art_start_date AS dateOfInitiation,\n" +
             "    CAST(pe.art_start_time AS VARCHAR) AS timingOfArtInitiation,\n" +
-            "    CAST(COALESCE(NULLIF(anc.syphilis_info->>'testResultSyphilis', ''), NULLIF(pe.syphilis_details->>'testResult', ''), NULLIF(phts.syphilis_info->>'testResultSyphilis', ''), NULLIF(phts.syphilis, ''), NULLIF(mv_latest.syphilis_test_result, '')) AS VARCHAR) AS syphilisTestResult,\n" +
-            "    CAST(COALESCE(NULLIF(anc.syphilis_info->>'treatedSyphilis', ''), NULLIF(pe.syphilis_details->>'treatment', ''), NULLIF(phts.syphilis_info->>'treatedSyphilis', ''), NULLIF(mv_latest.syphilis_treated, '')) AS VARCHAR) AS syphilisTreated,\n" +
+            "    CAST(COALESCE(NULLIF(anc.syphilis_info->>'testResultSyphilis', ''), NULLIF(pe.syphilis_details->>'testResult', ''), NULLIF(phts.syphilis_info->>'testResultSyphilis', ''), NULLIF(phts.syphilis, ''), NULLIF(hts_en.syphilis_result, ''), NULLIF(mv_latest.syphilis_test_result, '')) AS VARCHAR) AS syphilisTestResult,\n" +
+            "    CAST(COALESCE(NULLIF(anc.syphilis_info->>'treatedSyphilis', ''), NULLIF(pe.syphilis_details->>'treatment', ''), NULLIF(phts.syphilis_info->>'treatedSyphilis', ''), NULLIF(hts_en.syphilis_treatment, ''), NULLIF(mv_latest.syphilis_treated, '')) AS VARCHAR) AS syphilisTreated,\n" +
             "    CAST(COALESCE(NULLIF(anc.syphilis_info->>'referredSyphilisTreatment', ''), NULLIF(phts.syphilis_info->>'referredSyphilisTreatment', ''), NULLIF(mv_latest.syphilis_referred, '')) AS VARCHAR) AS syphilisReferred,\n" +
-            "    CAST(COALESCE(NULLIF(anc.hepatitis_b_info->>'previouslyKnownPositive', ''), NULLIF(phts.hbv_info->>'previouslyKnownPositive', ''), NULLIF(mv_latest.hbv_known_pos, '')) AS VARCHAR) AS hbvKnownPositive,\n" +
-            "    CAST(COALESCE(NULLIF(anc.hepatitis_b_info->>'currentHbvStatus', ''), NULLIF(anc.hepatitis_b_info->>'hepatitisB', ''), NULLIF(pe.hbv_details->>'testResult', ''), NULLIF(phts.hepatitis_b, ''), NULLIF(mv_latest.hbv_status, '')) AS VARCHAR) AS hbvTestResult,\n" +
-            "    CAST(COALESCE(NULLIF(anc.hepatitis_b_info->>'treatedHepatitisB', ''), NULLIF(pe.hbv_details->>'treatmentType', ''), NULLIF(phts.hbv_info->>'treatedHepatitisB', ''), NULLIF(mv_latest.hbv_treated, '')) AS VARCHAR) AS hbvTreated,\n" +
+            "    CAST(COALESCE(NULLIF(anc.hepatitis_b_info->>'previouslyKnownPositive', ''), NULLIF(phts.hbv_info->>'previouslyKnownPositive', ''), NULLIF(hts_en.hbv_known_pos, ''), NULLIF(mv_latest.hbv_known_pos, '')) AS VARCHAR) AS hbvKnownPositive,\n" +
+            "    CAST(COALESCE(NULLIF(anc.hepatitis_b_info->>'currentHbvStatus', ''), NULLIF(anc.hepatitis_b_info->>'hepatitisB', ''), NULLIF(pe.hbv_details->>'testResult', ''), NULLIF(phts.hepatitis_b, ''), NULLIF(hts_en.hbv_result, ''), NULLIF(mv_latest.hbv_status, '')) AS VARCHAR) AS hbvTestResult,\n" +
+            "    CAST(COALESCE(NULLIF(anc.hepatitis_b_info->>'treatedHepatitisB', ''), NULLIF(pe.hbv_details->>'treatmentType', ''), NULLIF(phts.hbv_info->>'treatedHepatitisB', ''), NULLIF(hts_en.hbv_treatment, ''), NULLIF(mv_latest.hbv_treated, '')) AS VARCHAR) AS hbvTreated,\n" +
             "    CAST(COALESCE(NULLIF(anc.hepatitis_b_info->>'referredHepatitisB', ''), NULLIF(phts.hbv_info->>'referredHepatitisB', ''), NULLIF(mv_latest.hbv_referred, '')) AS VARCHAR) AS hbvReferred,\n" +
-            "    CAST(COALESCE(NULLIF(phts.initiated_on_prophylaxis, ''), NULLIF(pe.hbv_details->>'treatmentType', ''), NULLIF(anc.hepatitis_b_info->>'currentHbvStatus', ''), NULLIF(mv_latest.hbv_status, '')) AS VARCHAR) AS initiatedOnProphylaxis,\n" +
-            "    CAST(COALESCE(NULLIF(CAST(pe.tb_status AS VARCHAR), ''), NULLIF(CAST(phts.tb_screening_status AS VARCHAR), '')) AS VARCHAR) AS tbScreeningStatus,\n" +
-            "    CAST(NULLIF(CAST(phts.tb_referred AS VARCHAR), '') AS VARCHAR) AS tbTreatmentReferral,\n" +
+            "    CAST(COALESCE(NULLIF(phts.initiated_on_prophylaxis, ''), NULLIF(hts_en.initiated_on_prophylaxis, ''), NULLIF(pe.hbv_details->>'treatmentType', ''), NULLIF(anc.hepatitis_b_info->>'currentHbvStatus', ''), NULLIF(mv_latest.hbv_status, '')) AS VARCHAR) AS initiatedOnProphylaxis,\n" +
+            "    CAST(COALESCE(NULLIF(CAST(pe.tb_status AS VARCHAR), ''), NULLIF(CAST(phts.tb_screening_status AS VARCHAR), ''), NULLIF(CAST(hts_en.tb_screening_status AS VARCHAR), '')) AS VARCHAR) AS tbScreeningStatus,\n" +
+            "    CAST(COALESCE(NULLIF(CAST(phts.tb_referred AS VARCHAR), ''), NULLIF(CAST(hts_en.tb_referred AS VARCHAR), '')) AS VARCHAR) AS tbTreatmentReferral,\n" +
             "    vl_lt32.date_of_viral_load AS vlLessThan32WeeksDate,\n" +
             "    CAST(NULLIF(REGEXP_REPLACE(COALESCE(CAST(vl_lt32.result_of_viral_load AS VARCHAR), ''), '[^0-9.]', '', 'g'), '') AS NUMERIC) AS vlLessThan32WeeksResult,\n" +
             "    vl_32_36.date_of_viral_load AS vl32To36WeeksDate,\n" +
@@ -381,18 +381,30 @@ public interface NDRQueryRepository extends JpaRepository<NdrMessageLog, Integer
             ") phts ON TRUE\n" +
             "LEFT JOIN LATERAL (\n" +
             "    SELECT\n" +
-            "        observation->>'hivEarlyDetectResult' AS hiv_early_acute,\n" +
+            "        COALESCE(NULLIF(observation->>'hivEarlyDetectResult', ''), NULLIF(observation->>'suspectedAcuteInfection', '')) AS hiv_early_acute,\n" +
             "        observation->>'hivEarlyDetectViralLoad' AS hiv_early_vl,\n" +
             "        observation->>'finalHivTestResult' AS final_result,\n" +
-            "        observation->>'agreedToPartnerNotification' AS agreed_notification,\n" +
-            "        observation->>'testedHiv' AS partner_tested_hiv,\n" +
-            "        observation->>'testedSyphilis' AS partner_tested_syphilis,\n" +
-            "        observation->>'testedHbv' AS partner_tested_hbv,\n" +
-            "        observation->>'referral' AS partner_referral\n" +
+            "        observation->>'previouslyKnownHivPositive' AS previously_known_hiv,\n" +
+            "        observation->>'enrolledOnArt' AS enrolled_on_art,\n" +
+            "        observation->>'pmtctTestEntryPoint' AS pmtct_entry_point,\n" +
+            "        COALESCE(NULLIF(observation->>'pregnancyStatusAtEntry', ''), NULLIF(observation->>'pregnancyStatus', '')) AS pregnancy_status,\n" +
+            "        COALESCE(NULLIF(observation->'syphilisInfo'->>'testResult', ''), NULLIF(observation->>'syphilisTestResult', '')) AS syphilis_result,\n" +
+            "        observation->'syphilisInfo'->>'treatment' AS syphilis_treatment,\n" +
+            "        observation->'hbvInfo'->>'knownPositive' AS hbv_known_pos,\n" +
+            "        observation->'hbvInfo'->>'testResult' AS hbv_result,\n" +
+            "        observation->'hbvInfo'->>'treatment' AS hbv_treatment,\n" +
+            "        observation->>'initiatedOnProphylaxis' AS initiated_on_prophylaxis,\n" +
+            "        observation->>'tbScreeningStatus' AS tb_screening_status,\n" +
+            "        observation->>'tbReferred' AS tb_referred,\n" +
+            "        COALESCE(NULLIF(observation->'partnerInfo'->>'notificationAgreed', ''), NULLIF(observation->>'agreedToPartnerNotification', '')) AS agreed_notification,\n" +
+            "        COALESCE(NULLIF(observation->'partnerInfo'->>'testedHiv', ''), NULLIF(observation->>'testedHiv', '')) AS partner_tested_hiv,\n" +
+            "        COALESCE(NULLIF(observation->'partnerInfo'->>'testedSyphilis', ''), NULLIF(observation->>'testedSyphilis', '')) AS partner_tested_syphilis,\n" +
+            "        COALESCE(NULLIF(observation->'partnerInfo'->>'testedHbv', ''), NULLIF(observation->>'testedHbv', '')) AS partner_tested_hbv,\n" +
+            "        COALESCE(NULLIF(observation->'partnerInfo'->>'referral', ''), NULLIF(observation->>'referral', '')) AS partner_referral\n" +
             "    FROM hts_encounter he\n" +
             "    WHERE he.patient_uuid = COALESCE(anc.patient_uuid, pe.patient_uuid)\n" +
             "      AND COALESCE(CAST(he.archived AS VARCHAR), '0') IN ('0', 'false', 'f', '')\n" +
-            "    ORDER BY he.id DESC\n" +
+            "    ORDER BY CASE WHEN he.observation->>'testingType' = 'PMTCT-HTS' THEN 0 ELSE 1 END, he.id DESC\n" +
             "    LIMIT 1\n" +
             ") hts_en ON TRUE\n" +
             "LEFT JOIN LATERAL (\n" +
@@ -509,7 +521,12 @@ public interface NDRQueryRepository extends JpaRepository<NdrMessageLog, Integer
             "    CAST(COALESCE(CAST(ii.infant_arv_data AS VARCHAR), CAST(iv_latest.infant_arv_data AS VARCHAR)) AS VARCHAR) AS infantArvDataJson,\n" +
             "    CAST(ii.syphilis_prophylaxis AS VARCHAR) AS syphilisProphylaxisJson,\n" +
             "    CAST(ii.hbv_vaccinations AS VARCHAR) AS hbvVaccinationsJson,\n" +
-            "    CAST(COALESCE(CAST(iv_latest.infant_pcr_data AS VARCHAR), CAST(ii.infant_pcr_data AS VARCHAR)) AS VARCHAR) AS infantPcrDataJson,\n" +
+            "    CAST(CASE\n" +
+            "        WHEN ii.infant_pcr_data IS NOT NULL AND iv_latest.infant_pcr_data IS NOT NULL THEN jsonb_build_array(ii.infant_pcr_data, iv_latest.infant_pcr_data)\n" +
+            "        WHEN ii.infant_pcr_data IS NOT NULL THEN jsonb_build_array(ii.infant_pcr_data)\n" +
+            "        WHEN iv_latest.infant_pcr_data IS NOT NULL THEN jsonb_build_array(iv_latest.infant_pcr_data)\n" +
+            "        ELSE NULL\n" +
+            "    END AS VARCHAR) AS infantPcrDataJson,\n" +
             "    CAST(iv_latest.hbv_vaccination_data AS VARCHAR) AS visitHbvVaccinationDataJson,\n" +
             "    CAST(iv_latest.rapid_test_data AS VARCHAR) AS rapidTestDataJson,\n" +
             "    CAST(iv_latest.infant_outcome_at18_months AS VARCHAR) AS outcomeAt18Months,\n" +
@@ -606,7 +623,12 @@ public interface NDRQueryRepository extends JpaRepository<NdrMessageLog, Integer
             "    CAST(iarv.timing_of_avr_within_72hours AS VARCHAR) AS relTimingWithin72,\n" +
             "    CAST(iarv.timing_of_avr_after_72hours AS VARCHAR) AS relTimingAfter72,\n" +
             "    CAST(iarv.age_at_ctx AS VARCHAR) AS relAgeAtCtx,\n" +
-            "    CAST(COALESCE(CAST(iv.infant_pcr_data AS VARCHAR), CAST(ii.infant_pcr_data AS VARCHAR)) AS VARCHAR) AS infantPcrDataJson,\n" +
+            "    CAST(CASE\n" +
+            "        WHEN ii.infant_pcr_data IS NOT NULL AND iv.infant_pcr_data IS NOT NULL THEN jsonb_build_array(ii.infant_pcr_data, iv.infant_pcr_data)\n" +
+            "        WHEN ii.infant_pcr_data IS NOT NULL THEN jsonb_build_array(ii.infant_pcr_data)\n" +
+            "        WHEN iv.infant_pcr_data IS NOT NULL THEN jsonb_build_array(iv.infant_pcr_data)\n" +
+            "        ELSE NULL\n" +
+            "    END AS VARCHAR) AS infantPcrDataJson,\n" +
             "    CAST(ipcr.pcr_list AS VARCHAR) AS relPcrListJson,\n" +
             "    CAST(iv.rapid_test_data AS VARCHAR) AS rapidTestDataJson,\n" +
             "    CAST(irapid.rapid_json AS VARCHAR) AS relRapidTestJson,\n" +
@@ -630,7 +652,11 @@ public interface NDRQueryRepository extends JpaRepository<NdrMessageLog, Integer
             "    FROM pmtct_delivery pd\n" +
             "    WHERE pd.patient_uuid = ?2\n" +
             "      AND COALESCE(CAST(pd.archived AS VARCHAR), '0') IN ('0', 'false', 'f', '')\n" +
-            "    ORDER BY pd.date_of_delivery DESC NULLS LAST, pd.id DESC\n" +
+            "    ORDER BY CASE\n" +
+            "        WHEN CAST(pd.pmtct_cycle_uuid AS VARCHAR) = COALESCE(CAST(ii.pmtct_cycle_uuid AS VARCHAR), CAST(iv.pmtct_cycle_uuid AS VARCHAR)) THEN 0\n" +
+            "        WHEN pd.date_of_delivery = ii.date_of_delivery THEN 1\n" +
+            "        ELSE 2\n" +
+            "    END, pd.date_of_delivery DESC NULLS LAST, pd.id DESC\n" +
             "    LIMIT 1\n" +
             ") d ON TRUE\n" +
             "LEFT JOIN LATERAL (\n" +
@@ -646,7 +672,10 @@ public interface NDRQueryRepository extends JpaRepository<NdrMessageLog, Integer
             "    FROM pmtct_enrollment pe_sub\n" +
             "    WHERE pe_sub.patient_uuid = ?2\n" +
             "      AND COALESCE(CAST(pe_sub.archived AS VARCHAR), '0') IN ('0', 'false', 'f', '')\n" +
-            "    ORDER BY pe_sub.pmtct_enrollment_date DESC NULLS LAST, pe_sub.id DESC\n" +
+            "    ORDER BY CASE\n" +
+            "        WHEN CAST(pe_sub.pmtct_cycle_uuid AS VARCHAR) = COALESCE(CAST(ii.pmtct_cycle_uuid AS VARCHAR), CAST(iv.pmtct_cycle_uuid AS VARCHAR)) THEN 0\n" +
+            "        ELSE 1\n" +
+            "    END, pe_sub.pmtct_enrollment_date DESC NULLS LAST, pe_sub.id DESC\n" +
             "    LIMIT 1\n" +
             ") pe ON TRUE\n" +
             "LEFT JOIN LATERAL (\n" +
