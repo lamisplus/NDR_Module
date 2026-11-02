@@ -222,7 +222,7 @@ public interface NDRQueryRepository extends JpaRepository<NdrMessageLog, Integer
             "    CAST(pi.history_of_drug_allergies AS VARCHAR)               AS historyOfDrugAllergies,\n" +
             "    CAST(pi.history_of_drug_to_drug_interaction AS VARCHAR)     AS historyOfDrugDrugInteractions,\n" +
             "    CAST(pi.urinalysis_result AS VARCHAR)                       AS urinalysisResult,\n" +
-            "    CAST(pi.liver_function_test_results AS VARCHAR)             AS liverFunctionTestResult,\n" +
+            "    CAST(pi.liver_function_test_results->>0 AS VARCHAR)         AS liverFunctionTestResult,\n" +
             "    CAST('' AS VARCHAR)                                         AS referredAtInitiation,\n" +
             "    CAST(NULL AS DATE)                                          AS dateReferredAtInitiation,\n" +
             "    CAST('' AS VARCHAR)                                         AS serviceReferredFor,\n" +
@@ -254,6 +254,40 @@ public interface NDRQueryRepository extends JpaRepository<NdrMessageLog, Integer
             "     AND eduCode.code_description = CAST(p.education->>'display' AS VARCHAR)\n" +
             "WHERE p.uuid = ?2", nativeQuery = true)
     List<PrepDTO> getCardEnrollment(Long facilityId, String patientId, LocalDateTime lastModified);
+
+    @Query(value = "SELECT\n" +
+            "\tpfv.uuid AS visitID,\n" +
+            "\tpfv.encounter_date AS visitDate,\n" +
+            "\tpfv.visit_type AS visitType,\n" +
+            "\tpfv.weight AS fvWeight,\n" +
+            "\tCAST(pfv.prep_noted_side_effects ->> 0 AS VARCHAR) AS notedSideEffects,\n" +
+            "\tCAST(pfv.syndromic_sti_screening ->> 0 AS VARCHAR) AS syndromicSTIScreening,\n" +
+            "\tpfv.risk_reduction_services AS riskReductionServices,\n" +
+            "\tpfv.adherence_level AS adherence,\n" +
+            "\tpfv.why_adherence_level_poor AS reasonForPoorFairAdherence,\n" +
+            "\tpfv.prep_type AS prepType,\n" +
+            "\tpfv.regimen_id AS prepRegimen,\n" +
+            "\tpfv.refill_days AS monthsOfRefill,\n" +
+            "\tpfv.other_drugs AS otherDrugsPrescribed,\n" +
+            "\tCAST(NULLIF(urinalysis->>'testDate', '') AS DATE) AS dateOfUrinalysis,\n" +
+            "\tCAST(urinalysis->>'result' AS VARCHAR) AS urinalysisResult,\n" +
+            "\tCAST(NULLIF(hepatitis->>'testDate', '') AS DATE) AS dateOfHepatitisTest,\n" +
+            "\tCAST(hepatitis->>'result' AS VARCHAR) AS hepatitisTestResult,\n" +
+            "\tCAST(NULLIF(syphilis->>'testDate', '') AS DATE) AS dateOfSyphilisTest,\n" +
+            "\tCAST(syphilis->>'result' AS VARCHAR) AS syphilisTestResult,\n" +
+            "\tpfv.date_of_liver_function_test_results AS dateOfLiverFunctionTest,\n" +
+            "\tCAST(pfv.liver_function_test_results ->> 0 AS VARCHAR) AS liverFunctionTestResult,\n" +
+            "-- \tCAST(other_tests_result->>'testDate' AS VARCHAR) AS dateOfOtherTests,\n" +
+            "-- \tCAST(other_tests_result->>'result' AS VARCHAR) AS otherTestsResult,\n" +
+            "\tpfv.next_appointment AS nextAppointmentDate\n" +
+            "FROM prep_followup_visit pfv\n" +
+            "WHERE pfv.facility_id = ?1\n" +
+            "AND pfv.person_uuid = ?2\n" +
+            "AND pfv.date_modified >= ?3\n" +
+            "AND pfv.archived = false\n" +
+            "ORDER BY id DESC\n" +
+            "LIMIT 1", nativeQuery = true)
+    List<PrepDTO> getPrepFollowUpVisit(Long facilityId, String patientId, LocalDateTime lastModified);
 
     @Query(value = "SELECT DISTINCT p.uuid\n" +
             "FROM patient_person p\n" +

@@ -283,10 +283,12 @@ public class PrEPService {
     List<PrepDTO> getPatientPrepDetails(long facilityId, String patientId, LocalDateTime lastModified) {
         List<PrepDTO> screeningReports = ndrQueryRepository.getPrepReportByClientCodeAndLastModified(facilityId, patientId, lastModified);
         List<PrepDTO> enrollmentReports = ndrQueryRepository.getCardEnrollment(facilityId, patientId, lastModified);
+        List<PrepDTO> prepFollowUpVisit = ndrQueryRepository.getPrepFollowUpVisit(facilityId, patientId, lastModified);
 
         List<PrepDTO> combinedReports = new ArrayList<>();
         if (screeningReports != null) combinedReports.addAll(screeningReports);
         if (enrollmentReports != null) combinedReports.addAll(enrollmentReports);
+        if (prepFollowUpVisit != null) combinedReports.addAll(prepFollowUpVisit);
 
         return combinedReports;
     }
