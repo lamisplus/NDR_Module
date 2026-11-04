@@ -641,8 +641,8 @@ public class HtsEncounterReportTypeMapper {
     }
     private String mapTestResult(String result) {
         String upperType = result.toUpperCase();
-        if (upperType.contains("STI_HIV_RESULT_")) {
-            upperType = upperType.replace("STI_HIV_RESULT_", "").trim();
+        if (upperType.contains("HIV_TEST_RESULT_")) {
+            upperType = upperType.replace("HIV_TEST_RESULT_", "").trim();
             return upperType.equalsIgnoreCase("POSITIVE") ? "R" : "NR";
         }else if (upperType.contains("HIV_CONFIRMATORY_TEST_RESULT_")) {
             upperType = upperType.replace("HIV_CONFIRMATORY_TEST_RESULT_", "").trim();
