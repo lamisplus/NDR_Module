@@ -358,7 +358,7 @@ public interface NDRQueryRepository extends JpaRepository<NdrMessageLog, Integer
             "    COALESCE(anc.date_of_enrollment, pe.pmtct_enrollment_date) AS visitDate,\n" +
             "    CAST(p.hospital_number AS VARCHAR) AS hospitalNo,\n" +
             "    CAST(anc.anc_no AS VARCHAR) AS ancNumber,\n" +
-            "    CAST(COALESCE(NULLIF(CAST(mv_latest.current_status AS VARCHAR), ''), NULLIF(CAST(phts.pregnancy_status_at_entry AS VARCHAR), ''), NULLIF(CAST(hts_en.pregnancy_status AS VARCHAR), ''), NULLIF(CAST(pe.entry_point AS VARCHAR), ''), 'P') AS VARCHAR) AS pregnancyBreastfeedingStatus,\n" +
+            "    CAST(COALESCE(NULLIF(CAST(phts.pregnancy_status_at_entry AS VARCHAR), ''), NULLIF(CAST(hts_en.pregnancy_status AS VARCHAR), ''), NULLIF(CAST(pe.entry_point AS VARCHAR), ''), CASE WHEN anc.uuid IS NOT NULL THEN 'P' END, NULLIF(CAST(mv_latest.current_status AS VARCHAR), ''), 'P') AS VARCHAR) AS pregnancyBreastfeedingStatus,\n" +
             "    CAST(NULLIF(REGEXP_REPLACE(COALESCE(NULLIF(CAST(anc.gaweeks AS VARCHAR), ''), NULLIF(CAST(pe.gaweeks AS VARCHAR), ''), ''), '[^0-9]', '', 'g'), '') AS INTEGER) AS gestationalAgeAtBooking,\n" +
             "    CAST(COALESCE(NULLIF(CAST(anc.previously_known_hiv_status AS VARCHAR), ''), NULLIF(CAST(phts.previously_known_hiv_positive AS VARCHAR), ''), NULLIF(CAST(hts_en.previously_known_hiv AS VARCHAR), ''), NULLIF(CAST(pe.time_of_hiv_diagnosis AS VARCHAR), '')) AS VARCHAR) AS previouslyKnownHivStatus,\n" +
             "    CAST(COALESCE(NULLIF(CAST(anc.currently_on_art AS VARCHAR), ''), NULLIF(CAST(phts.enrolled_on_art AS VARCHAR), ''), NULLIF(CAST(hts_en.enrolled_on_art AS VARCHAR), ''), CASE WHEN pe.art_start_date IS NOT NULL THEN 'Yes' END) AS VARCHAR) AS currentlyOnArt,\n" +
@@ -377,9 +377,9 @@ public interface NDRQueryRepository extends JpaRepository<NdrMessageLog, Integer
             "    CAST(COALESCE(NULLIF(anc.syphilis_info->>'referredSyphilisTreatment', ''), NULLIF(phts.syphilis_info->>'referredSyphilisTreatment', ''), NULLIF(mv_latest.syphilis_referred, '')) AS VARCHAR) AS syphilisReferred,\n" +
             "    CAST(COALESCE(NULLIF(anc.hepatitis_b_info->>'previouslyKnownPositive', ''), NULLIF(phts.hbv_info->>'previouslyKnownPositive', ''), NULLIF(hts_en.hbv_known_pos, ''), NULLIF(mv_latest.hbv_known_pos, '')) AS VARCHAR) AS hbvKnownPositive,\n" +
             "    CAST(COALESCE(NULLIF(anc.hepatitis_b_info->>'currentHbvStatus', ''), NULLIF(anc.hepatitis_b_info->>'hepatitisB', ''), NULLIF(pe.hbv_details->>'testResult', ''), NULLIF(phts.hepatitis_b, ''), NULLIF(hts_en.hbv_result, ''), NULLIF(mv_latest.hbv_status, '')) AS VARCHAR) AS hbvTestResult,\n" +
-            "    CAST(COALESCE(NULLIF(anc.hepatitis_b_info->>'treatedHepatitisB', ''), NULLIF(pe.hbv_details->>'treatmentType', ''), NULLIF(phts.hbv_info->>'treatedHepatitisB', ''), NULLIF(hts_en.hbv_treatment, ''), NULLIF(mv_latest.hbv_treated, '')) AS VARCHAR) AS hbvTreated,\n" +
+            "    CAST(COALESCE(NULLIF(anc.hepatitis_b_info->>'treatedHepatitisB', ''), NULLIF(NULLIF(pe.hbv_details->>'treatmentType', ''), 'None'), NULLIF(phts.hbv_info->>'treatedHepatitisB', ''), NULLIF(hts_en.hbv_treatment, ''), NULLIF(mv_latest.hbv_treated, ''), NULLIF(pe.hbv_details->>'treatmentType', '')) AS VARCHAR) AS hbvTreated,\n" +
             "    CAST(COALESCE(NULLIF(anc.hepatitis_b_info->>'referredHepatitisB', ''), NULLIF(phts.hbv_info->>'referredHepatitisB', ''), NULLIF(mv_latest.hbv_referred, '')) AS VARCHAR) AS hbvReferred,\n" +
-            "    CAST(COALESCE(NULLIF(phts.initiated_on_prophylaxis, ''), NULLIF(hts_en.initiated_on_prophylaxis, ''), NULLIF(pe.hbv_details->>'treatmentType', ''), NULLIF(anc.hepatitis_b_info->>'currentHbvStatus', ''), NULLIF(mv_latest.hbv_status, '')) AS VARCHAR) AS initiatedOnProphylaxis,\n" +
+            "    CAST(COALESCE(NULLIF(phts.initiated_on_prophylaxis, ''), NULLIF(hts_en.initiated_on_prophylaxis, ''), NULLIF(NULLIF(pe.hbv_details->>'treatmentType', ''), 'None'), NULLIF(hts_en.hbv_treatment, ''), NULLIF(anc.hepatitis_b_info->>'currentHbvStatus', ''), NULLIF(mv_latest.hbv_status, ''), NULLIF(pe.hbv_details->>'treatmentType', '')) AS VARCHAR) AS initiatedOnProphylaxis,\n" +
             "    CAST(COALESCE(NULLIF(CAST(pe.tb_status AS VARCHAR), ''), NULLIF(CAST(phts.tb_screening_status AS VARCHAR), ''), NULLIF(CAST(hts_en.tb_screening_status AS VARCHAR), '')) AS VARCHAR) AS tbScreeningStatus,\n" +
             "    CAST(COALESCE(NULLIF(CAST(phts.tb_referred AS VARCHAR), ''), NULLIF(CAST(hts_en.tb_referred AS VARCHAR), '')) AS VARCHAR) AS tbTreatmentReferral,\n" +
             "    vl_lt32.date_of_viral_load AS vlLessThan32WeeksDate,\n" +
@@ -547,23 +547,23 @@ public interface NDRQueryRepository extends JpaRepository<NdrMessageLog, Integer
             "    CAST(COALESCE(NULLIF(CAST(ii.body_weight AS VARCHAR), ''), NULLIF(d.baby_info->>'babyLiveBirthWeight', ''), NULLIF(d.baby_info->'aliveOutcomes'->0->>'babyLiveBirthWeight', '')) AS VARCHAR) AS birthWeightKg,\n" +
             "    CAST(NULLIF(REGEXP_REPLACE(COALESCE(CAST(ii.length AS VARCHAR), ''), '[^0-9.]', '', 'g'), '') AS NUMERIC) AS birthLengthCm,\n" +
             "    CAST(COALESCE(NULLIF(CAST(ii.birth_outcome AS VARCHAR), ''), NULLIF(CAST(d.child_status AS VARCHAR), ''), CASE WHEN COALESCE(CAST(NULLIF(REGEXP_REPLACE(COALESCE(CAST(d.number_of_infants_alive AS VARCHAR), ''), '[^0-9]', '', 'g'), '') AS INTEGER), 0) > 0 THEN 'Alive' WHEN COALESCE(CAST(NULLIF(REGEXP_REPLACE(COALESCE(CAST(d.number_of_infants_dead AS VARCHAR), ''), '[^0-9]', '', 'g'), '') AS INTEGER), 0) > 0 THEN 'Dead' END) AS VARCHAR) AS birthOutcome,\n" +
-            "    CAST(COALESCE(NULLIF(CAST(ii.infant_hospital_number AS VARCHAR), ''), NULLIF(CAST(iv_latest.infant_hospital_number AS VARCHAR), '')) AS VARCHAR) AS childHospitalNumber,\n" +
+            "    CAST(COALESCE(NULLIF(CAST(ii.infant_hospital_number AS VARCHAR), ''), NULLIF(CAST(iv_agg.infant_hospital_number AS VARCHAR), '')) AS VARCHAR) AS childHospitalNumber,\n" +
             "    CAST(ii.entry_point AS VARCHAR) AS childEntryPoint,\n" +
             "    CAST(COALESCE(NULLIF(d.baby_info->>'sexOfBaby', ''), NULLIF(d.baby_info->'aliveOutcomes'->0->>'sexOfBaby', '')) AS VARCHAR) AS sex,\n" +
             "    CAST(d.child_given_arv_within72 AS VARCHAR) AS childGivenArvWithin72,\n" +
             "    CAST(d.baby_info AS VARCHAR) AS babyInfoJson,\n" +
-            "    CAST(COALESCE(CAST(ii.infant_arv_data AS VARCHAR), CAST(iv_latest.infant_arv_data AS VARCHAR)) AS VARCHAR) AS infantArvDataJson,\n" +
+            "    CAST(COALESCE(CAST(ii.infant_arv_data AS VARCHAR), CAST(iv_agg.infant_arv_data AS VARCHAR)) AS VARCHAR) AS infantArvDataJson,\n" +
             "    CAST(ii.syphilis_prophylaxis AS VARCHAR) AS syphilisProphylaxisJson,\n" +
             "    CAST(ii.hbv_vaccinations AS VARCHAR) AS hbvVaccinationsJson,\n" +
             "    CAST(CASE\n" +
-            "        WHEN ii.infant_pcr_data IS NOT NULL AND iv_latest.infant_pcr_data IS NOT NULL THEN jsonb_build_array(ii.infant_pcr_data, iv_latest.infant_pcr_data)\n" +
+            "        WHEN ii.infant_pcr_data IS NOT NULL AND iv_agg.visit_pcr_array IS NOT NULL THEN jsonb_build_array(ii.infant_pcr_data, iv_agg.visit_pcr_array)\n" +
             "        WHEN ii.infant_pcr_data IS NOT NULL THEN jsonb_build_array(ii.infant_pcr_data)\n" +
-            "        WHEN iv_latest.infant_pcr_data IS NOT NULL THEN jsonb_build_array(iv_latest.infant_pcr_data)\n" +
+            "        WHEN iv_agg.visit_pcr_array IS NOT NULL THEN iv_agg.visit_pcr_array\n" +
             "        ELSE NULL\n" +
             "    END AS VARCHAR) AS infantPcrDataJson,\n" +
-            "    CAST(iv_latest.hbv_vaccination_data AS VARCHAR) AS visitHbvVaccinationDataJson,\n" +
-            "    CAST(iv_latest.rapid_test_data AS VARCHAR) AS rapidTestDataJson,\n" +
-            "    CAST(iv_latest.infant_outcome_at18_months AS VARCHAR) AS outcomeAt18Months,\n" +
+            "    CAST(iv_agg.hbv_vaccination_data AS VARCHAR) AS visitHbvVaccinationDataJson,\n" +
+            "    CAST(iv_agg.rapid_test_data AS VARCHAR) AS rapidTestDataJson,\n" +
+            "    CAST(iv_agg.infant_outcome_at18_months AS VARCHAR) AS outcomeAt18Months,\n" +
             "    iarv.date_of_arv AS relArvDate,\n" +
             "    CAST(iarv.infant_arv_type AS VARCHAR) AS relArvType,\n" +
             "    CAST(iarv.infant_arv_time AS VARCHAR) AS relArvTime,\n" +
@@ -582,14 +582,29 @@ public interface NDRQueryRepository extends JpaRepository<NdrMessageLog, Integer
             ") ii ON COALESCE(NULLIF(CAST(ii.pmtct_cycle_uuid AS VARCHAR), ''), CAST(ii.date_of_delivery AS VARCHAR), CAST(ii.uuid AS VARCHAR))\n" +
             "      = COALESCE(NULLIF(CAST(d.pmtct_cycle_uuid AS VARCHAR), ''), CAST(d.date_of_delivery AS VARCHAR), CAST(d.uuid AS VARCHAR))\n" +
             "LEFT JOIN LATERAL (\n" +
-            "    SELECT *\n" +
+            "    SELECT\n" +
+            "        (array_agg(iv.infant_hospital_number ORDER BY iv.visit_date DESC NULLS LAST, iv.id DESC) FILTER (WHERE NULLIF(CAST(iv.infant_hospital_number AS VARCHAR), '') IS NOT NULL))[1] AS infant_hospital_number,\n" +
+            "        (array_agg(iv.infant_arv_data ORDER BY iv.visit_date DESC NULLS LAST, iv.id DESC) FILTER (WHERE iv.infant_arv_data IS NOT NULL))[1] AS infant_arv_data,\n" +
+            "        jsonb_agg(iv.infant_pcr_data ORDER BY iv.visit_date ASC NULLS LAST, iv.id ASC) FILTER (WHERE iv.infant_pcr_data IS NOT NULL) AS visit_pcr_array,\n" +
+            "        CASE\n" +
+            "            WHEN COUNT(iv.hbv_vaccination_data) > 0 THEN jsonb_strip_nulls(jsonb_build_object(\n" +
+            "                'firstDoseDate', MAX(COALESCE(NULLIF(iv.hbv_vaccination_data->>'firstDoseDate', ''), NULLIF(iv.hbv_vaccination_data->>'firstDoseBirthDoseDate', ''))),\n" +
+            "                'firstDoseTiming', MAX(COALESCE(NULLIF(iv.hbv_vaccination_data->>'firstDoseTiming', ''), NULLIF(iv.hbv_vaccination_data->>'timingOfVaccination', ''))),\n" +
+            "                'secondDoseDate', MAX(NULLIF(iv.hbv_vaccination_data->>'secondDoseDate', '')),\n" +
+            "                'thirdDoseDate', MAX(NULLIF(iv.hbv_vaccination_data->>'thirdDoseDate', ''))\n" +
+            "            ))\n" +
+            "            ELSE NULL\n" +
+            "        END AS hbv_vaccination_data,\n" +
+            "        (array_agg(iv.rapid_test_data ORDER BY iv.visit_date DESC NULLS LAST, iv.id DESC) FILTER (WHERE iv.rapid_test_data IS NOT NULL))[1] AS rapid_test_data,\n" +
+            "        (array_agg(iv.infant_outcome_at18_months ORDER BY iv.visit_date DESC NULLS LAST, iv.id DESC) FILTER (WHERE NULLIF(CAST(iv.infant_outcome_at18_months AS VARCHAR), '') IS NOT NULL))[1] AS infant_outcome_at18_months\n" +
             "    FROM pmtct_infant_visit iv\n" +
             "    WHERE iv.mother_patient_uuid = ?2\n" +
             "      AND COALESCE(CAST(iv.archived AS VARCHAR), '0') IN ('0', 'false', 'f', '')\n" +
-            "      AND (ii.infant_hospital_number IS NULL OR CAST(iv.infant_hospital_number AS VARCHAR) = CAST(ii.infant_hospital_number AS VARCHAR) OR CAST(iv.pmtct_cycle_uuid AS VARCHAR) = COALESCE(CAST(ii.pmtct_cycle_uuid AS VARCHAR), CAST(d.pmtct_cycle_uuid AS VARCHAR)))\n" +
-            "    ORDER BY iv.visit_date DESC NULLS LAST, iv.id DESC\n" +
-            "    LIMIT 1\n" +
-            ") iv_latest ON TRUE\n" +
+            "      AND (\n" +
+            "          (NULLIF(CAST(ii.infant_hospital_number AS VARCHAR), '') IS NOT NULL AND CAST(iv.infant_hospital_number AS VARCHAR) = CAST(ii.infant_hospital_number AS VARCHAR))\n" +
+            "          OR (NULLIF(CAST(ii.infant_hospital_number AS VARCHAR), '') IS NULL AND CAST(iv.pmtct_cycle_uuid AS VARCHAR) = COALESCE(CAST(ii.pmtct_cycle_uuid AS VARCHAR), CAST(d.pmtct_cycle_uuid AS VARCHAR)))\n" +
+            "      )\n" +
+            ") iv_agg ON TRUE\n" +
             "LEFT JOIN LATERAL (\n" +
             "    SELECT *\n" +
             "    FROM pmtct_infant_arv ia\n" +
@@ -631,7 +646,7 @@ public interface NDRQueryRepository extends JpaRepository<NdrMessageLog, Integer
             "    CAST(CASE\n" +
             "        WHEN iv.visit_date IS NOT NULL AND COALESCE(ii.date_of_delivery, d.date_of_delivery) IS NOT NULL\n" +
             "             AND iv.visit_date >= COALESCE(ii.date_of_delivery, d.date_of_delivery)\n" +
-            "        THEN EXTRACT(DAY FROM AGE(iv.visit_date, COALESCE(ii.date_of_delivery, d.date_of_delivery))) / 7\n" +
+            "        THEN (CAST(iv.visit_date AS DATE) - CAST(COALESCE(ii.date_of_delivery, d.date_of_delivery) AS DATE)) / 7\n" +
             "        ELSE NULL\n" +
             "    END AS INTEGER) AS ageAtFirstVisit,\n" +
             "    CAST(COALESCE(NULLIF(CAST(ii.infant_hospital_number AS VARCHAR), ''), NULLIF(CAST(iv.infant_hospital_number AS VARCHAR), ''), NULLIF(CAST(iarv.infant_hospital_number AS VARCHAR), '')) AS VARCHAR) AS childHospitalRegNo,\n" +
@@ -644,8 +659,8 @@ public interface NDRQueryRepository extends JpaRepository<NdrMessageLog, Integer
             "    CAST(COALESCE(CAST(reg_info.regimen_code AS VARCHAR), NULLIF(CAST(mv.regimen_line_id AS VARCHAR), '')) AS VARCHAR) AS motherRegimenCode,\n" +
             "    CAST(COALESCE(CAST(reg_info.regimen_desc AS VARCHAR), NULLIF(CAST(mv.mothers_art_regimen AS VARCHAR), ''), NULLIF(CAST(pe.regimen_id AS VARCHAR), '')) AS VARCHAR) AS motherRegimenDescription,\n" +
             "    CAST(reg_info.ndr_code AS VARCHAR) AS motherRegimenNdrCode,\n" +
-            "    CAST(COALESCE(NULLIF(mv.syphilis_info->>'date', ''), NULLIF(pe.syphilis_details->>'date', '')) AS VARCHAR) AS motherSyphilisTreatmentStartDate,\n" +
-            "    CAST(COALESCE(NULLIF(mv.hepatitis_b_info->>'dateOfHepatitisB', ''), NULLIF(pe.hbv_details->>'vlResultDate', '')) AS VARCHAR) AS motherHepatitisBTreatmentStartDate,\n" +
+            "    CAST(COALESCE(NULLIF(iv.mother_art_data->>'syphilisTreatmentStartDate', ''), NULLIF(mv.syphilis_info->>'date', ''), NULLIF(pe.syphilis_details->>'date', '')) AS VARCHAR) AS motherSyphilisTreatmentStartDate,\n" +
+            "    CAST(COALESCE(NULLIF(iv.mother_art_data->>'hbvTreatmentStartDate', ''), NULLIF(mv.hepatitis_b_info->>'dateOfHepatitisB', ''), NULLIF(pe.hbv_details->>'vlResultDate', '')) AS VARCHAR) AS motherHepatitisBTreatmentStartDate,\n" +
             "    CASE WHEN LOWER(COALESCE(CAST(d.hiv_exposed_infant_given_hb_within24hrs AS VARCHAR), '')) IN ('true', 't', 'yes', 'y', '1') THEN true WHEN LOWER(COALESCE(CAST(d.hiv_exposed_infant_given_hb_within24hrs AS VARCHAR), '')) IN ('false', 'f', 'no', 'n', '0') THEN false ELSE NULL END AS hivExposedInfantGivenHbWithin24hrs,\n" +
             "    CASE WHEN LOWER(COALESCE(CAST(d.non_hbv_exposed_infant_given_hb_within_24hrs AS VARCHAR), '')) IN ('true', 't', 'yes', 'y', '1') THEN true WHEN LOWER(COALESCE(CAST(d.non_hbv_exposed_infant_given_hb_within_24hrs AS VARCHAR), '')) IN ('false', 'f', 'no', 'n', '0') THEN false ELSE NULL END AS nonHbvExposedInfantGivenHbWithin24hrs,\n" +
             "    CAST(ii.hbv_vaccinations AS VARCHAR) AS hbvVaccinationsJson,\n" +
@@ -658,9 +673,9 @@ public interface NDRQueryRepository extends JpaRepository<NdrMessageLog, Integer
             "    CAST(iarv.timing_of_avr_after_72hours AS VARCHAR) AS relTimingAfter72,\n" +
             "    CAST(iarv.age_at_ctx AS VARCHAR) AS relAgeAtCtx,\n" +
             "    CAST(CASE\n" +
-            "        WHEN ii.infant_pcr_data IS NOT NULL AND iv.infant_pcr_data IS NOT NULL THEN jsonb_build_array(ii.infant_pcr_data, iv.infant_pcr_data)\n" +
+            "        WHEN ii.infant_pcr_data IS NOT NULL AND iv.visit_pcr_array IS NOT NULL THEN jsonb_build_array(ii.infant_pcr_data, iv.visit_pcr_array)\n" +
             "        WHEN ii.infant_pcr_data IS NOT NULL THEN jsonb_build_array(ii.infant_pcr_data)\n" +
-            "        WHEN iv.infant_pcr_data IS NOT NULL THEN jsonb_build_array(iv.infant_pcr_data)\n" +
+            "        WHEN iv.visit_pcr_array IS NOT NULL THEN iv.visit_pcr_array\n" +
             "        ELSE NULL\n" +
             "    END AS VARCHAR) AS infantPcrDataJson,\n" +
             "    CAST(ipcr.pcr_list AS VARCHAR) AS relPcrListJson,\n" +
@@ -674,10 +689,33 @@ public interface NDRQueryRepository extends JpaRepository<NdrMessageLog, Integer
             "    WHERE facility_id = ?1 AND mother_patient_uuid = ?2 AND COALESCE(CAST(archived AS VARCHAR), '0') IN ('0', 'false', 'f', '')\n" +
             ") ii\n" +
             "FULL OUTER JOIN (\n" +
-            "    SELECT DISTINCT ON (COALESCE(NULLIF(CAST(infant_hospital_number AS VARCHAR), ''), CAST(uuid AS VARCHAR))) *\n" +
+            "    SELECT\n" +
+            "        COALESCE(NULLIF(CAST(infant_hospital_number AS VARCHAR), ''), CAST(uuid AS VARCHAR)) AS infant_key,\n" +
+            "        (array_agg(uuid ORDER BY visit_date ASC NULLS LAST, id ASC))[1] AS uuid,\n" +
+            "        (array_agg(infant_hospital_number ORDER BY visit_date ASC NULLS LAST, id ASC) FILTER (WHERE NULLIF(CAST(infant_hospital_number AS VARCHAR), '') IS NOT NULL))[1] AS infant_hospital_number,\n" +
+            "        (array_agg(mother_patient_uuid ORDER BY visit_date ASC NULLS LAST, id ASC))[1] AS mother_patient_uuid,\n" +
+            "        (array_agg(pmtct_cycle_uuid ORDER BY visit_date ASC NULLS LAST, id ASC) FILTER (WHERE NULLIF(CAST(pmtct_cycle_uuid AS VARCHAR), '') IS NOT NULL))[1] AS pmtct_cycle_uuid,\n" +
+            "        MIN(visit_date) AS visit_date,\n" +
+            "        (array_agg(anc_number ORDER BY visit_date DESC NULLS LAST, id DESC) FILTER (WHERE NULLIF(CAST(anc_number AS VARCHAR), '') IS NOT NULL))[1] AS anc_number,\n" +
+            "        (array_agg(mother_art_data ORDER BY visit_date DESC NULLS LAST, id DESC) FILTER (WHERE mother_art_data IS NOT NULL))[1] AS mother_art_data,\n" +
+            "        (array_agg(infant_arv_data ORDER BY visit_date DESC NULLS LAST, id DESC) FILTER (WHERE infant_arv_data IS NOT NULL))[1] AS infant_arv_data,\n" +
+            "        jsonb_agg(infant_pcr_data ORDER BY visit_date ASC NULLS LAST, id ASC) FILTER (WHERE infant_pcr_data IS NOT NULL) AS visit_pcr_array,\n" +
+            "        CASE\n" +
+            "            WHEN COUNT(hbv_vaccination_data) > 0 THEN jsonb_strip_nulls(jsonb_build_object(\n" +
+            "                'firstDoseDate', MAX(COALESCE(NULLIF(hbv_vaccination_data->>'firstDoseDate', ''), NULLIF(hbv_vaccination_data->>'firstDoseBirthDoseDate', ''))),\n" +
+            "                'firstDoseTiming', MAX(COALESCE(NULLIF(hbv_vaccination_data->>'firstDoseTiming', ''), NULLIF(hbv_vaccination_data->>'timingOfVaccination', ''))),\n" +
+            "                'secondDoseDate', MAX(NULLIF(hbv_vaccination_data->>'secondDoseDate', '')),\n" +
+            "                'thirdDoseDate', MAX(NULLIF(hbv_vaccination_data->>'thirdDoseDate', ''))\n" +
+            "            ))\n" +
+            "            ELSE NULL\n" +
+            "        END AS hbv_vaccination_data,\n" +
+            "        (array_agg(rapid_test_data ORDER BY visit_date DESC NULLS LAST, id DESC) FILTER (WHERE rapid_test_data IS NOT NULL))[1] AS rapid_test_data,\n" +
+            "        (array_agg(infant_outcome_at18_months ORDER BY visit_date DESC NULLS LAST, id DESC) FILTER (WHERE NULLIF(CAST(infant_outcome_at18_months AS VARCHAR), '') IS NOT NULL))[1] AS infant_outcome_at18_months,\n" +
+            "        (array_agg(date_linked_to_art_clinic ORDER BY visit_date DESC NULLS LAST, id DESC) FILTER (WHERE date_linked_to_art_clinic IS NOT NULL))[1] AS date_linked_to_art_clinic,\n" +
+            "        (array_agg(art_enrollment_no ORDER BY visit_date DESC NULLS LAST, id DESC) FILTER (WHERE NULLIF(CAST(art_enrollment_no AS VARCHAR), '') IS NOT NULL))[1] AS art_enrollment_no\n" +
             "    FROM pmtct_infant_visit\n" +
             "    WHERE facility_id = ?1 AND mother_patient_uuid = ?2 AND COALESCE(CAST(archived AS VARCHAR), '0') IN ('0', 'false', 'f', '')\n" +
-            "    ORDER BY COALESCE(NULLIF(CAST(infant_hospital_number AS VARCHAR), ''), CAST(uuid AS VARCHAR)), visit_date ASC NULLS LAST, id ASC\n" +
+            "    GROUP BY COALESCE(NULLIF(CAST(infant_hospital_number AS VARCHAR), ''), CAST(uuid AS VARCHAR))\n" +
             ") iv ON COALESCE(NULLIF(CAST(iv.infant_hospital_number AS VARCHAR), ''), NULLIF(CAST(iv.pmtct_cycle_uuid AS VARCHAR), ''), CAST(iv.uuid AS VARCHAR))\n" +
             "      = COALESCE(NULLIF(CAST(ii.infant_hospital_number AS VARCHAR), ''), NULLIF(CAST(ii.pmtct_cycle_uuid AS VARCHAR), ''), CAST(ii.uuid AS VARCHAR))\n" +
             "INNER JOIN patient_person p ON p.uuid = COALESCE(ii.mother_patient_uuid, iv.mother_patient_uuid)\n" +
@@ -773,7 +811,8 @@ public interface NDRQueryRepository extends JpaRepository<NdrMessageLog, Integer
             "    ORDER BY ir.visit_date DESC NULLS LAST, ir.id DESC\n" +
             "    LIMIT 1\n" +
             ") irapid ON TRUE\n" +
-            "WHERE COALESCE(CAST(ii.uuid AS VARCHAR), CAST(iv.uuid AS VARCHAR)) IS NOT NULL", nativeQuery = true)
+            "WHERE COALESCE(CAST(ii.uuid AS VARCHAR), CAST(iv.uuid AS VARCHAR)) IS NOT NULL\n" +
+            "  AND (COALESCE(CAST(ii.birth_outcome AS VARCHAR), '') NOT ILIKE 'Dead%' OR iv.uuid IS NOT NULL OR ii.infant_arv_data IS NOT NULL OR ii.infant_pcr_data IS NOT NULL)", nativeQuery = true)
     List<InfantCohortRegistrationProjection> getInfantCohortRegistrationsByPatient(Long facilityId, String patientUuid, LocalDateTime lastModified);
 
     @Query(value = "SELECT DISTINCT\n" +
