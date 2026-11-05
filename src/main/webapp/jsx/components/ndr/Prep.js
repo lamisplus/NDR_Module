@@ -396,15 +396,15 @@ export default function Prep(props) {
                 new Promise((resolve, reject) =>
                   axios
                     .get(
-                      `${baseUrl}prep/persons/enrolled?pageSize=${query.pageSize}&pageNo=${query.page}&searchValue=${query.search}`,
+                      `${baseUrl}ndr/prep/list?search=${query.search}&page=${query.page}&size=${query.pageSize}`,
                       { headers: { Authorization: `Bearer ${token}` } },
                     )
                     .then((response) => response)
                     .then((result) => {
                       resolve({
-                        data: result.data.records.map((row) => ({
-                          personId: row.personId,
-                          personUuid: row.personUuid,
+                        data: result.data.content.map((row) => ({
+                          personId: row.uniqueClientId,
+                          personUuid: row.uuid,
                           hospitalNumber: row.hospitalNumber,
                         })),
                         page: query.page,

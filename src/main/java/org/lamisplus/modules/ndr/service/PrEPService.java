@@ -5,6 +5,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.lamisplus.modules.ndr.domain.dto.NDRErrorDTO;
 import org.lamisplus.modules.ndr.domain.dto.PatientDemographicDTO;
 import org.lamisplus.modules.ndr.domain.dto.PrepDTO;
+import org.lamisplus.modules.ndr.domain.dto.prep.ProphylaxisScreeningDTO;
+import org.lamisplus.modules.ndr.domain.dto.prep.ProphylaxisScreeningProjection;
 import org.lamisplus.modules.ndr.domain.entities.NdrMessageLog;
 import org.lamisplus.modules.ndr.mapper.*;
 import org.lamisplus.modules.ndr.repositories.NdrMessageLogRepository;
@@ -12,6 +14,8 @@ import org.lamisplus.modules.ndr.repositories.NDRQueryRepository;
 import org.lamisplus.modules.ndr.repositories.NdrXmlStatusRepository;
 import org.lamisplus.modules.ndr.schema.*;
 import org.lamisplus.modules.ndr.utility.ZipUtility;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import javax.xml.XMLConstants;
@@ -284,11 +288,15 @@ public class PrEPService {
         List<PrepDTO> screeningReports = ndrQueryRepository.getPrepReportByClientCodeAndLastModified(facilityId, patientId, lastModified);
         List<PrepDTO> enrollmentReports = ndrQueryRepository.getCardEnrollment(facilityId, patientId, lastModified);
         List<PrepDTO> prepFollowUpVisit = ndrQueryRepository.getPrepFollowUpVisit(facilityId, patientId, lastModified);
+        List<PrepDTO> pepFollowUpVisit = ndrQueryRepository.getPepFollowUpVisit(facilityId, patientId, lastModified);
+        List<PrepDTO> prepDiscontinuation = ndrQueryRepository.getDiscontinuation(facilityId, patientId, lastModified);
 
         List<PrepDTO> combinedReports = new ArrayList<>();
         if (screeningReports != null) combinedReports.addAll(screeningReports);
         if (enrollmentReports != null) combinedReports.addAll(enrollmentReports);
         if (prepFollowUpVisit != null) combinedReports.addAll(prepFollowUpVisit);
+        if (pepFollowUpVisit != null) combinedReports.addAll(pepFollowUpVisit);
+        if (prepDiscontinuation != null) combinedReports.addAll(prepDiscontinuation);
 
         return combinedReports;
     }
@@ -376,5 +384,25 @@ public class PrEPService {
         }
         return null;
     }
+
+    public Page<ProphylaxisScreeningDTO> searchProphylaxisScreenings(
+            String search,
+            Pageable pageable) {
+
+        Page<ProphylaxisScreeningProjection> results =
+                ndrQueryRepository.searchProphylaxisScreenings(
+                        search == null ? "" : search.trim(),
+                        pageable
+                );
+
+        return results.map(record -> new ProphylaxisScreeningDTO(
+                record.getId(),
+                record.getUuid(),
+                record.getUniqueClientId(),
+                record.getHospitalNumber()
+        ));
+    }
+
+
 }
 

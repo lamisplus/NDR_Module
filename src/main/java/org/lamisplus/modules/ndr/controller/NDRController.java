@@ -7,7 +7,11 @@ import lombok.extern.slf4j.Slf4j;
 import org.lamisplus.modules.ndr.domain.dto.NDREligibleClient;
 import org.lamisplus.modules.ndr.domain.dto.NDRErrorDTO;
 import org.lamisplus.modules.ndr.domain.dto.NdrXmlStatusDto;
+import org.lamisplus.modules.ndr.domain.dto.prep.ProphylaxisScreeningDTO;
 import org.lamisplus.modules.ndr.service.*;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.simp.SimpMessageSendingOperations;
 import org.springframework.web.bind.annotation.*;
@@ -220,6 +224,31 @@ public class NDRController {
         outputStream.write (baos.toByteArray ());
         outputStream.close ();
         response.flushBuffer ();
+    }
+
+    @GetMapping("/prep/list")
+    public ResponseEntity<Page<ProphylaxisScreeningDTO>> getScreenings(
+
+            @RequestParam(required = false, defaultValue = "") String search,
+
+            @RequestParam(defaultValue = "0") int page,
+
+            @RequestParam(defaultValue = "20") int size) {
+
+        if (page < 0) {
+            page = 0;
+        }
+
+        if (size <= 0 || size > 100) {
+            size = 20;
+        }
+
+        Pageable pageable = PageRequest.of(page, size);
+
+        Page<ProphylaxisScreeningDTO> result =
+                prEPService.searchProphylaxisScreenings(search, pageable);
+
+        return ResponseEntity.ok(result);
     }
 
 }
