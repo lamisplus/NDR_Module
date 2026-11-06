@@ -6,21 +6,9 @@ import java.time.LocalDate;
 import java.util.List;
 public interface PrepDiscontinuationProjection {
 //    List<PrepInterruptionType> getInterruptions();
-    // ----- PrEP Interruptions (repeatable — card has up to 3 rows) -----
-
-    /**
-     * PrEP interruptions. Repeatable; expected up to 3 rows per the card
-     * layout, but the schema allows an unbounded list.
-     */
-//    List<? extends PrepInterruptionProjection> getInterruptions();
-
-    // ----- Referral Out -----
-
     LocalDate getDateClientReferredOut();
 
     String getFacilityReferredTo();
-
-    // ----- Mortality -----
 
     LocalDate getDateClientDied();
 
