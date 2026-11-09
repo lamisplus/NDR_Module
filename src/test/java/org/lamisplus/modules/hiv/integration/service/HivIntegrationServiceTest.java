@@ -1,19 +1,7 @@
 package org.lamisplus.modules.hiv.integration.service;
 
 
-import com.foreach.across.config.AcrossContextConfigurer;
-import com.foreach.across.core.AcrossContext;
-import com.foreach.across.test.AcrossTestConfiguration;
-import com.foreach.across.test.AcrossWebAppConfiguration;
-import io.zonky.test.db.AutoConfigureEmbeddedDatabase;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.lamisplus.modules.base.BaseModule;
-import org.lamisplus.modules.hiv.HivModule;
-import org.lamisplus.modules.patient.PatientModule;
-import org.lamisplus.modules.triage.TriageModule;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.PropertySource;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestExecutionListeners;
@@ -27,8 +15,6 @@ import org.springframework.test.context.transaction.TransactionalTestExecutionLi
 @ExtendWith({SpringExtension.class})
 @DirtiesContext
 @ContextConfiguration(loader = AnnotationConfigContextLoader.class)
-@AcrossWebAppConfiguration
-@AutoConfigureEmbeddedDatabase(beanName = "acrossDataSource")
 @TestExecutionListeners({
         DependencyInjectionTestExecutionListener.class,
         DirtiesContextTestExecutionListener.class,

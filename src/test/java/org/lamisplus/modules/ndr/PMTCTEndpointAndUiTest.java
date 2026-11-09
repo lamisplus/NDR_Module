@@ -322,6 +322,241 @@ class PMTCTEndpointAndUiTest {
     }
 
     @Test
+    void shouldGenerateAndValidatePndr1XmlAgainstNdrXsd() throws Exception {
+        PMTCTTypeMapper mapper = new PMTCTTypeMapper();
+
+        PMTCTRegisterProjection pndr1Reg = Mockito.mock(PMTCTRegisterProjection.class);
+        when(pndr1Reg.getVisitId()).thenReturn("f898945e-4932-4bb5-895e-a6b015ee99b8");
+        when(pndr1Reg.getVisitDate()).thenReturn(LocalDate.of(2024, 10, 1));
+        when(pndr1Reg.getHospitalNo()).thenReturn("PNDR-1");
+        when(pndr1Reg.getAncNumber()).thenReturn("PNDR-1");
+        when(pndr1Reg.getPregnancyBreastfeedingStatus()).thenReturn("P");
+        when(pndr1Reg.getGestationalAgeAtBooking()).thenReturn(4);
+        when(pndr1Reg.getPreviouslyKnownHivStatus()).thenReturn("No");
+        when(pndr1Reg.getCurrentlyOnArt()).thenReturn("Yes");
+        when(pndr1Reg.getHivEarlyAcute()).thenReturn("YES_NO_NO");
+        when(pndr1Reg.getHivTrAnc()).thenReturn("Positive");
+        when(pndr1Reg.getDateOfInitiation()).thenReturn(LocalDate.of(2024, 10, 1));
+        when(pndr1Reg.getTimingOfArtInitiation()).thenReturn("TIMING_MOTHERS_ART_INITIATION_INITIATED_ART_DURING_PREGNANCY_<_36_WEEKS_GESTATION_PERIOD");
+        when(pndr1Reg.getSyphilisTestResult()).thenReturn("SYPHILIS_RESULT_POSITIVE");
+        when(pndr1Reg.getSyphilisTreated()).thenReturn("Yes");
+        when(pndr1Reg.getSyphilisReferred()).thenReturn("Yes");
+        when(pndr1Reg.getHbvKnownPositive()).thenReturn("Yes");
+        when(pndr1Reg.getHbvTestResult()).thenReturn("Negative");
+        when(pndr1Reg.getHbvTreated()).thenReturn("New on Prophylaxis");
+        when(pndr1Reg.getHbvReferred()).thenReturn("No");
+        when(pndr1Reg.getInitiatedOnProphylaxis()).thenReturn("New on Prophylaxis");
+        when(pndr1Reg.getTbScreeningStatus()).thenReturn("Presumptive TB and Referred for evaluation");
+        when(pndr1Reg.getVl32To36WeeksDate()).thenReturn(LocalDate.of(2025, 2, 5));
+        when(pndr1Reg.getVl32To36WeeksResult()).thenReturn(new BigDecimal("19"));
+        when(pndr1Reg.getVlBreastfeedingDate()).thenReturn(LocalDate.of(2025, 7, 13));
+        when(pndr1Reg.getVlBreastfeedingResult()).thenReturn(new BigDecimal("19"));
+        when(pndr1Reg.getPartnerAgreedToNotification()).thenReturn("Yes");
+        when(pndr1Reg.getPartnerTestedHiv()).thenReturn("Negative");
+        when(pndr1Reg.getPartnerTestedSyphilis()).thenReturn("Positive");
+        when(pndr1Reg.getPartnerTestedHepatitisB()).thenReturn("Negative");
+        when(pndr1Reg.getPartnerReferral()).thenReturn("PARTNER_REFERRED_PMTCT_PREP");
+
+        MotherInfantPairVisitProjection visit1 = Mockito.mock(MotherInfantPairVisitProjection.class);
+        when(visit1.getVisitId()).thenReturn("a6a5e17b-5832-4c76-9f61-5c5c70562e75");
+        when(visit1.getVisitDate()).thenReturn(LocalDate.of(2025, 2, 5));
+        when(visit1.getGestationalAgeWeeks()).thenReturn(33);
+        when(visit1.getMotherWeightKg()).thenReturn(new BigDecimal("96"));
+        when(visit1.getSfhLengthCm()).thenReturn(new BigDecimal("11"));
+        when(visit1.getMotherCurrentStatus()).thenReturn("Pregnant");
+        when(visit1.getMotherCurrentArtStatus()).thenReturn("Active");
+        when(visit1.getRegimenCode()).thenReturn("1c");
+        when(visit1.getRegimenDescription()).thenReturn("ABC+3TC+DTG");
+        when(visit1.getRegimenNdrCode()).thenReturn("NDR1c0009");
+        when(visit1.getMotherCurrentHbvStatus()).thenReturn("On Prophylaxis");
+        when(visit1.getMotherCurrentHbvDrugName()).thenReturn("drug b");
+        when(visit1.getMotherCurrentSyphilisStatus()).thenReturn("Treated");
+        when(visit1.getSyphilisDrugAdministered()).thenReturn("drug s");
+        when(visit1.getVlDateSampleCollected()).thenReturn(LocalDate.of(2025, 2, 5));
+        when(visit1.getVlDateResultReceived()).thenReturn(LocalDate.of(2025, 2, 12));
+        when(visit1.getVlResultCopiesPerMl()).thenReturn(new BigDecimal("19"));
+        when(visit1.getNextAppointmentDate()).thenReturn(LocalDate.of(2025, 2, 26));
+
+        MotherInfantPairVisitProjection visit2 = Mockito.mock(MotherInfantPairVisitProjection.class);
+        when(visit2.getVisitId()).thenReturn("38108297-1d17-4191-81a9-5780425be525");
+        when(visit2.getVisitDate()).thenReturn(LocalDate.of(2025, 7, 13));
+        when(visit2.getGestationalAgeWeeks()).thenReturn(23);
+        when(visit2.getMotherWeightKg()).thenReturn(new BigDecimal("88"));
+        when(visit2.getSfhLengthCm()).thenReturn(new BigDecimal("35"));
+        when(visit2.getMotherCurrentStatus()).thenReturn("Breastfeeding");
+        when(visit2.getMotherCurrentArtStatus()).thenReturn("Active");
+        when(visit2.getRegimenCode()).thenReturn("1c");
+        when(visit2.getRegimenDescription()).thenReturn("ABC+3TC+DTG");
+        when(visit2.getRegimenNdrCode()).thenReturn("NDR1c0009");
+        when(visit2.getMotherCurrentHbvStatus()).thenReturn("Negative");
+        when(visit2.getMotherCurrentSyphilisStatus()).thenReturn("Negative");
+        when(visit2.getVlDateSampleCollected()).thenReturn(LocalDate.of(2025, 7, 13));
+        when(visit2.getVlDateResultReceived()).thenReturn(LocalDate.of(2025, 7, 14));
+        when(visit2.getVlResultCopiesPerMl()).thenReturn(new BigDecimal("19"));
+        when(visit2.getInfantFeedingPractice()).thenReturn("FEEDING_PRACTICE_EXCLUSIVE_BREASTFEEDING_(EBF)");
+        when(visit2.getInfantOnCtx()).thenReturn("Yes");
+        when(visit2.getNextAppointmentDate()).thenReturn(LocalDate.of(2025, 7, 14));
+
+        String babyInfoJson = "{\"sexOfBaby\": \"\", \"babyPreterm\": \"\", \"babyAbortion\": \"\", "
+                + "\"deadOutcomes\": [{\"babyAbortion\": \"SA\", \"babyStillBirthType\": \"FSB\", \"babyDeadWithin7Days\": \"Yes\", \"babyNotBreathingAtBirth\": \"No\"}], "
+                + "\"aliveOutcomes\": [{\"sexOfBaby\": \"Male\", \"babyPreterm\": \"Yes\", \"babyResuscitated\": \"Yes\", \"babyTimeOfDelivery\": \"10:44\", \"babyLiveBirthWeight\": \"Less than 2.5kg\", \"babyNotBreathingAtBirth\": \"\", \"babyLiveBirthHivPositive\": \"Yes\"}]}";
+
+        DeliveryChildrenDetailsProjection twinDead = Mockito.mock(DeliveryChildrenDetailsProjection.class);
+        when(twinDead.getDeliveryUuid()).thenReturn("0535122b-cd1d-4704-87eb-584e481f4dad");
+        when(twinDead.getInfantUuid()).thenReturn("3d808f64-7f95-4d91-b038-1b8a42797e0a");
+        when(twinDead.getDateOfDelivery()).thenReturn(LocalDate.of(2025, 1, 1));
+        when(twinDead.getModeOfDelivery()).thenReturn("MODE_DELIVERY_NORMAL_VAGINAL_DELIVERY");
+        when(twinDead.getBirthWeightKg()).thenReturn("1.2");
+        when(twinDead.getBirthLengthCm()).thenReturn(new BigDecimal("32"));
+        when(twinDead.getBirthOutcome()).thenReturn("Dead");
+        when(twinDead.getChildHospitalNumber()).thenReturn("PNDR-1/2");
+        when(twinDead.getChildEntryPoint()).thenReturn("ANC");
+        when(twinDead.getSex()).thenReturn("Male");
+        when(twinDead.getBabyInfoJson()).thenReturn(babyInfoJson);
+
+        String pndr1InfantArvJson = "{\"ageAtCtx\": \"0\", \"dateOfArv\": [2025, 1, 1], \"dateOfCtx\": [2025, 1, 1], "
+                + "\"infantArvTime\": \"Within 72 hour\", \"infantArvType\": \"TYPE_PROPHYLAXIS_AZT_+_3TC_+_NVP_(TRIPLE)\", "
+                + "\"arvDeliveryPoint\": \"Facility Delivery\"}";
+        String pndr1HbvVacJson = "[{\"dose\": \"First Dose (Birth Dose)\", \"ageAtVaccination\": null, \"dateOfVaccination\": \"2025-01-01\"}]";
+        String pndr1VisitHbvJson = "{\"firstDoseDate\": \"2025-01-01\", \"secondDoseDate\": \"2025-02-05\", \"thirdDoseDate\": \"2025-12-01\"}";
+        String pndr1CombinedPcrJson = "["
+                + "{\"results\": \"INFANT_PCR_RESULT_NEGATIVE\", \"testType\": \"INFANT_TESTING_PCR_1ST_PCR_4-6_WEEKS_OF_AGE_OR_1ST_CONTACT\", \"ageAtTest\": \"CHILD_TEST_AGE_<_72_HRS\", \"dateSampleCollected\": [2025, 1, 1], \"dateResultReceivedByCaregiver\": [2025, 1, 1]}, "
+                + "["
+                + "{\"results\": \"INFANT_PCR_RESULT_NEGATIVE\", \"testType\": \"INFANT_TESTING_PCR_2ND_PCR_12_WEEKS_AFTER_CESSATION_OF_BREASTFEEDING_OR_AS_INDICATED\", \"ageAtTest\": \"CHILD_TEST_AGE_>72_HRS_-_<_2_MONTHS\", \"dateSampleCollected\": [2025, 2, 5], \"dateResultReceivedByCaregiver\": [2025, 2, 19]}, "
+                + "{\"results\": \"INFANT_PCR_RESULT_POSITIVE\", \"testType\": \"INFANT_TESTING_PCR_CONFIRMATORY_PCR___IF_PREVIOUS_TEST_POSITIVE\", \"ageAtTest\": \"CHILD_TEST_AGE_2-12_MONTHS\", \"dateSampleCollected\": [2025, 12, 1], \"dateResultReceivedByCaregiver\": [2025, 12, 15]}, "
+                + "{\"results\": \"INFANT_PCR_RESULT_POSITIVE\", \"testType\": \"INFANT_TESTING_PCR_CONFIRMATORY_PCR\", \"ageAtTest\": \"CHILD_TEST_AGE_>12_MONTHS\", \"dateSampleCollected\": [2026, 7, 1], \"dateResultReceivedByCaregiver\": [2026, 7, 12]}"
+                + "]"
+                + "]";
+        String pndr1RapidJson = "{\"result\": \"INFANT_PCR_RESULT_POSITIVE\", \"ageAtTest\": \"CHILD_TEST_AGE_>12_MONTHS\", \"dateOfTest\": [2026, 7, 1], \"rapidTestType\": \"Second Rapid Antibody\"}";
+
+        DeliveryChildrenDetailsProjection twinAlive = Mockito.mock(DeliveryChildrenDetailsProjection.class);
+        when(twinAlive.getDeliveryUuid()).thenReturn("0535122b-cd1d-4704-87eb-584e481f4dad");
+        when(twinAlive.getInfantUuid()).thenReturn("e8f0f9a8-92d0-49cb-a307-5e92f21a79e4");
+        when(twinAlive.getDateOfDelivery()).thenReturn(LocalDate.of(2025, 1, 1));
+        when(twinAlive.getModeOfDelivery()).thenReturn("MODE_DELIVERY_NORMAL_VAGINAL_DELIVERY");
+        when(twinAlive.getBirthWeightKg()).thenReturn("1.8");
+        when(twinAlive.getBirthLengthCm()).thenReturn(new BigDecimal("43"));
+        when(twinAlive.getBirthOutcome()).thenReturn("Alive");
+        when(twinAlive.getChildHospitalNumber()).thenReturn("PNDR-1/1");
+        when(twinAlive.getChildEntryPoint()).thenReturn("ANC");
+        when(twinAlive.getSex()).thenReturn("Male");
+        when(twinAlive.getBabyInfoJson()).thenReturn(babyInfoJson);
+        when(twinAlive.getInfantArvDataJson()).thenReturn(pndr1InfantArvJson);
+        when(twinAlive.getHbvVaccinationsJson()).thenReturn(pndr1HbvVacJson);
+        when(twinAlive.getVisitHbvVaccinationDataJson()).thenReturn(pndr1VisitHbvJson);
+        when(twinAlive.getInfantPcrDataJson()).thenReturn(pndr1CombinedPcrJson);
+        when(twinAlive.getRapidTestDataJson()).thenReturn(pndr1RapidJson);
+        when(twinAlive.getOutcomeAt18Months()).thenReturn("INFANT_OUTCOME_AT_18_MONTHS_HIV-POSITIVE_NOT_LINKED_TO_ART");
+
+        InfantCohortRegistrationProjection cohortAlive = Mockito.mock(InfantCohortRegistrationProjection.class);
+        when(cohortAlive.getInfantUuid()).thenReturn("e8f0f9a8-92d0-49cb-a307-5e92f21a79e4");
+        when(cohortAlive.getDateOfBirth()).thenReturn(LocalDate.of(2025, 1, 1));
+        when(cohortAlive.getDateOfFirstVisit()).thenReturn(LocalDate.of(2025, 2, 5));
+        when(cohortAlive.getAgeAtFirstVisit()).thenReturn(5);
+        when(cohortAlive.getChildHospitalRegNo()).thenReturn("PNDR-1/1");
+        when(cohortAlive.getInfantSex()).thenReturn("Male");
+        when(cohortAlive.getChildEntryPoint()).thenReturn("ANC");
+        when(cohortAlive.getMotherHospitalNumber()).thenReturn("PNDR-1");
+        when(cohortAlive.getMotherAncNumber()).thenReturn("PNDR-1");
+        when(cohortAlive.getMotherStatus()).thenReturn("Hepatitis B+");
+        when(cohortAlive.getMotherArtInitiationTiming()).thenReturn("TIMING_MOTHERS_ART_INITIATION_INITIATED_ART_DURING_PREGNANCY_<_36_WEEKS_GESTATION_PERIOD");
+        when(cohortAlive.getMotherRegimenCode()).thenReturn("1c");
+        when(cohortAlive.getMotherRegimenDescription()).thenReturn("ABC+3TC+DTG");
+        when(cohortAlive.getMotherRegimenNdrCode()).thenReturn("NDR1c0009");
+        when(cohortAlive.getMotherSyphilisTreatmentStartDate()).thenReturn("2026-07-01");
+        when(cohortAlive.getMotherHepatitisBTreatmentStartDate()).thenReturn("2026-07-01");
+        when(cohortAlive.getHbvVaccinationsJson()).thenReturn(pndr1HbvVacJson);
+        when(cohortAlive.getVisitHbvVaccinationDataJson()).thenReturn(pndr1VisitHbvJson);
+        when(cohortAlive.getInfantArvDataJson()).thenReturn(pndr1InfantArvJson);
+        when(cohortAlive.getInfantPcrDataJson()).thenReturn(pndr1CombinedPcrJson);
+        when(cohortAlive.getRapidTestDataJson()).thenReturn(pndr1RapidJson);
+        when(cohortAlive.getOutcomeAt18Months()).thenReturn("INFANT_OUTCOME_AT_18_MONTHS_HIV-POSITIVE_NOT_LINKED_TO_ART");
+
+        PmtctDTO pmtctDTO = new PmtctDTO(
+                Collections.singletonList(pndr1Reg),
+                Arrays.asList(visit1, visit2),
+                Arrays.asList(twinDead, twinAlive),
+                Collections.singletonList(cohortAlive)
+        );
+
+        ObjectFactory objectFactory = new ObjectFactory();
+        IndividualReportType individualReport = new IndividualReportType();
+        PatientDemographicsType demographics = new PatientDemographicsType();
+        demographics.setPatientIdentifier("SvuAvAPSwgQ_b0a00ca4-425a-4e64-9420-08ecd723ede3");
+        FacilityType treatmentFacility = new FacilityType();
+        treatmentFacility.setFacilityName("St Luke's Hospital Anua");
+        treatmentFacility.setFacilityID("SvuAvAPSwgQ");
+        treatmentFacility.setFacilityTypeCode("FAC");
+        demographics.setTreatmentFacility(treatmentFacility);
+        demographics.setPatientDateOfBirth(DatatypeFactory.newInstance().newXMLGregorianCalendar("2000-01-01"));
+        demographics.setPatientSexCode("F");
+        individualReport.setPatientDemographics(demographics);
+
+        ConditionType condition = new ConditionType();
+        condition.setConditionCode("86406008");
+        ProgramAreaType programArea = new ProgramAreaType();
+        programArea.setProgramAreaCode("HIV");
+        condition.setProgramArea(programArea);
+        individualReport.getCondition().add(condition);
+
+        List<NDRErrorDTO> errors = new ArrayList<>();
+        boolean mapped = mapper.getPMTCTType(individualReport, objectFactory, pmtctDTO, errors, demographics.getPatientIdentifier());
+        assertTrue(mapped, "PNDR-1 should map successfully");
+        assertTrue(errors.isEmpty(), "PNDR-1 mapping should not produce errors");
+
+        PMTCTType pmtct = individualReport.getPMTCT().get(0);
+        assertEquals("P", pmtct.getPMTCTRegister().get(0).getPregnancyBreastfeedingStatus());
+        assertEquals(2, pmtct.getDeliveryChildrenDetails().size());
+        assertEquals(0, pmtct.getDeliveryChildrenDetails().get(0).getDNAPCR().size(), "Dead twin PNDR-1/2 should not have PNDR-1/1's PCRs");
+        assertEquals(2, pmtct.getDeliveryChildrenDetails().get(1).getDNAPCR().size(), "Alive twin PNDR-1/1 should have 1st and 2nd DNA PCRs");
+        assertNotNull(pmtct.getDeliveryChildrenDetails().get(1).getHBVVaccination().getFirstDoseDate());
+        assertEquals("Within24hrs", pmtct.getDeliveryChildrenDetails().get(1).getHBVVaccination().getFirstDoseTiming());
+        assertNotNull(pmtct.getDeliveryChildrenDetails().get(1).getHBVVaccination().getSecondDoseDate());
+        assertNotNull(pmtct.getDeliveryChildrenDetails().get(1).getHBVVaccination().getThirdDoseDate());
+
+        assertEquals(1, pmtct.getInfantCohortRegistration().size());
+        assertEquals("LT36", pmtct.getPMTCTRegister().get(0).getTimingOfArtInitiation());
+        assertEquals(Boolean.TRUE, pmtct.getPMTCTRegister().get(0).getPartnerNotification().isReferredToPrEP());
+        InfantCohortRegistrationType cohortXml = pmtct.getInfantCohortRegistration().get(0);
+        assertEquals(5, cohortXml.getAgeAtFirstVisit());
+        assertEquals("InitiatedLessThan36Weeks", cohortXml.getMotherARTInitiationTiming());
+        assertNotNull(cohortXml.getFirstPCR());
+        assertNotNull(cohortXml.getSecondPCR());
+        assertNotNull(cohortXml.getConfirmatoryPCR());
+        assertNotNull(cohortXml.getRapidAntibodyTest());
+        assertEquals(Boolean.TRUE, cohortXml.getInfantHBVProphylaxis().isBirthDoseWithin24Hrs());
+        assertEquals(Boolean.TRUE, cohortXml.getInfantHBVProphylaxis().isSecondDoseGiven());
+        assertEquals(Boolean.TRUE, cohortXml.getInfantHBVProphylaxis().isThirdDoseGiven());
+        assertNotNull(cohortXml.getMotherSyphilisTreatmentStartDate());
+        assertNotNull(cohortXml.getMotherHepatitisBTreatmentStartDate());
+        assertEquals(InfantOutcomeStatusType.HIV_POSITIVE_NOT_LINKED_TO_ART, cohortXml.getOutcomeAt18Months());
+
+        Container container = new Container();
+        MessageHeaderType header = new MessageHeaderType();
+        header.setMessageStatusCode("INITIAL");
+        header.setMessageCreationDateTime(DatatypeFactory.newInstance().newXMLGregorianCalendar("2026-11-04T12:00:00"));
+        header.setMessageSchemaVersion(new BigDecimal("1.7"));
+        header.setMessageUniqueID("b0a00ca4-425a-4e64-9420-08ecd723ede3");
+        header.setMessageSendingOrganization(treatmentFacility);
+        container.setMessageHeader(header);
+        container.setIndividualReport(individualReport);
+
+        JAXBContext jaxbContext = JAXBContext.newInstance(Container.class, ObjectFactory.class);
+        Marshaller marshaller = jaxbContext.createMarshaller();
+        marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE);
+        SchemaFactory sf = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI);
+        Schema schema = sf.newSchema(getClass().getClassLoader().getResource("NDR_XSD 1.7.2.0.xsd"));
+        marshaller.setSchema(schema);
+
+        StringWriter sw = new StringWriter();
+        marshaller.marshal(container, sw);
+        String xml = sw.toString();
+        File pndr1XmlFile = new File("target/pndr-1-sample-ndr.xml");
+        Files.write(pndr1XmlFile.toPath(), xml.getBytes(StandardCharsets.UTF_8));
+        assertTrue(pndr1XmlFile.exists());
+    }
+
+    @Test
     void shouldHavePmtctUiSourceAndStaticBundleWired() throws Exception {
         File pmtctSource = new File("src/main/webapp/jsx/components/ndr/Pmtct.js");
         assertTrue(pmtctSource.exists(), "Pmtct.js component must exist");

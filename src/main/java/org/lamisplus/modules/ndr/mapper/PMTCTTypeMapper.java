@@ -675,13 +675,13 @@ public class PMTCTTypeMapper {
         Boolean refPrep = null;
         Boolean refOther = null;
         if (StringUtils.isNotBlank(row.getPartnerReferral())) {
-            String refUpper = row.getPartnerReferral().toUpperCase();
-            if (refUpper.contains("ART")) {
-                refArt = Boolean.TRUE;
+            String refUpper = row.getPartnerReferral().toUpperCase().replace("PARTNER", "");
+            if (refUpper.contains("PREP")) {
+                refPrep = Boolean.TRUE;
             } else if (refUpper.contains("FP") || refUpper.contains("FAMILY")) {
                 refFp = Boolean.TRUE;
-            } else if (refUpper.contains("PREP")) {
-                refPrep = Boolean.TRUE;
+            } else if (refUpper.contains("ART")) {
+                refArt = Boolean.TRUE;
             } else if (!refUpper.contains("NONE")) {
                 refOther = Boolean.TRUE;
             }
@@ -835,7 +835,14 @@ public class PMTCTTypeMapper {
             if (firstDoseDate == null) {
                 firstDoseDate = getJsonDate(firstItem, "firstDoseDate");
             }
-            firstDoseTiming = mapFirstDoseTiming(firstNonBlank(getJsonText(firstItem, "ageAtVaccination"), getJsonText(firstItem, "firstDoseTiming")));
+            if (firstDoseDate == null) {
+                firstDoseDate = getJsonDate(firstItem, "firstDoseBirthDoseDate");
+            }
+            firstDoseTiming = mapFirstDoseTiming(firstNonBlank(
+                    getJsonText(firstItem, "ageAtVaccination"),
+                    getJsonText(firstItem, "firstDoseTiming"),
+                    getJsonText(firstItem, "infantDose"),
+                    getJsonText(firstItem, "dose")));
             secondDoseDate = getJsonDate(firstItem, "secondDoseDate");
             thirdDoseDate = getJsonDate(firstItem, "thirdDoseDate");
         }
@@ -844,8 +851,14 @@ public class PMTCTTypeMapper {
             if (firstDoseDate == null) {
                 firstDoseDate = getJsonDate(visitHbvNode, "firstDoseDate");
             }
+            if (firstDoseDate == null) {
+                firstDoseDate = getJsonDate(visitHbvNode, "firstDoseBirthDoseDate");
+            }
             if (firstDoseTiming == null) {
-                firstDoseTiming = mapFirstDoseTiming(getJsonText(visitHbvNode, "firstDoseTiming"));
+                firstDoseTiming = mapFirstDoseTiming(firstNonBlank(
+                        getJsonText(visitHbvNode, "firstDoseTiming"),
+                        getJsonText(visitHbvNode, "infantDose"),
+                        getJsonText(visitHbvNode, "dose")));
             }
             if (secondDoseDate == null) {
                 secondDoseDate = getJsonDate(visitHbvNode, "secondDoseDate");
@@ -892,8 +905,12 @@ public class PMTCTTypeMapper {
 
         if (hbvVacArrayNode != null) {
             JsonNode firstItem = hbvVacArrayNode.isArray() && hbvVacArrayNode.size() > 0 ? hbvVacArrayNode.get(0) : hbvVacArrayNode;
-            String timing = mapFirstDoseTiming(firstNonBlank(getJsonText(firstItem, "ageAtVaccination"), getJsonText(firstItem, "firstDoseTiming")));
-            if ("Within24hrs".equals(timing)) {
+            String timing = mapFirstDoseTiming(firstNonBlank(
+                    getJsonText(firstItem, "ageAtVaccination"),
+                    getJsonText(firstItem, "firstDoseTiming"),
+                    getJsonText(firstItem, "infantDose"),
+                    getJsonText(firstItem, "dose")));
+            if ("Within24hrs".equals(timing) || getJsonDate(firstItem, "firstDoseBirthDoseDate") != null) {
                 within24 = Boolean.TRUE;
             } else if ("After24hrs".equals(timing)) {
                 after24 = Boolean.TRUE;
@@ -1033,10 +1050,10 @@ public class PMTCTTypeMapper {
             return null;
         }
         String u = raw.trim().toUpperCase();
-        if (u.equals("LT36") || u.contains("< 36") || u.contains("<36") || u.contains("LESS_THAN_36") || u.contains("PRIOR")) {
+        if (u.equals("LT36") || u.equals("1") || u.contains("<_36") || u.contains("< 36") || u.contains("<36") || u.contains("LESS_THAN_36") || u.contains("PRIOR")) {
             return "LT36";
         }
-        if (u.equals("GTE36") || u.contains(">= 36") || u.contains(">=36") || u.contains("36_WEEKS") || u.contains("GREATER")) {
+        if (u.equals("GTE36") || u.equals("2") || u.contains(">=_36") || u.contains(">= 36") || u.contains(">=36") || u.contains("36_WEEKS") || u.contains("GREATER")) {
             return "GTe36";
         }
         if (u.equals("LD") || u.contains("LABOUR") || u.contains("DELIVERY")) {
@@ -1374,7 +1391,7 @@ public class PMTCTTypeMapper {
             return null;
         }
         String u = raw.trim().toUpperCase();
-        if (u.contains("WITHIN") || u.contains("< 24") || u.contains("<24") || u.equals("0")) {
+        if (u.contains("WITHIN") || u.contains("< 24") || u.contains("<24") || u.equals("0") || u.contains("BIRTH DOSE") || u.contains("BIRTH_DOSE")) {
             return "Within24hrs";
         }
         if (u.contains("AFTER") || u.contains("> 24") || u.contains(">24")) {
@@ -1474,10 +1491,10 @@ public class PMTCTTypeMapper {
         if (u.contains("PRIOR")) {
             return "PriorOnPregnancy";
         }
-        if (u.contains("< 36") || u.contains("<36") || u.contains("LESS_THAN_36") || u.contains("LESSTHAN36")) {
+        if (u.contains("<_36") || u.contains("< 36") || u.contains("<36") || u.contains("LESS_THAN_36") || u.contains("LESSTHAN36")) {
             return "InitiatedLessThan36Weeks";
         }
-        if (u.contains(">= 36") || u.contains("> 36") || u.contains("36_WEEKS") || u.contains("GREATER")) {
+        if (u.contains(">=_36") || u.contains(">= 36") || u.contains(">_36") || u.contains("> 36") || u.contains("36_WEEKS") || u.contains("GREATER")) {
             return "InitiatedGreaterThan36Weeks";
         }
         if (u.contains("AFTER_DELIVERY") || u.contains("AFTERDELIVERY") || u.contains("POST-PARTUM") || u.contains("POSTPARTUM")) {
@@ -1724,7 +1741,15 @@ public class PMTCTTypeMapper {
         return null;
     }
 
-    private String firstNonBlank(String a, String b) {
-        return StringUtils.isNotBlank(a) ? a.trim() : (StringUtils.isNotBlank(b) ? b.trim() : null);
+    private String firstNonBlank(String... values) {
+        if (values == null) {
+            return null;
+        }
+        for (String v : values) {
+            if (StringUtils.isNotBlank(v)) {
+                return v.trim();
+            }
+        }
+        return null;
     }
 }
