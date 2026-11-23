@@ -259,36 +259,46 @@ public interface NDRQueryRepository extends JpaRepository<NdrMessageLog, Integer
     List<PrepDTO> getCardEnrollment(Long facilityId, String patientId, LocalDateTime lastModified);
 
     @Query(value = "SELECT\n" +
-            "\tpfv.uuid AS visitID,\n" +
-            "\tpfv.encounter_date AS visitDate,\n" +
-            "\tpfv.visit_type AS visitType,\n" +
-            "\tpfv.weight AS fvWeight,\n" +
-            "\tCAST(pfv.prep_noted_side_effects ->> 0 AS VARCHAR) AS notedSideEffects,\n" +
-            "\tCAST(pfv.syndromic_sti_screening ->> 0 AS VARCHAR) AS syndromicSTIScreening,\n" +
-            "\tpfv.risk_reduction_services AS riskReductionServices,\n" +
-            "\tpfv.adherence_level AS adherence,\n" +
-            "\tpfv.why_adherence_level_poor AS reasonForPoorFairAdherence,\n" +
-            "\tpfv.prep_type AS prepType,\n" +
-            "\tpfv.regimen_id AS prepRegimen,\n" +
-            "\tpfv.refill_days AS monthsOfRefill,\n" +
-            "\tpfv.other_drugs AS otherDrugsPrescribed,\n" +
-            "\tCAST(NULLIF(urinalysis->>'testDate', '') AS DATE) AS dateOfUrinalysis,\n" +
-            "\tCAST(urinalysis->>'result' AS VARCHAR) AS urinalysisResult,\n" +
-            "\tCAST(NULLIF(hepatitis->>'testDate', '') AS DATE) AS dateOfHepatitisTest,\n" +
-            "\tCAST(hepatitis->>'result' AS VARCHAR) AS hepatitisTestResult,\n" +
-            "\tCAST(NULLIF(syphilis->>'testDate', '') AS DATE) AS dateOfSyphilisTest,\n" +
-            "\tCAST(syphilis->>'result' AS VARCHAR) AS syphilisTestResult,\n" +
-            "\tpfv.date_of_liver_function_test_results AS dateOfLiverFunctionTest,\n" +
-            "\tCAST(pfv.liver_function_test_results ->> 0 AS VARCHAR) AS liverFunctionTestResult,\n" +
-            "-- \tCAST(other_tests_result->>'testDate' AS VARCHAR) AS dateOfOtherTests,\n" +
-            "-- \tCAST(other_tests_result->>'result' AS VARCHAR) AS otherTestsResult,\n" +
-            "\tpfv.next_appointment AS nextAppointmentDate\n" +
+            "    pfv.uuid AS visitID,\n" +
+            "    pfv.encounter_date AS visitDate,\n" +
+            "    pfv.visit_type AS visitType,\n" +
+            "    pfv.weight AS fvWeight,\n" +
+            "    CAST(pfv.prep_noted_side_effects ->> 0 AS VARCHAR) AS notedSideEffects,\n" +
+            "    CAST(pfv.syndromic_sti_screening ->> 0 AS VARCHAR) AS syndromicSTIScreening,\n" +
+            "    pfv.risk_reduction_services AS riskReductionServices,\n" +
+            "    pfv.adherence_level AS adherence,\n" +
+            "    pfv.why_adherence_level_poor AS reasonForPoorFairAdherence,\n" +
+            "    pfv.prep_type AS prepType,\n" +
+            "    pfv.regimen_id AS prepRegimen,\n" +
+            "    CASE\n" +
+            "        WHEN pfv.refill_days BETWEEN 1 AND 120 THEN\n" +
+            "            CASE\n" +
+            "                WHEN pfv.refill_days BETWEEN 25 AND 35 THEN 1\n" +
+            "                WHEN pfv.refill_days BETWEEN 55 AND 65 THEN 2\n" +
+            "                WHEN pfv.refill_days BETWEEN 85 AND 95 THEN 3\n" +
+            "                WHEN pfv.refill_days BETWEEN 115 AND 120 THEN 4\n" +
+            "                ELSE NULL\n" +
+            "            END\n" +
+            "        ELSE NULL\n" +
+            "    END AS monthsOfRefill,\n" +
+            "    pfv.other_drugs AS otherDrugsPrescribed,\n" +
+            "    CAST(NULLIF(urinalysis->>'testDate', '') AS DATE) AS dateOfUrinalysis,\n" +
+            "    CAST(urinalysis->>'result' AS VARCHAR) AS urinalysisResult,\n" +
+            "    CAST(NULLIF(hepatitis->>'testDate', '') AS DATE) AS dateOfHepatitisTest,\n" +
+            "    CAST(hepatitis->>'result' AS VARCHAR) AS hepatitisTestResult,\n" +
+            "    CAST(NULLIF(syphilis->>'testDate', '') AS DATE) AS dateOfSyphilisTest,\n" +
+            "    CAST(syphilis->>'result' AS VARCHAR) AS syphilisTestResult,\n" +
+            "    pfv.date_of_liver_function_test_results AS dateOfLiverFunctionTest,\n" +
+            "    CAST(pfv.liver_function_test_results ->> 0 AS VARCHAR) AS liverFunctionTestResult,\n" +
+            "--  CAST(other_tests_result->>'testDate' AS VARCHAR) AS dateOfOtherTests,\n" +
+            "--  CAST(other_tests_result->>'result' AS VARCHAR) AS otherTestsResult,\n" +
+            "    pfv.next_appointment AS nextAppointmentDate\n" +
             "FROM prep_followup_visit pfv\n" +
             "WHERE pfv.facility_id = ?1\n" +
             "AND pfv.person_uuid = ?2\n" +
             "AND pfv.date_modified >= ?3\n" +
             "AND pfv.archived = false\n" +
-            "ORDER BY id DESC\n" +
+            "ORDER BY pfv.id DESC\n" +
             "LIMIT 1", nativeQuery = true)
     List<PrepDTO> getPrepFollowUpVisit(Long facilityId, String patientId, LocalDateTime lastModified);
 
@@ -344,7 +354,7 @@ public interface NDRQueryRepository extends JpaRepository<NdrMessageLog, Integer
     List<PrepDTO> getDiscontinuation(Long facilityId, String patientId, LocalDateTime lastModified);
 
     @Query(
-            value = "SELECT " +
+            value = "SELECT DISTINCT " +
                     "ps.id AS id, " +
                     "pp.uuid AS uuid, " +
                     "ps.unique_client_id AS uniqueClientId, " +
@@ -353,36 +363,35 @@ public interface NDRQueryRepository extends JpaRepository<NdrMessageLog, Integer
                     "JOIN prophylaxis_screening ps ON pp.uuid = ps.person_uuid " +
                     "WHERE ps.archived = false " +
                     "AND EXISTS ( " +
-                    "   SELECT 1 FROM prophylaxis_initiation pi " +
-                    "   WHERE pi.person_uuid = pp.uuid " +
-                    "   AND pi.archived = false " +
+                    "  SELECT 1 FROM prophylaxis_initiation pi " +
+                    "  WHERE pi.person_uuid = pp.uuid " +
+                    "  AND pi.archived = false " +
                     ") " +
                     "AND (COALESCE(?1, '') = '' " +
                     "OR LOWER(ps.unique_client_id) LIKE LOWER(CONCAT('%', ?1, '%')) " +
                     "OR LOWER(pp.hospital_number) LIKE LOWER(CONCAT('%', ?1, '%')) " +
-                    "OR CAST(pp.uuid AS VARCHAR) LIKE CONCAT('%', ?1, '%')) " +
+                    "OR LOWER(CAST(pp.uuid AS VARCHAR)) LIKE LOWER(CONCAT('%', ?1, '%'))) " +
                     "ORDER BY ps.id DESC",
-
-            countQuery = "SELECT COUNT(*) " +
+            countQuery = "SELECT COUNT(DISTINCT ps.id) " +
                     "FROM patient_person pp " +
                     "JOIN prophylaxis_screening ps ON pp.uuid = ps.person_uuid " +
                     "WHERE ps.archived = false " +
                     "AND EXISTS ( " +
-                    "   SELECT 1 FROM prophylaxis_initiation pi " +
-                    "   WHERE pi.person_uuid = pp.uuid " +
-                    "   AND pi.archived = false " +
+                    "  SELECT 1 FROM prophylaxis_initiation pi " +
+                    "  WHERE pi.person_uuid = pp.uuid " +
+                    "  AND pi.archived = false " +
                     ") " +
                     "AND (COALESCE(?1, '') = '' " +
                     "OR LOWER(ps.unique_client_id) LIKE LOWER(CONCAT('%', ?1, '%')) " +
                     "OR LOWER(pp.hospital_number) LIKE LOWER(CONCAT('%', ?1, '%')) " +
-                    "OR CAST(pp.uuid AS VARCHAR) LIKE CONCAT('%', ?1, '%'))",
-
+                    "OR LOWER(CAST(pp.uuid AS VARCHAR)) LIKE LOWER(CONCAT('%', ?1, '%')))",
             nativeQuery = true
     )
     Page<ProphylaxisScreeningProjection> searchProphylaxisScreenings(
             String search,
             Pageable pageable
     );
+
 
 
 

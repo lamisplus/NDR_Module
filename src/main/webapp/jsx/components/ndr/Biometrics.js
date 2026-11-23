@@ -135,7 +135,14 @@ const Biometrics = (props) => {
       })
       .then((response) => {
         if (!isMounted) return;
-        setFacilities(response.data.applicationUserOrganisationUnits || []);
+        const { currentOrganisationUnitName, currentOrganisationUnitId } =
+          response.data;
+        setFacilities([
+          {
+            facility: currentOrganisationUnitName,
+            facilityId: currentOrganisationUnitId,
+          },
+        ]);
       })
       .catch(() => {
         toast.error("Unable to load facilities. Please refresh the page.");
@@ -159,9 +166,7 @@ const Biometrics = (props) => {
   );
 
   const facilityQueryString = useMemo(() => {
-    return checked
-      .map((value) => `facilityIds=${value.organisationUnitId}`)
-      .join("&");
+    return checked.map((value) => `facilityIds=${value.facilityId}`).join("&");
   }, [checked]);
 
   const generateBiometrics = useCallback(async () => {
@@ -252,7 +257,7 @@ const Biometrics = (props) => {
                 const isChecked = checked.indexOf(value) !== -1;
                 return (
                   <div
-                    key={value.id}
+                    key={value.value.facilityId}
                     className={classes.facilityItem}
                     onClick={handleToggle(value)}
                     role="button"
@@ -273,7 +278,7 @@ const Biometrics = (props) => {
                     />
                     <AccountBalanceIcon className={classes.facilityIcon} />
                     <span className={classes.facilityName}>
-                      {value.organisationUnitName}
+                      {value.value.facility}
                     </span>
                   </div>
                 );

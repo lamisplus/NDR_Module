@@ -177,7 +177,7 @@ export default function Prep(props) {
   const [modal, setModal] = useState(false);
   const [selectedRows, setSelectedRows] = useState([]);
   const [selectPatients, setSelectPatients] = useState([]);
-
+  const [pageSize, setPageSize] = useState(10);
   const toggle = useCallback(() => setModal((m) => !m), []);
 
   useEffect(() => {
@@ -188,7 +188,14 @@ export default function Prep(props) {
       })
       .then((response) => {
         if (!isMounted) return;
-        setFacilities(response.data.applicationUserOrganisationUnits || []);
+        const { currentOrganisationUnitName, currentOrganisationUnitId } =
+          response.data;
+        setFacilities([
+          {
+            facility: currentOrganisationUnitName,
+            facilityId: currentOrganisationUnitId,
+          },
+        ]);
       })
       .catch(() => {
         toast.error("Unable to load facilities. Please refresh the page.");
@@ -217,9 +224,7 @@ export default function Prep(props) {
   }, []);
 
   const facilityQueryString = useMemo(() => {
-    return checked
-      .map((value) => `facilityIds=${value.organisationUnitId}`)
-      .join("&");
+    return checked.map((value) => `facilityIds=${value.facilityId}`).join("&");
   }, [checked]);
 
   const generateAction = useCallback(async () => {
@@ -310,10 +315,10 @@ export default function Prep(props) {
               <div className={classes.facilityPanel}>
                 {hasFacilities ? (
                   facilities.map((value) => {
-                    const labelId = `facility-${value.id}`;
+                    const labelId = `facility-${value.facilityId}`;
                     return (
                       <div
-                        key={value.id}
+                        key={value.facilityId}
                         className={classes.facilityItem}
                         onClick={handleToggle(value)}
                         role="button"
@@ -336,7 +341,7 @@ export default function Prep(props) {
                           style={{ marginRight: 10, cursor: "pointer" }}
                         />
                         <span style={{ fontSize: "0.85rem", color: "#333" }}>
-                          {value.organisationUnitName}
+                          {value.facility}
                         </span>
                       </div>
                     );
@@ -427,10 +432,11 @@ export default function Prep(props) {
                 exportButton: false,
                 searchFieldAlignment: "left",
                 pageSizeOptions: [10, 20, 100],
-                pageSize: 10,
+                pageSize,
                 debounceInterval: 400,
                 toolbar: true,
               }}
+              onChangeRowsPerPage={(newPageSize) => setPageSize(newPageSize)}
               components={{
                 Toolbar: (toolbarProps) => (
                   <div>

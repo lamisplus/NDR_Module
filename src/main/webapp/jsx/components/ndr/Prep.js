@@ -8,7 +8,7 @@ import React, {
 import { makeStyles } from "@material-ui/core/styles";
 import axios from "axios";
 import * as api from "./../../../api";
-import { token as token, url as baseUrl } from "./../../../api";
+import { token, url as baseUrl } from "./../../../api";
 import { CardBody, Card } from "reactstrap";
 import { Alert, AlertTitle } from "@material-ui/lab";
 import { GiFiles } from "react-icons/gi";
@@ -168,15 +168,19 @@ const useStyles = makeStyles((theme) => ({
   },
 }));
 
+const PAGE_SIZE_OPTIONS = [10, 20, 100];
+
 export default function Prep(props) {
   const classes = useStyles();
   const [facilities, setFacilities] = useState([]);
+  const [facility, setFacility] = useState("");
   const [processing, setProcessing] = useState(false);
   const [status, setStatus] = useState(false); // false = Updated, true = Initial
   const [checked, setChecked] = useState([]);
   const [modal, setModal] = useState(false);
   const [selectedRows, setSelectedRows] = useState([]);
   const [selectPatients, setSelectPatients] = useState([]);
+  const [pageSize, setPageSize] = useState(10);
 
   const toggle = useCallback(() => setModal((m) => !m), []);
 
@@ -188,7 +192,14 @@ export default function Prep(props) {
       })
       .then((response) => {
         if (!isMounted) return;
-        setFacilities(response.data.applicationUserOrganisationUnits || []);
+        const { currentOrganisationUnitName, currentOrganisationUnitId } =
+          response.data;
+        setFacilities([
+          {
+            facility: currentOrganisationUnitName,
+            facilityId: currentOrganisationUnitId,
+          },
+        ]);
       })
       .catch(() => {
         toast.error("Unable to load facilities. Please refresh the page.");
@@ -213,13 +224,11 @@ export default function Prep(props) {
 
   const handleRowSelection = useCallback((rows) => {
     setSelectedRows(rows);
-    setSelectPatients(uniq(rows).map((row) => row.personUuid));
+    setSelectPatients(uniq(rows.map((row) => row.personUuid).filter(Boolean)));
   }, []);
 
   const facilityQueryString = useMemo(() => {
-    return checked
-      .map((value) => `facilityIds=${value.organisationUnitId}`)
-      .join("&");
+    return checked.map((value) => `facilityIds=${value.facilityId}`).join("&");
   }, [checked]);
 
   const generateAction = useCallback(async () => {
@@ -229,12 +238,13 @@ export default function Prep(props) {
     setModal(true);
 
     const usePatients = selectPatients.length > 0;
-    const url = usePatients
+
+    const endpoint = usePatients
       ? `${api.url}ndr/generate/prep?${facilityQueryString}&isInitial=${status}&patientIds=${selectPatients}`
       : `${api.url}ndr/prep?${facilityQueryString}&isInitial=${status}`;
 
     try {
-      await axios.get(url, {
+      await axios.get(endpoint, {
         headers: { Authorization: `Bearer ${token}` },
       });
 
@@ -257,6 +267,85 @@ export default function Prep(props) {
     }
   }, [facilityQueryString, selectPatients, status, props]);
 
+  const fetchPatients = useCallback(
+    (query) => {
+      const effectiveSize = query.pageSize || pageSize;
+      const params = new URLSearchParams({
+        search: query.search || "",
+        page: String(query.page ?? 0),
+        size: String(effectiveSize),
+      });
+
+      return axios
+        .get(`${baseUrl}ndr/prep/list?${params.toString()}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        })
+        .then((result) => ({
+          data: (result.data.content || []).map((row) => ({
+            personId: row.uniqueClientId,
+            personUuid: row.uuid,
+            hospitalNumber: row.hospitalNumber,
+          })),
+          page: result.data.number ?? query.page ?? 0,
+          totalCount: result.data.totalElements ?? 0,
+        }))
+        .catch(() => {
+          toast.error("Failed to load patients.");
+          return { data: [], page: 0, totalCount: 0 };
+        });
+    },
+    [pageSize],
+  );
+
+  const columns = useMemo(
+    () => [
+      { title: "Patient Id", field: "personId", filtering: false },
+      { title: "Patient Uuid", field: "personUuid", filtering: false },
+      { title: "Hospital No", field: "hospitalNumber", filtering: false },
+    ],
+    [],
+  );
+
+  const tableOptions = useMemo(
+    () => ({
+      search: true,
+      selection: true,
+      headerStyle: {
+        backgroundColor: "#014d88",
+        color: "#fff",
+        fontWeight: 600,
+      },
+      rowStyle: (rowData) => ({
+        backgroundColor: selectedRows.find(
+          (row) => row.tableData?.id === rowData.tableData?.id,
+        )
+          ? "#e8f5e9"
+          : "",
+      }),
+      filtering: false,
+      exportButton: false,
+      searchFieldAlignment: "left",
+      pageSizeOptions: PAGE_SIZE_OPTIONS,
+      pageSize,
+      debounceInterval: 400,
+      toolbar: true,
+    }),
+    [pageSize, selectedRows],
+  );
+
+  const handleChangeRowsPerPage = useCallback((newPageSize) => {
+    setPageSize(newPageSize);
+  }, []);
+
+  const toolbarComponent = useMemo(
+    () => (toolbarProps) => (
+      <div>
+        <MTableToolbar {...toolbarProps} />
+      </div>
+    ),
+    [],
+  );
+
   const hasFacilities = facilities.length > 0;
   const canGenerate = checked.length >= 1 && !processing;
 
@@ -266,7 +355,6 @@ export default function Prep(props) {
 
       <Card className={classes.card}>
         <CardBody>
-          {/* Info alert */}
           <Alert severity="info">
             <AlertTitle>Generate PrEP XML</AlertTitle>
             Select one or more facilities below, choose the data type, then
@@ -309,38 +397,35 @@ export default function Prep(props) {
               </div>
               <div className={classes.facilityPanel}>
                 {hasFacilities ? (
-                  facilities.map((value) => {
-                    const labelId = `facility-${value.id}`;
-                    return (
-                      <div
-                        key={value.id}
-                        className={classes.facilityItem}
-                        onClick={handleToggle(value)}
-                        role="button"
-                        tabIndex={0}
-                        onKeyDown={(e) =>
-                          e.key === "Enter" && handleToggle(value)()
-                        }
-                        style={{
-                          display: "flex",
-                          alignItems: "center",
-                          padding: "6px 10px",
-                          cursor: "pointer",
-                        }}
-                      >
-                        <input
-                          type="checkbox"
-                          checked={checked.indexOf(value) !== -1}
-                          onChange={handleToggle(value)}
-                          onClick={(e) => e.stopPropagation()}
-                          style={{ marginRight: 10, cursor: "pointer" }}
-                        />
-                        <span style={{ fontSize: "0.85rem", color: "#333" }}>
-                          {value.organisationUnitName}
-                        </span>
-                      </div>
-                    );
-                  })
+                  facilities.map((value) => (
+                    <div
+                      key={value.facilityId}
+                      className={classes.facilityItem}
+                      onClick={handleToggle(value)}
+                      role="button"
+                      tabIndex={0}
+                      onKeyDown={(e) =>
+                        e.key === "Enter" && handleToggle(value)()
+                      }
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        padding: "6px 10px",
+                        cursor: "pointer",
+                      }}
+                    >
+                      <input
+                        type="checkbox"
+                        checked={checked.indexOf(value) !== -1}
+                        onChange={handleToggle(value)}
+                        onClick={(e) => e.stopPropagation()}
+                        style={{ marginRight: 10, cursor: "pointer" }}
+                      />
+                      <span style={{ fontSize: "0.85rem", color: "#333" }}>
+                        {value.facility}
+                      </span>
+                    </div>
+                  ))
                 ) : (
                   <div className={classes.emptyState}>
                     No facilities available
@@ -379,74 +464,12 @@ export default function Prep(props) {
             <MaterialTable
               icons={tableIcons}
               title="Eligible Patients"
-              columns={[
-                { title: "Patient Id", field: "personId", filtering: false },
-                {
-                  title: "Patient Uuid",
-                  field: "personUuid",
-                  filtering: false,
-                },
-                {
-                  title: "Hospital No",
-                  field: "hospitalNumber",
-                  filtering: false,
-                },
-              ]}
-              data={(query) =>
-                new Promise((resolve, reject) =>
-                  axios
-                    .get(
-                      `${baseUrl}ndr/prep/list?search=${query.search}&page=${query.page}&size=${query.pageSize}`,
-                      { headers: { Authorization: `Bearer ${token}` } },
-                    )
-                    .then((response) => response)
-                    .then((result) => {
-                      resolve({
-                        data: result.data.content.map((row) => ({
-                          personId: row.uniqueClientId,
-                          personUuid: row.uuid,
-                          hospitalNumber: row.hospitalNumber,
-                        })),
-                        page: query.page,
-                        totalCount: result.data.totalRecords,
-                      });
-                    })
-                    .catch(() => {
-                      resolve({ data: [], page: 0, totalCount: 0 });
-                      toast.error("Failed to load patients.");
-                    })
-                    .finally(() => setSelectedRows([])),
-                )
-              }
-              options={{
-                search: true,
-                selection: true,
-                headerStyle: {
-                  backgroundColor: "#014d88",
-                  color: "#fff",
-                  fontWeight: 600,
-                },
-                rowStyle: (rowData) => ({
-                  backgroundColor: selectedRows.find(
-                    (row) => row.tableData.id === rowData.tableData.id,
-                  )
-                    ? "#e8f5e9"
-                    : "",
-                }),
-                filtering: false,
-                exportButton: false,
-                searchFieldAlignment: "left",
-                pageSizeOptions: [10, 20, 100],
-                pageSize: 10,
-                debounceInterval: 400,
-                toolbar: true,
-              }}
+              columns={columns}
+              data={fetchPatients}
+              options={tableOptions}
+              onChangeRowsPerPage={handleChangeRowsPerPage}
               components={{
-                Toolbar: (toolbarProps) => (
-                  <div>
-                    <MTableToolbar {...toolbarProps} />
-                  </div>
-                ),
+                Toolbar: toolbarComponent,
               }}
               onSelectionChange={handleRowSelection}
             />
