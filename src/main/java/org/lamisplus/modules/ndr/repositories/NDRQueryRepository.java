@@ -357,7 +357,14 @@ public interface NDRQueryRepository extends JpaRepository<NdrMessageLog, Integer
             "    CAST(COALESCE(CAST(anc.uuid AS VARCHAR), CAST(pe.uuid AS VARCHAR)) AS VARCHAR) AS visitId,\n" +
             "    COALESCE(anc.date_of_enrollment, pe.pmtct_enrollment_date) AS visitDate,\n" +
             "    CAST(p.hospital_number AS VARCHAR) AS hospitalNo,\n" +
-            "    CAST(anc.anc_no AS VARCHAR) AS ancNumber,\n" +
+            "    CAST(COALESCE(\n" +
+            "        NULLIF(TRIM(CAST(anc.anc_no AS VARCHAR)), ''),\n" +
+            "        (SELECT NULLIF(TRIM(CAST(pa2.anc_no AS VARCHAR)), '') FROM pmtct_anc pa2 WHERE pa2.patient_uuid = COALESCE(anc.patient_uuid, pe.patient_uuid) AND COALESCE(CAST(pa2.archived AS VARCHAR), '0') IN ('0', 'false', 'f', '') AND NULLIF(TRIM(CAST(pa2.anc_no AS VARCHAR)), '') IS NOT NULL ORDER BY pa2.date_of_enrollment DESC NULLS LAST, pa2.id DESC LIMIT 1),\n" +
+            "        (SELECT NULLIF(TRIM(CAST(piv2.anc_number AS VARCHAR)), '') FROM pmtct_infant_visit piv2 WHERE piv2.mother_patient_uuid = COALESCE(anc.patient_uuid, pe.patient_uuid) AND COALESCE(CAST(piv2.archived AS VARCHAR), '0') IN ('0', 'false', 'f', '') AND NULLIF(TRIM(CAST(piv2.anc_number AS VARCHAR)), '') IS NOT NULL ORDER BY piv2.visit_date DESC NULLS LAST, piv2.id DESC LIMIT 1),\n" +
+            "        (SELECT COALESCE(NULLIF(TRIM(pii2.infant_arv_data->>'ancNumber'), ''), NULLIF(TRIM(pii2.infant_pcr_data->>'ancNumber'), '')) FROM pmtct_infant_information pii2 WHERE pii2.mother_patient_uuid = COALESCE(anc.patient_uuid, pe.patient_uuid) AND COALESCE(CAST(pii2.archived AS VARCHAR), '0') IN ('0', 'false', 'f', '') AND COALESCE(NULLIF(TRIM(pii2.infant_arv_data->>'ancNumber'), ''), NULLIF(TRIM(pii2.infant_pcr_data->>'ancNumber'), '')) IS NOT NULL ORDER BY pii2.id DESC LIMIT 1),\n" +
+            "        NULLIF(TRIM(CAST(p.hospital_number AS VARCHAR)), ''),\n" +
+            "        CAST(COALESCE(CAST(anc.uuid AS VARCHAR), CAST(pe.uuid AS VARCHAR)) AS VARCHAR)\n" +
+            "    ) AS VARCHAR) AS ancNumber,\n" +
             "    CAST(COALESCE(NULLIF(CAST(phts.pregnancy_status_at_entry AS VARCHAR), ''), NULLIF(CAST(hts_en.pregnancy_status AS VARCHAR), ''), NULLIF(CAST(pe.entry_point AS VARCHAR), ''), CASE WHEN anc.uuid IS NOT NULL THEN 'P' END, NULLIF(CAST(mv_latest.current_status AS VARCHAR), ''), 'P') AS VARCHAR) AS pregnancyBreastfeedingStatus,\n" +
             "    CAST(NULLIF(REGEXP_REPLACE(COALESCE(NULLIF(CAST(anc.gaweeks AS VARCHAR), ''), NULLIF(CAST(pe.gaweeks AS VARCHAR), ''), ''), '[^0-9]', '', 'g'), '') AS INTEGER) AS gestationalAgeAtBooking,\n" +
             "    CAST(COALESCE(NULLIF(CAST(anc.previously_known_hiv_status AS VARCHAR), ''), NULLIF(CAST(phts.previously_known_hiv_positive AS VARCHAR), ''), NULLIF(CAST(hts_en.previously_known_hiv AS VARCHAR), ''), NULLIF(CAST(pe.time_of_hiv_diagnosis AS VARCHAR), '')) AS VARCHAR) AS previouslyKnownHivStatus,\n" +
@@ -653,7 +660,7 @@ public interface NDRQueryRepository extends JpaRepository<NdrMessageLog, Integer
             "    CAST(COALESCE(NULLIF(d.baby_info->>'sexOfBaby', ''), NULLIF(d.baby_info->'aliveOutcomes'->0->>'sexOfBaby', '')) AS VARCHAR) AS infantSex,\n" +
             "    CAST(ii.entry_point AS VARCHAR) AS childEntryPoint,\n" +
             "    CAST(p.hospital_number AS VARCHAR) AS motherHospitalNumber,\n" +
-            "    CAST(COALESCE(NULLIF(CAST(iv.anc_number AS VARCHAR), ''), NULLIF(CAST(anc.anc_no AS VARCHAR), ''), NULLIF(CAST(iarv.anc_number AS VARCHAR), '')) AS VARCHAR) AS motherAncNumber,\n" +
+            "    CAST(COALESCE(NULLIF(TRIM(CAST(iv.anc_number AS VARCHAR)), ''), NULLIF(TRIM(CAST(anc.anc_no AS VARCHAR)), ''), NULLIF(TRIM(CAST(iarv.anc_number AS VARCHAR)), ''), NULLIF(TRIM(ii.infant_arv_data->>'ancNumber'), ''), NULLIF(TRIM(ii.infant_pcr_data->>'ancNumber'), ''), NULLIF(TRIM(CAST(p.hospital_number AS VARCHAR)), '')) AS VARCHAR) AS motherAncNumber,\n" +
             "    CAST(COALESCE(NULLIF(iv.mother_art_data->>'motherCurrentArtStatus', ''), 'HIV+') AS VARCHAR) AS motherStatus,\n" +
             "    CAST(COALESCE(NULLIF(iv.mother_art_data->>'motherArtInitiationTime', ''), NULLIF(CAST(ima.mother_art_initiation_time AS VARCHAR), ''), NULLIF(CAST(pe.art_start_time AS VARCHAR), '')) AS VARCHAR) AS motherArtInitiationTiming,\n" +
             "    CAST(COALESCE(CAST(reg_info.regimen_code AS VARCHAR), NULLIF(CAST(mv.regimen_line_id AS VARCHAR), '')) AS VARCHAR) AS motherRegimenCode,\n" +

@@ -121,8 +121,9 @@ public class PMTCTTypeMapper {
         if (StringUtils.isNotBlank(row.getHospitalNo())) {
             reg.setHospitalNo(row.getHospitalNo().trim());
         }
-        if (StringUtils.isNotBlank(row.getAncNumber())) {
-            reg.setANCNumber(row.getAncNumber().trim());
+        String ancNumber = firstNonBlank(row.getAncNumber(), row.getHospitalNo(), row.getVisitId());
+        if (StringUtils.isNotBlank(ancNumber)) {
+            reg.setANCNumber(ancNumber);
         }
 
         PregnancyBreastfeedingStatusType pregBfStatus = mapPregnancyBreastfeedingStatus(row.getPregnancyBreastfeedingStatus());
@@ -489,8 +490,9 @@ public class PMTCTTypeMapper {
         if (StringUtils.isNotBlank(row.getMotherHospitalNumber())) {
             cohort.setMotherHospitalNumber(row.getMotherHospitalNumber().trim());
         }
-        if (StringUtils.isNotBlank(row.getMotherAncNumber())) {
-            cohort.setMotherANCNumber(row.getMotherAncNumber().trim());
+        String motherAncNumber = firstNonBlank(row.getMotherAncNumber(), row.getMotherHospitalNumber());
+        if (StringUtils.isNotBlank(motherAncNumber)) {
+            cohort.setMotherANCNumber(motherAncNumber);
         }
 
         String motherStatus = mapMotherCohortStatus(row.getMotherStatus());
