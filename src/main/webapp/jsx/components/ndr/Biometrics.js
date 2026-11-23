@@ -257,7 +257,7 @@ const Biometrics = (props) => {
                 const isChecked = checked.indexOf(value) !== -1;
                 return (
                   <div
-                    key={value.value.facilityId}
+                    key={value.facilityId}
                     className={classes.facilityItem}
                     onClick={handleToggle(value)}
                     role="button"
@@ -278,7 +278,7 @@ const Biometrics = (props) => {
                     />
                     <AccountBalanceIcon className={classes.facilityIcon} />
                     <span className={classes.facilityName}>
-                      {value.value.facility}
+                      {value.facility}
                     </span>
                   </div>
                 );
