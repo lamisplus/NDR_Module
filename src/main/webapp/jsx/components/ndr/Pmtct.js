@@ -183,22 +183,29 @@ export default function Pmtct(props) {
   const toggle = useCallback(() => setModal((m) => !m), []);
 
   useEffect(() => {
-    let isMounted = true;
-    axios
-      .get(`${api.url}account`, {
-        headers: { Authorization: `Bearer ${token}` },
-      })
-      .then((response) => {
-        if (!isMounted) return;
-        setFacilities(response.data.applicationUserOrganisationUnits || []);
-      })
-      .catch(() => {
-        toast.error("Unable to load facilities. Please refresh the page.");
-      });
-    return () => {
-      isMounted = false;
-    };
-  }, []);
+      let isMounted = true;
+      axios
+        .get(`${api.url}account`, {
+          headers: { Authorization: `Bearer ${token}` },
+        })
+        .then((response) => {
+          if (!isMounted) return;
+          const { currentOrganisationUnitName, currentOrganisationUnitId } =
+            response.data;
+          setFacilities([
+            {
+              facility: currentOrganisationUnitName,
+              facilityId: currentOrganisationUnitId,
+            },
+          ]);
+        })
+        .catch(() => {
+          toast.error("Unable to load facilities. Please refresh the page.");
+        });
+      return () => {
+        isMounted = false;
+      };
+    }, []);
 
   const handleToggle = useCallback(
     (value) => () => {
@@ -218,11 +225,9 @@ export default function Pmtct(props) {
     setSelectPatients(uniq(rows).map((row) => row.personUuid));
   }, []);
 
-  const facilityQueryString = useMemo(() => {
-    return checked
-      .map((value) => `facilityIds=${value.organisationUnitId}`)
-      .join("&");
-  }, [checked]);
+   const facilityQueryString = useMemo(() => {
+      return checked.map((value) => `facilityIds=${value.facilityId}`).join("&");
+    }, [checked]);
 
   useEffect(() => {
     if (tableRef.current) {
@@ -319,7 +324,7 @@ export default function Pmtct(props) {
                 {hasFacilities ? (
                   facilities.map((value) => (
                     <div
-                      key={value.id}
+                      key={value.facilityId}
                       className={classes.facilityItem}
                       onClick={handleToggle(value)}
                       role="button"
@@ -342,7 +347,7 @@ export default function Pmtct(props) {
                         style={{ marginRight: 10, cursor: "pointer" }}
                       />
                       <span style={{ fontSize: "0.85rem", color: "#333" }}>
-                        {value.organisationUnitName}
+                        {value.facility}
                       </span>
                     </div>
                   ))
