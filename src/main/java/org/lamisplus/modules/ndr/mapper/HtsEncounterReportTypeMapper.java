@@ -142,30 +142,53 @@ public class HtsEncounterReportTypeMapper {
             ObjectFactory objectFactory,
             List<HtsReportDto> projections,
             List<NDRErrorDTO> errors) {
-
-        log.info("HTS Mapping started... ");
+        log.info("HTS Mapping started for {} records... ", projections != null ? projections.size() : 0);
         if (projections == null || projections.isEmpty()) {
             return false;
         }
-
         List<HIVTestingReportType> hivTestingReport = individualReportType.getHIVTestingReport();
-
         projections.parallelStream().forEach(projection -> {
             try {
+                if (!hasValidData(projection)) {
+                    synchronized (errors) {
+                        errors.add(new NDRErrorDTO(
+                                projection != null ? projection.getClientCode() : "UNKNOWN",
+                                null,
+                                "Skipped: Missing mandatory XSD required fields."
+                        ));
+                    }
+                    return;
+                }
                 HIVTestingReportType reportType = NDRObjectFactory.createHIVTestingReportType();
                 mapProjectionToReportType(projection, reportType, objectFactory);
-                hivTestingReport.add(reportType);
+                synchronized (hivTestingReport) {
+                    hivTestingReport.add(reportType);
+                }
             } catch (Exception e) {
-                errors.add(new NDRErrorDTO(
-                        projection.getClientCode(),
-                        null,
-                        e.getMessage() + " | " + Arrays.toString(e.getStackTrace())
-                ));
-                log.error("Error mapping projection for client: {}", projection.getClientCode(), e);
+                synchronized (errors) {
+                    errors.add(new NDRErrorDTO(
+                            projection != null ? projection.getClientCode() : "UNKNOWN",
+                            null,
+                            e.getMessage() + " | " + Arrays.toString(e.getStackTrace())
+                    ));
+                }
+                log.error("Error mapping projection for client: {}", projection != null ? projection.getClientCode() : "UNKNOWN", e);
             }
         });
-
-        return true;
+        return !hivTestingReport.isEmpty();
+    }
+    private boolean hasValidData(final HtsReportDto p) {
+        if (p == null) return false;
+        boolean hasValidClientId = StringUtils.isNotBlank(p.getClientCode());
+        boolean hasVisitDate = p.getVisitDate() != null;
+        boolean hasVisitId = StringUtils.isNotBlank(p.getVisitId());
+        boolean hasSetting = StringUtils.isNotBlank(p.getSetting());
+        //boolean hasModality = StringUtils.isNotBlank(p.getModality());
+        boolean hasSex = StringUtils.isNotBlank(p.getSex());
+        boolean hasSessionType = StringUtils.isNotBlank(p.getSessionType());
+        boolean hasClientAge = p.getClientAge() != null;
+        return hasValidClientId && hasVisitDate && hasVisitId &&
+                hasSetting && hasSex && hasSessionType && hasClientAge;
     }
 
     private void mapProjectionToReportType(
@@ -181,7 +204,6 @@ public class HtsEncounterReportTypeMapper {
         setIfPresent(projection.getModality() != null ? "C" : "S", reportType::setModality); // TODO - get the modalities // required
         if (projection.getClientAge() != null) {
             reportType.setClientAge(projection.getClientAge());
-            //setIfPresent(Integer.parseInt(projection.getClientAge()), reportType::setClientAge); // required
         }
         setIfPresent(projection.getSex(), reportType::setSex, this::mapSex); // required
         setIfPresent(projection.getMaritalStatus(), reportType::setMaritalStatus, this::mapMaritalStatus);
@@ -282,19 +304,15 @@ public class HtsEncounterReportTypeMapper {
         ClinicalTBScreeningType screening = factory.createClinicalTBScreeningType();
         if (p.getCurrentlyCough() != null ) {
             screening.setCurrentlyCough(p.getCurrentlyCough());
-//            setBooleanIfPresent(p.getCurrentlyCough(), screening::setCurrentlyCough);
         }
         if (p.getWeightLoss() != null) {
             screening.setWeightLoss(p.getWeightLoss());
-//            setBooleanIfPresent(p.getWeightLoss(), screening::setWeightLoss);
         }
         if (p.getFever() != null) {
             screening.setFever(p.getFever());
-//            setBooleanIfPresent(p.getFever(), screening::setFever);
         }
         if (p.getNightSweats() != null) {
             screening.setNightSweats(p.getNightSweats());
-//            setBooleanIfPresent(p.getNightSweats(), screening::setNightSweats);
         }
         return screening;
     }
@@ -730,10 +748,12 @@ public class HtsEncounterReportTypeMapper {
             try {
                 setter.accept(DateUtil.getXmlDate(Date.valueOf(date)));
             } catch (DatatypeConfigurationException e) {
-                throw new RuntimeException("Error setting " + fieldName + ": " + e.getMessage(), e);
+                log.warn("{} cannot be null. MSG: {}", fieldName, e.getMessage());
+                //throw new RuntimeException("Error setting " + fieldName + ": " + e.getMessage(), e);
             }
         } else {
-            throw new IllegalArgumentException(fieldName + " cannot be null");
+            log.warn("{} cannot be null.", fieldName);
+            //throw new IllegalArgumentException(fieldName + " cannot be null");
         }
     }
     private void setDateIfPresent(LocalDate date, Consumer<javax.xml.datatype.XMLGregorianCalendar> setter) {

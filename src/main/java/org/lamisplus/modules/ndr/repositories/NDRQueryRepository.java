@@ -7,7 +7,10 @@ import org.lamisplus.modules.ndr.domain.dto.pmtct.InfantCohortRegistrationProjec
 import org.lamisplus.modules.ndr.domain.dto.pmtct.MotherInfantPairVisitProjection;
 import org.lamisplus.modules.ndr.domain.dto.pmtct.PMTCTEligiblePatientProjection;
 import org.lamisplus.modules.ndr.domain.dto.pmtct.PMTCTRegisterProjection;
+import org.lamisplus.modules.ndr.domain.dto.prep.ProphylaxisScreeningProjection;
 import org.lamisplus.modules.ndr.domain.entities.NdrMessageLog;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
@@ -288,6 +291,100 @@ public interface NDRQueryRepository extends JpaRepository<NdrMessageLog, Integer
             "ORDER BY id DESC\n" +
             "LIMIT 1", nativeQuery = true)
     List<PrepDTO> getPrepFollowUpVisit(Long facilityId, String patientId, LocalDateTime lastModified);
+
+    @Query(value =
+            "SELECT " +
+                    "pfv.uuid AS visitID, " +
+                    "pfv.encounter_date AS visitDate, " +
+                    "pfv.mode_of_exposure AS modeOfExposure, " +
+                    "pfv.duration_before_pep AS durationBeforePepProvided, " +
+                    "pfv.hiv_status_at_exposure AS hivStatusAtExposure, " +
+                    "CAST(pfv.pep_noted_side_effects ->> 0 AS VARCHAR) AS notedSideEffects, " +
+                    "CAST(pfv.syndromic_sti_screening ->> 0 AS VARCHAR) AS syndromicSTIScreening, " +
+                    "pfv.risk_reduction_services AS riskReductionServices, " +
+                    "pfv.adherence_level AS adherence, " +
+                    "pfv.pep_regimen AS prepRegimen, " +
+                    "pfv.date_start_pep AS datePepGivenStart, " +
+                    "pfv.date_stop_pep AS datePepGivenStop, " +
+                    "CAST(pfv.followup_hiv_test_results ->> 'result' AS VARCHAR) AS followUpHivTestResult1st6Weeks, " +
+                    "pfv.next_appointment AS nextAppointmentDate " +
+                    "FROM pep_followup_visit pfv " +
+                    "WHERE pfv.facility_id = ?1 " +
+                    "AND pfv.person_uuid = ?2 " +
+                    "AND pfv.date_modified >= ?3 " +
+                    "AND pfv.archived = false " +
+                    "ORDER BY pfv.id DESC " +
+                    "LIMIT 1",
+            nativeQuery = true)
+    List<PrepDTO> getPepFollowUpVisit(Long facilityId, String patientId, LocalDateTime lastModified);
+
+    @Query(value =
+            "SELECT\n" +
+                    "\t\tpfv.interruption_type AS interruption,\n" +
+                    "\t\tpfv.date_client_referred_out AS dateClientReferredOut,\n" +
+                    "\t\tpfv.facility_referred_to AS facilityReferredTo,\n" +
+                    "\t\tpfv.date_client_died AS dateClientDied,\n" +
+                    "\t\tpfv.source_of_death_info AS sourceOfDeathInformation,\n" +
+                    "\t\tpfv.cause_of_death AS causeOfDeath,\n" +
+                    "\t\tpfv.reason_for_prep_discontinuation AS discontinuedPrepPepReason,\n" +
+                    "\t\tpfv.interruption_date AS discontinuedPrepPepDate,\n" +
+                    "\t\tpfv.follow_up_visit_date AS artLinkDate,\n" +
+                    "\t\tpfv.interruption_reason AS interruptionReason,\n" +
+                    "\t\tpfv.interruption_date AS interruptionDate,\n" +
+                    "\t\tpfv.why AS whyCode,\n" +
+                    "\t\tpfv.date_restart_placed_back_medication AS dateOfRestart\n" +
+                    "\tFROM prophylaxis_interruptions pfv\n" +
+                    "\tWHERE pfv.facility_id = ?1\n" +
+                    "\tAND pfv.person_uuid = ?2\n" +
+                    "\tAND pfv.date_modified >= ?3\n" +
+                    "\tAND pfv.archived = false\n" +
+                    "\tORDER BY id DESC\n" +
+                    "\tLIMIT 1",
+            nativeQuery = true)
+    List<PrepDTO> getDiscontinuation(Long facilityId, String patientId, LocalDateTime lastModified);
+
+    @Query(
+            value = "SELECT " +
+                    "ps.id AS id, " +
+                    "pp.uuid AS uuid, " +
+                    "ps.unique_client_id AS uniqueClientId, " +
+                    "pp.hospital_number AS hospitalNumber " +
+                    "FROM patient_person pp " +
+                    "JOIN prophylaxis_screening ps ON pp.uuid = ps.person_uuid " +
+                    "WHERE ps.archived = false " +
+                    "AND EXISTS ( " +
+                    "   SELECT 1 FROM prophylaxis_initiation pi " +
+                    "   WHERE pi.person_uuid = pp.uuid " +
+                    "   AND pi.archived = false " +
+                    ") " +
+                    "AND (COALESCE(?1, '') = '' " +
+                    "OR LOWER(ps.unique_client_id) LIKE LOWER(CONCAT('%', ?1, '%')) " +
+                    "OR LOWER(pp.hospital_number) LIKE LOWER(CONCAT('%', ?1, '%')) " +
+                    "OR CAST(pp.uuid AS VARCHAR) LIKE CONCAT('%', ?1, '%')) " +
+                    "ORDER BY ps.id DESC",
+
+            countQuery = "SELECT COUNT(*) " +
+                    "FROM patient_person pp " +
+                    "JOIN prophylaxis_screening ps ON pp.uuid = ps.person_uuid " +
+                    "WHERE ps.archived = false " +
+                    "AND EXISTS ( " +
+                    "   SELECT 1 FROM prophylaxis_initiation pi " +
+                    "   WHERE pi.person_uuid = pp.uuid " +
+                    "   AND pi.archived = false " +
+                    ") " +
+                    "AND (COALESCE(?1, '') = '' " +
+                    "OR LOWER(ps.unique_client_id) LIKE LOWER(CONCAT('%', ?1, '%')) " +
+                    "OR LOWER(pp.hospital_number) LIKE LOWER(CONCAT('%', ?1, '%')) " +
+                    "OR CAST(pp.uuid AS VARCHAR) LIKE CONCAT('%', ?1, '%'))",
+
+            nativeQuery = true
+    )
+    Page<ProphylaxisScreeningProjection> searchProphylaxisScreenings(
+            String search,
+            Pageable pageable
+    );
+
+
 
     @Query(value = "SELECT DISTINCT p.uuid\n" +
             "FROM patient_person p\n" +
