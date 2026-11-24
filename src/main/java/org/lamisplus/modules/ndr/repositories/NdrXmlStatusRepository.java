@@ -15,33 +15,78 @@ import java.util.Optional;
 
 public interface NdrXmlStatusRepository extends JpaRepository<NdrXmlStatus, Integer> {
 	
-	@Query(value = "SELECT p.id,p.uuid as personUuid, p.facility_id as facilityId, \n" +
-			"CAST(p.archived AS BOOLEAN) as archived, p.uuid,p.hospital_number as hospitalNumber, \n" +
-			"\t\t\t  p.surname, p.first_name as firstName,\n" +
-			"\t\t\t  EXTRACT(YEAR from AGE(NOW(),  date_of_birth)) as age,\n" +
-			"\t\t\t  p.other_name as otherName, p.sex, p.date_of_birth as dateOfBirth, \n" +
-			"\t\t\t  h.date_enrolled_in_hiv_care as dateOfRegistration, p.marital_status->>'display' as maritalStatus, \n" +
-			"\t\t\t  education->>'display' as education, p.employment_status->>'display' as occupation, \n" +
-			"\t\t\t  facility.name as facilityName, facility_lga.name as lga, facility_state.name as state, \n" +
-			"\t\t\t  boui.code as datimId, r.city as town,res_state.name as residentialState, res_lga.name as residentialLga,\n" +
-			"\t\t\t  r.address as address, p.contact_point->'contactPoint'->0->'value'->>0 AS phone\n" +
-			"\t\t\t  FROM patient_person p\n" +
-			"\t\t\t  INNER JOIN (\n" +
-			"\t\t\t  SELECT * FROM (SELECT p.id, REPLACE(REPLACE(REPLACE(CAST(address_object->>'line' AS text), '\\\"', ''), ']', ''), '[', '') AS address,\n" +
-			"\t\t\t  REPLACE(REPLACE(REPLACE(cast(address_object->>'city' AS text), '\\\\\\\"', ''), ']', ''), '[', '') AS city,\n" +
-			"\t\t\tCASE WHEN address_object->>'stateId'  ~ '^\\\\d+(\\\\.\\\\d+)?$' THEN address_object->>'stateId' ELSE null END  AS stateId,\n" +
-			"\t\t\tCASE WHEN address_object->>'district'  ~ '^\\\\d+(\\\\.\\\\d+)?$' THEN address_object->>'district' ELSE null END  AS lgaId\n" +
-			"\t\t\tFROM patient_person p,\n" +
-			"\t\t\tjsonb_array_elements(p.address-> 'address') with ordinality l(address_object)) as result\n" +
-			"\t\t\t  ) r ON r.id=p.id\n" +
-			"\t\t\t INNER JOIN base_organisation_unit facility ON facility.id=facility_id\n" +
-			"\t\t\t INNER JOIN base_organisation_unit facility_lga ON facility_lga.id=facility.parent_organisation_unit_id\n" +
-			"\t\t\t INNER JOIN base_organisation_unit facility_state ON facility_state.id=facility_lga.parent_organisation_unit_id\n" +
-			"\t\t\t LEFT JOIN base_organisation_unit res_state ON res_state.id= CAST(r.stateid AS BIGINT)\n" +
-			"\t\t\t LEFT JOIN base_organisation_unit res_lga ON res_lga.id= CAST(r.lgaid AS BIGINT)\n" +
-			"\t\t\t INNER JOIN base_organisation_unit_identifier boui ON boui.organisation_unit_id=facility_id AND boui.name ='DATIM_ID' \n" +
-			"\t\t\t INNER JOIN hiv_enrollment_commencement h ON h.person_uuid = p.uuid\n" +
-			"\t\t\t WHERE h.archived=0 AND p.uuid=?1",
+	@Query(value = "SELECT\n" +
+			"    p.id,\n" +
+			"    p.uuid AS \"personUuid\",\n" +
+			"    p.facility_id AS \"facilityId\",\n" +
+			"    CAST(p.archived AS BOOLEAN) AS archived,\n" +
+			"    p.hospital_number AS \"hospitalNumber\",\n" +
+			"    p.surname,\n" +
+			"    p.first_name AS \"firstName\",\n" +
+			"    CAST(EXTRACT(YEAR FROM AGE(CURRENT_DATE, p.date_of_birth)) AS INTEGER) AS age,\n" +
+			"    p.other_name AS \"otherName\",\n" +
+			"    p.sex,\n" +
+			"    p.date_of_birth AS \"dateOfBirth\",\n" +
+			"    h.date_enrolled_in_hiv_care AS \"dateOfRegistration\",\n" +
+			"    p.marital_status ->> 'display' AS \"maritalStatus\",\n" +
+			"    p.education ->> 'display' AS education,\n" +
+			"    p.employment_status ->> 'display' AS occupation,\n" +
+			"    facility.name AS \"facilityName\",\n" +
+			"    facility_lga.name AS lga,\n" +
+			"    facility_state.name AS state,\n" +
+			"    boui.code AS \"datimId\",\n" +
+			"    addr.city AS town,\n" +
+			"    res_state.name AS \"residentialState\",\n" +
+			"    res_lga.name AS \"residentialLga\",\n" +
+			"    addr.address AS address,\n" +
+			"    p.contact_point -> 'contactPoint' -> 0 -> 'value' ->> 0 AS phone\n" +
+			"FROM patient_person p\n" +
+			"LEFT JOIN LATERAL (\n" +
+			"    SELECT\n" +
+			"        TRIM(BOTH '[]\"' FROM COALESCE(addr_elem -> 'line' ->> 0, addr_elem ->> 'line', '')) AS address,\n" +
+			"        TRIM(BOTH '[]\"' FROM COALESCE(addr_elem -> 'city' ->> 0, addr_elem ->> 'city', '')) AS city,\n" +
+			"        CASE\n" +
+			"            WHEN (addr_elem ->> 'stateId') ~ '^\\d+$' THEN CAST((addr_elem ->> 'stateId') AS BIGINT)\n" +
+			"        END AS state_id,\n" +
+			"        CASE\n" +
+			"            WHEN (addr_elem ->> 'district') ~ '^\\d+$' THEN CAST((addr_elem ->> 'district') AS BIGINT)\n" +
+			"        END AS lga_id\n" +
+			"    FROM jsonb_array_elements(\n" +
+			"        CASE\n" +
+			"            WHEN jsonb_typeof(p.address -> 'address') = 'array' THEN p.address -> 'address'\n" +
+			"            ELSE CAST('[]' AS jsonb)\n" +
+			"        END\n" +
+			"    ) WITH ORDINALITY AS t(addr_elem, ord)\n" +
+			"    ORDER BY ord\n" +
+			"    LIMIT 1\n" +
+			") AS addr ON TRUE\n" +
+			"INNER JOIN base_organisation_unit AS facility\n" +
+			"    ON facility.id = p.facility_id\n" +
+			"INNER JOIN base_organisation_unit AS facility_lga\n" +
+			"    ON facility_lga.id = facility.parent_organisation_unit_id\n" +
+			"INNER JOIN base_organisation_unit AS facility_state\n" +
+			"    ON facility_state.id = facility_lga.parent_organisation_unit_id\n" +
+			"LEFT JOIN base_organisation_unit AS res_state\n" +
+			"    ON res_state.id = addr.state_id\n" +
+			"LEFT JOIN base_organisation_unit AS res_lga\n" +
+			"    ON res_lga.id = addr.lga_id\n" +
+			"LEFT JOIN LATERAL (\n" +
+			"    SELECT b.code\n" +
+			"    FROM base_organisation_unit_identifier AS b\n" +
+			"    WHERE b.organisation_unit_id = p.facility_id\n" +
+			"      AND b.name = 'DATIM_ID'\n" +
+			"    ORDER BY b.id DESC\n" +
+			"    LIMIT 1\n" +
+			") AS boui ON TRUE\n" +
+			"INNER JOIN LATERAL (\n" +
+			"    SELECT hc.date_enrolled_in_hiv_care\n" +
+			"    FROM hiv_enrollment_commencement AS hc\n" +
+			"    WHERE hc.person_uuid = p.uuid\n" +
+			"      AND hc.archived = 0\n" +
+			"    ORDER BY hc.date_enrolled_in_hiv_care DESC, hc.id DESC\n" +
+			"    LIMIT 1\n" +
+			") AS h ON TRUE\n" +
+			"WHERE p.uuid = ?1",
 			nativeQuery = true)
 	Optional<PatientDemographics> getPatientDemographicsByUUID(String patientUuid);
 	

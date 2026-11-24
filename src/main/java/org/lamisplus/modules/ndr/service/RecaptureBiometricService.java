@@ -74,6 +74,7 @@ public class RecaptureBiometricService {
 		List<PatientDemographics> demographics = new ArrayList<>();
 		patientsIds.parallelStream()
 				.forEach(id -> {
+					log.info("fetching patient demographics {}", id);
 					Optional<PatientDemographics> demographicsOptional =
 							ndrXmlStatusRepository.getPatientDemographicsByUUID(id);
 					demographicsOptional.ifPresent(d -> {
